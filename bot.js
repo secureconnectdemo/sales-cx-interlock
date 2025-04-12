@@ -104,15 +104,17 @@ app.post("/webhook", async (req, res) => {
       const messageRes = await axios.get(`https://webexapis.com/v1/messages/${data.id}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
-
-      const messageText = messageRes.data.text.toLowerCase().trim();
-      console.log("💬 Message received:", messageText);
-
+    
+      let messageText = messageRes.data.text || "";
+      messageText = messageText.toLowerCase().replace(/^secure access sales handoff process/i, "").trim();
+      console.log("💬 Normalized Message:", messageText);
+    
       if (messageText.includes("submit handoff")) {
         await sendHandoffForm(roomId);
         return res.sendStatus(200);
       }
     }
+    
 
     if (resource === "attachmentActions") {
       const actionId = data.id;

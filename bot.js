@@ -1,7 +1,6 @@
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
-async function addHandoffEntry(formData) {
   console.log("📄 Writing to Sheet:", formData);
 
   try {

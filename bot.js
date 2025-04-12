@@ -30,7 +30,7 @@ app.post("/webhook", async (req, res) => {
   try {
     if (resource === "attachmentActions") {
       const actionId = data.id;
-      const actionRes = await axios.get(\`https://webexapis.com/v1/attachment/actions/\${actionId}\`, {
+      const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${actionId}`);
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 

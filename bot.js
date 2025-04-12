@@ -112,11 +112,24 @@ app.post("/webhook", async (req, res) => {
       });
 
       let rawText = messageRes.data.text || "";
-      let normalizedText = rawText.toLowerCase()
-        .replace(new RegExp(`^${BOT_NAME_PREFIX}\\s*`, "i"), "")
-        .trim();
+      let normalizedText = rawText.toLowerCase().trim();
+const botNameVariants = [
+  "secure access sales handoff process",
+  "secure access sales handoff", // fallback
+  "secure access handoff"
+];
+
+botNameVariants.forEach(variant => {
+  if (normalizedText.startsWith(variant)) {
+    normalizedText = normalizedText.replace(variant, "").trim();
+  }
+});
+
 
       console.log("💬 Normalized message text:", normalizedText);
+      console.log("📥 Raw message text:", rawText);
+      console.log("🧽 After normalization:", normalizedText);
+
 
       if (normalizedText === "submit handoff") {
         console.log("🧾 Sending handoff form...");

@@ -1,9 +1,7 @@
-
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
 
-// ✅ Declare once at the top
 const regionARRRoomMap = {
   "AMER_200K_PLUS": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1",
   "AMER_100K_200K": "Y2lzY29zcGFyazovL3VzL1JPT00vYzI1ZTQ1MDAtMTdkYi0xMWYwLTliYWYtYWZlMjQyNDhjYzU4",
@@ -25,7 +23,6 @@ const app = express();
 app.use(express.json());
 
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
-const BOT_NAME_PREFIX = "secure access sales handoff process";
 
 app.get("/test", (req, res) => {
   res.send("✅ Webex bot is up and reachable");
@@ -156,34 +153,35 @@ async function handleHandoffSubmission(roomId, formData) {
 - Adoption CSS (4 Sessions per Year)
 `
   };
+
   const onboardingAdoptionExpectations = `
-  
-  🔐 **What to Expect from Onboarding & Adoption**
-  Setting the stage for early wins and long-term value.
-  
-  ✅ **Onboarding (First 30–60 Days)**  
-  **Objective:** Establish a functional pilot aligned to business goals.  
-  - Provision access and licenses  
-  - Align on use cases and success criteria  
-  - Configure initial pilot setup  
-  - Educate key stakeholders (Execs, IT, Security, Users)  
-  - Test and validate initial setup  
-  - Deliver handoff with adoption plan  
-  🎯 *Outcome:* Customer is confident in the technology and prepared to scale with purpose.
-  
-  🚀 **Adoption (Next 60–90+ Days)**  
-  **Objective:** Maximize usage, enable advanced features, and demonstrate business value.  
-  - Scale rollout to more users/sites (IPSec tunnels, PAC files, virtual appliances, etc.)  
-  - Enable advanced features (AD integration, HTTPS inspection, SWG, ZTNA, DNS, DLP, etc.)  
-  - Track adoption and key usage metrics  
-  - Conduct executive reviews and health checks  
-  - Gather user feedback and reduce friction  
-  - Develop champions and expand use cases  
-  🎯 *Outcome:* Customer achieves business outcomes, adoption grows, and executive stakeholders see measurable value.
-  
-  💬 **Need Support?**  
-  Feel free to contact the corresponding SC Manager if you have any questions or would like to coordinate an internal meeting with the Customer Success team involved.
-  `;
+🔐 **What to Expect from Onboarding & Adoption**
+Setting the stage for early wins and long-term value.
+
+✅ **Onboarding (First 30–60 Days)**  
+**Objective:** Establish a functional pilot aligned to business goals.  
+- Provision access and licenses  
+- Align on use cases and success criteria  
+- Configure initial pilot setup  
+- Educate key stakeholders (Execs, IT, Security, Users)  
+- Test and validate initial setup  
+- Deliver handoff with adoption plan  
+🎯 *Outcome:* Customer is confident in the technology and prepared to scale with purpose.
+
+🚀 **Adoption (Next 60–90+ Days)**  
+**Objective:** Maximize usage, enable advanced features, and demonstrate business value.  
+- Scale rollout to more users/sites (IPSec tunnels, PAC files, virtual appliances, etc.)  
+- Enable advanced features (AD integration, HTTPS inspection, SWG, ZTNA, DNS, DLP, etc.)  
+- Track adoption and key usage metrics  
+- Conduct executive reviews and health checks  
+- Gather user feedback and reduce friction  
+- Develop champions and expand use cases  
+🎯 *Outcome:* Customer achieves business outcomes, adoption grows, and executive stakeholders see measurable value.
+
+💬 **Need Support?**  
+Feel free to contact the corresponding SC Manager if you have any questions or would like to coordinate an internal meeting with the Customer Success team involved.
+`;
+
   const summary = `
 **🧾 Sales to Post-Sales Handoff Summary**
 
@@ -204,7 +202,6 @@ async function handleHandoffSubmission(roomId, formData) {
   const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
   const entitlement = entitlementMessages[formData.arrTier] || "";
 
-  // Send handoff summary to mapped Webex room
   await axios.post("https://webexapis.com/v1/messages", {
     roomId: targetRoom,
     markdown: summary
@@ -212,7 +209,6 @@ async function handleHandoffSubmission(roomId, formData) {
     headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
   });
 
-  // Confirm back to sender room with entitlement info
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
     markdown: `✅ Sales handoff submitted for *${formData.customerName}*. Thank you!\n\n${entitlement}\n\n${onboardingAdoptionExpectations}`
@@ -220,18 +216,12 @@ async function handleHandoffSubmission(roomId, formData) {
     headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
   });
 }
-app.post("/webhook", async (req, res) => {
-  console.log("📥 Incoming Webhook Event:");
-  console.log(JSON.stringify(req.body, null, 2));
-  console.log("🌐 Full Headers:", JSON.stringify(req.headers, null, 2));
 
+app.post("/webhook", async (req, res) => {
   const { data, resource } = req.body;
   const roomId = data?.roomId;
 
-  if (!roomId) {
-    console.warn("⚠️ Missing roomId in webhook payload");
-    return res.sendStatus(400);
-  }
+  if (!roomId) return res.sendStatus(400);
 
   try {
     if (resource === "messages") {
@@ -239,31 +229,16 @@ app.post("/webhook", async (req, res) => {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 
-      let rawText = messageRes.data.text || "";
-      let normalizedText = rawText.toLowerCase().trim();
+      let normalizedText = (messageRes.data.text || "").toLowerCase().trim();
 
-      const botNameVariants = [
-        "secure access sales handoff process",
-        "secure access sales handoff",
-        "secure access handoff"
-      ];
-
-      for (const variant of botNameVariants) {
-        if (normalizedText.startsWith(variant)) {
-          normalizedText = normalizedText.replace(variant, "").trim();
-          break;
-        }
-      }
-
-      if (normalizedText.includes("submit handoff")) {
+      if (normalizedText === "secure access sales handoff process submit handoff" || normalizedText === "submit handoff") {
         await sendHandoffForm(roomId);
         return res.sendStatus(200);
       }
     }
 
     if (resource === "attachmentActions") {
-      const actionId = data.id;
-      const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${actionId}`, {
+      const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 

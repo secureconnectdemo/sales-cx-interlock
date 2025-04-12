@@ -7,7 +7,7 @@ app.use(express.json()); // Modern Express handles JSON natively
 
 // ✅ Use Render's secure environment variable
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
-const BOT_NAME_PREFIX = "secure access sales handoff"; // 🆗 case-insensitive match for normalization
+const BOT_NAME_PREFIX = "secure access sales handoff process"; // 🆗 case-insensitive match for normalization
 
 // 🧠 Send Adaptive Card Form
 async function sendHandoffForm(roomId) {

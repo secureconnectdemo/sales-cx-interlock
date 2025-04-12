@@ -1,3 +1,7 @@
+app.get("/test", (req, res) => {
+  res.send("✅ Webex bot is up and reachable");
+});
+
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");

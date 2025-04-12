@@ -101,6 +101,8 @@ async function handleHandoffSubmission(roomId, formData) {
 
 // 🔁 Webhook: message or action handler
 app.post("/webhook", async (req, res) => {
+  console.log("📥 Incoming Webhook Event:");
+  console.log(JSON.stringify(req.body, null, 2)); // <-- ✅ Add this!
   const { data, resource } = req.body;
   const roomId = data?.roomId;
 

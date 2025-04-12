@@ -156,7 +156,33 @@ async function handleHandoffSubmission(roomId, formData) {
 - Adoption CSS (4 Sessions per Year)
 `
   };
-
+  const onboardingAdoptionExpectations = `
+  🔐 **What to Expect from Onboarding & Adoption**
+  Setting the stage for early wins and long-term value.
+  
+  ✅ **Onboarding (First 30–60 Days)**  
+  **Objective:** Establish a functional pilot aligned to business goals.  
+  - Provision access and licenses  
+  - Align on use cases and success criteria  
+  - Configure initial pilot setup  
+  - Educate key stakeholders (Execs, IT, Security, Users)  
+  - Test and validate initial setup  
+  - Deliver handoff with adoption plan  
+  🎯 *Outcome:* Customer is confident in the technology and prepared to scale with purpose.
+  
+  🚀 **Adoption (Next 60–90+ Days)**  
+  **Objective:** Maximize usage, enable advanced features, and demonstrate business value.  
+  - Scale rollout to more users/sites (IPSec tunnels, PAC files, virtual appliances, etc.)  
+  - Enable advanced features (AD integration, HTTPS inspection, SWG, ZTNA, DNS, DLP, etc.)  
+  - Track adoption and key usage metrics  
+  - Conduct executive reviews and health checks  
+  - Gather user feedback and reduce friction  
+  - Develop champions and expand use cases  
+  🎯 *Outcome:* Customer achieves business outcomes, adoption grows, and executive stakeholders see measurable value.
+  
+  💬 **Need Support?**  
+  Feel free to contact the corresponding SC Manager if you have any questions or would like to coordinate an internal meeting with the Customer Success team involved.
+  `;
   const summary = `
 **🧾 Sales to Post-Sales Handoff Summary**
 

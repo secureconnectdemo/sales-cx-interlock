@@ -5,10 +5,11 @@ const { addHandoffEntry } = require("./sheet");
 const app = express();
 app.use(express.json()); // Modern Express handles JSON natively
 
-// ✅ Secure usage of Render env variable
+// ✅ Use Render's secure environment variable
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
+const BOT_NAME_PREFIX = "secure access sales handoff"; // 🆗 case-insensitive match for normalization
 
-// 🧠 Adaptive Card Form
+// 🧠 Send Adaptive Card Form
 async function sendHandoffForm(roomId) {
   const handoffCard = {
     type: "AdaptiveCard",
@@ -78,9 +79,9 @@ async function sendHandoffForm(roomId) {
   });
 }
 
-// ✅ Submission handler
+// 📩 Handle form submission
 async function handleHandoffSubmission(roomId, formData) {
-  console.log("📬 Received handoff form:", formData);
+  console.log("📬 Received handoff form data:", formData);
   await addHandoffEntry(formData);
 
   await axios.post("https://webexapis.com/v1/messages", {
@@ -94,30 +95,39 @@ async function handleHandoffSubmission(roomId, formData) {
   });
 }
 
-// 🚀 Webhook for both form submission + message trigger
+// 🚀 Webhook: handles messages and card submissions
 app.post("/webhook", async (req, res) => {
   const { data, resource } = req.body;
   const roomId = data?.roomId;
+
+  if (!roomId) {
+    console.warn("⚠️ Missing roomId in webhook payload");
+    return res.sendStatus(400);
+  }
 
   try {
     if (resource === "messages") {
       const messageRes = await axios.get(`https://webexapis.com/v1/messages/${data.id}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
-    
-      let messageText = messageRes.data.text || "";
-      messageText = messageText.toLowerCase().replace(/^secure access sales handoff process/i, "").trim();
-      console.log("💬 Normalized Message:", messageText);
-    
-      if (messageText.includes("submit handoff")) {
+
+      let rawText = messageRes.data.text || "";
+      let normalizedText = rawText.toLowerCase()
+        .replace(new RegExp(`^${BOT_NAME_PREFIX}\\s*`, "i"), "")
+        .trim();
+
+      console.log("💬 Normalized message text:", normalizedText);
+
+      if (normalizedText === "submit handoff") {
+        console.log("🧾 Sending handoff form...");
         await sendHandoffForm(roomId);
         return res.sendStatus(200);
       }
     }
-    
 
     if (resource === "attachmentActions") {
       const actionId = data.id;
+
       const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${actionId}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
@@ -127,15 +137,15 @@ app.post("/webhook", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    res.sendStatus(200);
+    res.sendStatus(200); // default
   } catch (error) {
     console.error("❌ Bot error:", error.response?.data || error.message);
     res.sendStatus(500);
   }
 });
 
-// 🟢 Server Listening
+// 🔊 Start Express server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`🚀 Sales-CX-Interlock bot listening on port ${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`🚀 Sales-CX-Interlock bot listening on port ${PORT}`);
+});

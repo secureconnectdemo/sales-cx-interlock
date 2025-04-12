@@ -150,6 +150,11 @@ async function handleHandoffSubmission(roomId, formData) {
 
   const key = formData.arrTier === "PREMIUM" ? "PREMIUM" : `${formData.region}_${formData.arrTier}`;
   const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
+  const regionARRRoomMap = {
+    "AMER_200K_PLUS": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1",
+    "DEFAULT": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1"
+  };
+  
 
   // Send summary to mapped Webex room
   await axios.post("https://webexapis.com/v1/messages", {

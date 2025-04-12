@@ -115,6 +115,7 @@ app.post("/webhook", async (req, res) => {
         "secure access sales handoff",
         "secure access handoff"
       ];
+      console.log("✅ Checking for trigger phrase in:", normalizedText);
 
       for (const variant of botNameVariants) {
         if (normalizedText.startsWith(variant)) {
@@ -126,7 +127,7 @@ app.post("/webhook", async (req, res) => {
       console.log("📥 Raw message text:", rawText);
       console.log("💬 Normalized message text:", normalizedText);
 
-      if (normalizedText === "submit handoff") {
+      if (normalizedText.includes("submit handoff")) {
         console.log("🧾 Sending handoff form...");
         await sendHandoffForm(roomId);
         return res.sendStatus(200);

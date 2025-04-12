@@ -19,10 +19,8 @@ async function sendHandoffForm(roomId) {
     type: "AdaptiveCard",
     body: [
       { type: "TextBlock", text: "📋 Sales to Post-Sales Handoff", weight: "Bolder", size: "Medium" },
-      
       { type: "Input.Text", id: "salesRep", placeholder: "Sales Rep" },
       { type: "Input.Text", id: "customerName", placeholder: "Customer Name" },
-
       {
         type: "Input.ChoiceSet",
         id: "product",
@@ -34,10 +32,8 @@ async function sendHandoffForm(roomId) {
           { title: "Suite", value: "Suite" }
         ]
       },
-
       { type: "Input.Text", id: "customerPOC", placeholder: "Customer POC (email)" },
       { type: "Input.Text", id: "useCases", placeholder: "Use Cases" },
-
       {
         type: "Input.ChoiceSet",
         id: "urgency",
@@ -48,7 +44,6 @@ async function sendHandoffForm(roomId) {
           { title: "High", value: "High" }
         ]
       },
-
       {
         type: "Input.ChoiceSet",
         id: "region",
@@ -59,7 +54,6 @@ async function sendHandoffForm(roomId) {
           { title: "APJC", value: "APJC" }
         ]
       },
-
       {
         type: "Input.ChoiceSet",
         id: "arrTier",
@@ -72,9 +66,7 @@ async function sendHandoffForm(roomId) {
           { title: "Premium (Any ARR with Premium Support)", value: "PREMIUM" }
         ]
       },
-
       { type: "Input.Text", id: "notes", placeholder: "Notes / PM involved? PoC? Advocacy restriction?" },
-
       {
         type: "Input.ChoiceSet",
         id: "followUpNeeded",
@@ -85,7 +77,6 @@ async function sendHandoffForm(roomId) {
           { title: "Custom", value: "Custom" }
         ]
       },
-
       {
         type: "Input.ChoiceSet",
         id: "nfrStatus",
@@ -101,19 +92,6 @@ async function sendHandoffForm(roomId) {
     $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
     version: "1.3"
   };
-
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId,
-    markdown: "📝 Please complete the sales-to-CX handoff form:",
-    attachments: [{
-      contentType: "application/vnd.microsoft.card.adaptive",
-      content: handoffCard
-    }]
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
-}
-
 
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
@@ -146,7 +124,7 @@ async function handleHandoffSubmission(roomId, formData) {
 // 🔁 Webhook: message or action handler
 app.post("/webhook", async (req, res) => {
   console.log("📥 Incoming Webhook Event:");
-  console.log(JSON.stringify(req.body, null, 2)); // <-- ✅ Add this!
+  console.log(JSON.stringify(req.body, null, 2));
   console.log("🌐 Full Headers:", JSON.stringify(req.headers, null, 2));
 
   const { data, resource } = req.body;
@@ -189,17 +167,18 @@ app.post("/webhook", async (req, res) => {
         return res.sendStatus(200);
       }
     }
-    console.log("📎 Attachment Action detected, pulling form inputs...");
+
     if (resource === "attachmentActions") {
+      console.log("📎 Attachment Action detected, pulling form inputs...");
       const actionId = data.id;
-const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${actionId}`, {
-  headers: { Authorization: WEBEX_BOT_TOKEN }
-});
 
-console.log("✅ Form submission payload received:", actionRes.data.inputs); // Add this!
+      const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${actionId}`, {
+        headers: { Authorization: WEBEX_BOT_TOKEN }
+      });
 
-const formData = actionRes.data.inputs;
-await handleHandoffSubmission(roomId, formData);
+      console.log("✅ Form submission payload received:", actionRes.data.inputs);
+      const formData = actionRes.data.inputs;
+      await handleHandoffSubmission(roomId, formData);
       return res.sendStatus(200);
     }
 

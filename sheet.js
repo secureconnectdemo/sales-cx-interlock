@@ -11,31 +11,40 @@ const auth = new google.auth.JWT(
 const sheets = google.sheets({ version: "v4", auth });
 
 const SPREADSHEET_ID = "1SbihsAk6t_6J8psGa2nHxtywqAsysvM-AsppQ_me3EM";
-const RANGE = "Sheet1!A2:M";
+const RANGE = "Sheet1!A2:M"; // Assumes you have headers on Row 1
 
 async function addHandoffEntry(formData) {
-  const values = [[
-    new Date().toLocaleString(),
-    formData.salesRep || "",
-    formData.customerName || "",
-    formData.product || "",
-    formData.useCases || "",
-    formData.customerPOC || "",
-    formData.region || "",
-    formData.urgency || "",
-    formData.notes || "",
-    formData.pocConfirmed || "",
-    formData.pmPromise || "",
-    formData.seededNFR || "",
-    formData.followUpDate || ""
-  ]];
+  try {
+    const values = [[
+      new Date().toISOString(), // Use ISO for consistency
+      formData.salesRep || "",
+      formData.customerName || "",
+      formData.product || "",
+      formData.useCases || "",
+      formData.customerPOC || "",
+      formData.region || "",
+      formData.urgency || "",
+      formData.notes || "",
+      formData.pocConfirmed || "",
+      formData.pmPromise || "",
+      formData.seededNFR || "",
+      formData.followUpDate || ""
+    ]];
 
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: SPREADSHEET_ID,
-    range: RANGE,
-    valueInputOption: "USER_ENTERED",
-    resource: { values }
-  });
+    console.log("📄 Appending row to Google Sheet:", values);
+
+    const result = await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: RANGE,
+      valueInputOption: "USER_ENTERED",
+      resource: { values }
+    });
+
+    console.log("✅ Google Sheet append result:", result.statusText || "Success");
+  } catch (error) {
+    console.error("❌ Google Sheets write failed:", error.message || error);
+    throw error;
+  }
 }
 
 module.exports = { addHandoffEntry };

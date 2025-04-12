@@ -1,3 +1,22 @@
+const regionARRRoomMap = {
+  "AMER_200K_PLUS": "WEBEX_ROOM_ID_1",
+  "AMER_100K_200K": "WEBEX_ROOM_ID_2",
+  "AMER_25K_100K": "WEBEX_ROOM_ID_3",
+  "AMER_UNDER_25K": "WEBEX_ROOM_ID_4",
+
+  "EMEA_200K_PLUS": "WEBEX_ROOM_ID_5",
+  "EMEA_100K_200K": "WEBEX_ROOM_ID_6",
+  "EMEA_25K_100K": "WEBEX_ROOM_ID_7",
+  "EMEA_UNDER_25K": "WEBEX_ROOM_ID_8",
+
+  "APJC_200K_PLUS": "WEBEX_ROOM_ID_9",
+  "APJC_100K_200K": "WEBEX_ROOM_ID_10",
+  "APJC_25K_100K": "WEBEX_ROOM_ID_11",
+  "APJC_UNDER_25K": "WEBEX_ROOM_ID_12",
+
+  "PREMIUM": "WEBEX_ROOM_ID_PREMIUM",
+  "DEFAULT": "WEBEX_ROOM_ID_FALLBACK"
+};
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
@@ -108,18 +127,47 @@ async function sendHandoffForm(roomId) {
 // 📩 Handle form submission
 async function handleHandoffSubmission(roomId, formData) {
   console.log("📬 Received handoff form data:", formData);
+
+  // Save to Google Sheet
   await addHandoffEntry(formData);
 
+  // Prepare regional handoff summary
+  const summary = `
+**🧾 Sales to Post-Sales Handoff Summary**
+
+📍 **Region:** ${formData.region}
+💰 **ARR Tier:** ${formData.arrTier}
+👤 **Sales Rep:** ${formData.salesRep}
+🏢 **Customer:** ${formData.customerName}
+📬 **Customer POC:** ${formData.customerPOC}
+🔧 **Product:** ${formData.product}
+🎯 **Use Cases:** ${formData.useCases}
+🚨 **Urgency:** ${formData.urgency}
+📝 **Notes:** ${formData.notes}
+🌱 **Seeded/NFR:** ${formData.nfrStatus}
+📅 **Follow Up:** ${formData.followUpNeeded}
+`;
+
+  const key = formData.arrTier === "PREMIUM" ? "PREMIUM" : `${formData.region}_${formData.arrTier}`;
+  const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
+
+  // Send summary to mapped Webex room
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId: targetRoom,
+    markdown: summary
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
+
+  // Confirmation back to original sender room
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
     markdown: `✅ Sales handoff submitted for *${formData.customerName}*. Thank you!`
   }, {
-    headers: {
-      Authorization: WEBEX_BOT_TOKEN,
-      "Content-Type": "application/json"
-    }
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
   });
 }
+
 
 // 🔁 Webhook: message or action handler
 app.post("/webhook", async (req, res) => {

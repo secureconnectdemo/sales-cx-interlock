@@ -193,15 +193,6 @@ async function handleHandoffSubmission(roomId, formData) {
     headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
   });
 }
-
-
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId,
-    markdown: `✅ Sales handoff submitted for *${formData.customerName}*. Thank you!`
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
-}
 const entitlement = entitlementMessages[formData.arrTier] || "";
 
 await axios.post("https://webexapis.com/v1/messages", {

@@ -1,7 +1,3 @@
-const regionARRRoomMap = {
-  "AMER_200K_PLUS": "YWE0ODUzYzYtOGE1ZS00NjFmLWEzZjktNmJiMGI3MjA4ZjM1ODhlM2RkNDctYjlh_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f",
-  "DEFAULT": "YWE0ODUzYzYtOGE1ZS00NjFmLWEzZjktNmJiMGI3MjA4ZjM1ODhlM2RkNDctYjlh_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
-};
 
 const express = require("express");
 const axios = require("axios");
@@ -9,7 +5,7 @@ const { addHandoffEntry } = require("./sheet");
 
 // ✅ Declare once at the top
 const regionARRRoomMap = {
-  "AMER_200K_PLUS": "WEBEX_ROOM_ID_1",
+  "AMER_200K_PLUS": "YWE0ODUzYzYtOGE1ZS00NjFmLWEzZjktNmJiMGI3MjA4ZjM1ODhlM2RkNDctYjlh_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f",
   "AMER_100K_200K": "WEBEX_ROOM_ID_2",
   "AMER_25K_100K": "WEBEX_ROOM_ID_3",
   "AMER_UNDER_25K": "WEBEX_ROOM_ID_4",

@@ -19,8 +19,10 @@ async function sendHandoffForm(roomId) {
     type: "AdaptiveCard",
     body: [
       { type: "TextBlock", text: "📋 Sales to Post-Sales Handoff", weight: "Bolder", size: "Medium" },
+      
       { type: "Input.Text", id: "salesRep", placeholder: "Sales Rep" },
       { type: "Input.Text", id: "customerName", placeholder: "Customer Name" },
+
       {
         type: "Input.ChoiceSet",
         id: "product",
@@ -29,11 +31,13 @@ async function sendHandoffForm(roomId) {
           { title: "Secure Access", value: "Secure Access" },
           { title: "Umbrella", value: "Umbrella" },
           { title: "Duo", value: "Duo" },
-          { title: "Other", value: "Other" }
+          { title: "Suite", value: "Suite" }
         ]
       },
+
       { type: "Input.Text", id: "customerPOC", placeholder: "Customer POC (email)" },
       { type: "Input.Text", id: "useCases", placeholder: "Use Cases" },
+
       {
         type: "Input.ChoiceSet",
         id: "urgency",
@@ -44,7 +48,33 @@ async function sendHandoffForm(roomId) {
           { title: "High", value: "High" }
         ]
       },
+
+      {
+        type: "Input.ChoiceSet",
+        id: "region",
+        placeholder: "Select Region",
+        choices: [
+          { title: "AMER", value: "AMER" },
+          { title: "EMEA", value: "EMEA" },
+          { title: "APJC", value: "APJC" }
+        ]
+      },
+
+      {
+        type: "Input.ChoiceSet",
+        id: "arrTier",
+        placeholder: "Select ARR Tier",
+        choices: [
+          { title: "> $200K ARR", value: "200K_PLUS" },
+          { title: "$100K – $200K ARR", value: "100K_200K" },
+          { title: "$25K – $100K ARR", value: "25K_100K" },
+          { title: "< $25K ARR", value: "UNDER_25K" },
+          { title: "Premium (Any ARR with Premium Support)", value: "PREMIUM" }
+        ]
+      },
+
       { type: "Input.Text", id: "notes", placeholder: "Notes / PM involved? PoC? Advocacy restriction?" },
+
       {
         type: "Input.ChoiceSet",
         id: "followUpNeeded",
@@ -55,6 +85,7 @@ async function sendHandoffForm(roomId) {
           { title: "Custom", value: "Custom" }
         ]
       },
+
       {
         type: "Input.ChoiceSet",
         id: "nfrStatus",
@@ -70,6 +101,19 @@ async function sendHandoffForm(roomId) {
     $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
     version: "1.3"
   };
+
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId,
+    markdown: "📝 Please complete the sales-to-CX handoff form:",
+    attachments: [{
+      contentType: "application/vnd.microsoft.card.adaptive",
+      content: handoffCard
+    }]
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
+}
+
 
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,

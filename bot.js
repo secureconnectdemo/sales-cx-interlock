@@ -1,7 +1,3 @@
-app.get("/test", (req, res) => {
-  res.send("✅ Webex bot is up and reachable");
-});
-
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
@@ -12,6 +8,12 @@ app.use(express.json());
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 const BOT_NAME_PREFIX = "secure access sales handoff process";
 
+// 🔍 Health check
+app.get("/test", (req, res) => {
+  res.send("✅ Webex bot is up and reachable");
+});
+
+// 🧠 Send Adaptive Card
 async function sendHandoffForm(roomId) {
   const handoffCard = {
     type: "AdaptiveCard",
@@ -81,6 +83,7 @@ async function sendHandoffForm(roomId) {
   });
 }
 
+// 📩 Handle form submission
 async function handleHandoffSubmission(roomId, formData) {
   console.log("📬 Received handoff form data:", formData);
   await addHandoffEntry(formData);
@@ -96,6 +99,7 @@ async function handleHandoffSubmission(roomId, formData) {
   });
 }
 
+// 🔁 Webhook: message or action handler
 app.post("/webhook", async (req, res) => {
   const { data, resource } = req.body;
   const roomId = data?.roomId;
@@ -119,7 +123,8 @@ app.post("/webhook", async (req, res) => {
         "secure access sales handoff",
         "secure access handoff"
       ];
-      console.log("✅ Checking for trigger phrase in:", normalizedText);
+
+      console.log("📥 Raw:", rawText);
 
       for (const variant of botNameVariants) {
         if (normalizedText.startsWith(variant)) {
@@ -128,11 +133,10 @@ app.post("/webhook", async (req, res) => {
         }
       }
 
-      console.log("📥 Raw message text:", rawText);
-      console.log("💬 Normalized message text:", normalizedText);
+      console.log("💬 Normalized:", normalizedText);
 
       if (normalizedText.includes("submit handoff")) {
-        console.log("🧾 Sending handoff form...");
+        console.log("📨 Trigger detected: submitting handoff card...");
         await sendHandoffForm(roomId);
         return res.sendStatus(200);
       }
@@ -149,13 +153,14 @@ app.post("/webhook", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    res.sendStatus(200);
+    res.sendStatus(200); // Gracefully ignore other resource types
   } catch (error) {
     console.error("❌ Bot error:", error.response?.data || error.message);
     res.sendStatus(500);
   }
 });
 
+// 🔊 Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Sales-CX-Interlock bot listening on port ${PORT}`);

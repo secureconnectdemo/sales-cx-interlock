@@ -180,7 +180,10 @@ async function handleHandoffSubmission(roomId, formData) {
   - Gather user feedback and reduce friction  
   - Develop champions and expand use cases  
   🎯 *Outcome:* Customer achieves business outcomes, adoption grows, and executive stakeholders see measurable value.
-
+  
+  💬 **Need Support?**  
+  Feel free to contact the corresponding SC Manager if you have any questions or would like to coordinate an internal meeting with the Customer Success team involved.
+  `;
   const summary = `
 **🧾 Sales to Post-Sales Handoff Summary**
 
@@ -216,7 +219,6 @@ async function handleHandoffSubmission(roomId, formData) {
   }, {
     headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
   });
-  
 }
 app.post("/webhook", async (req, res) => {
   console.log("📥 Incoming Webhook Event:");

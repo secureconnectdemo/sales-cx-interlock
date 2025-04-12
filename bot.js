@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
-const keys = require("./credentials.json");
+const keys = JSON.parse(process.env.GOOGLE_CREDS);
 
 const app = express();
 app.use(bodyParser.json());

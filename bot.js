@@ -3,13 +3,11 @@ const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
 
 const app = express();
-app.use(express.json()); // Modern Express handles JSON natively
+app.use(express.json());
 
-// ✅ Use Render's secure environment variable
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
-const BOT_NAME_PREFIX = "secure access sales handoff process"; // 🆗 case-insensitive match for normalization
+const BOT_NAME_PREFIX = "secure access sales handoff process";
 
-// 🧠 Send Adaptive Card Form
 async function sendHandoffForm(roomId) {
   const handoffCard = {
     type: "AdaptiveCard",
@@ -79,7 +77,6 @@ async function sendHandoffForm(roomId) {
   });
 }
 
-// 📩 Handle form submission
 async function handleHandoffSubmission(roomId, formData) {
   console.log("📬 Received handoff form data:", formData);
   await addHandoffEntry(formData);
@@ -95,7 +92,6 @@ async function handleHandoffSubmission(roomId, formData) {
   });
 }
 
-// 🚀 Webhook: handles messages and card submissions
 app.post("/webhook", async (req, res) => {
   const { data, resource } = req.body;
   const roomId = data?.roomId;
@@ -113,23 +109,22 @@ app.post("/webhook", async (req, res) => {
 
       let rawText = messageRes.data.text || "";
       let normalizedText = rawText.toLowerCase().trim();
-const botNameVariants = [
-  "secure access sales handoff process",
-  "secure access sales handoff", // fallback
-  "secure access handoff"
-];
 
-botNameVariants.forEach(variant => {
-  if (normalizedText.startsWith(variant)) {
-    normalizedText = normalizedText.replace(variant, "").trim();
-  }
-});
+      const botNameVariants = [
+        "secure access sales handoff process",
+        "secure access sales handoff",
+        "secure access handoff"
+      ];
 
+      for (const variant of botNameVariants) {
+        if (normalizedText.startsWith(variant)) {
+          normalizedText = normalizedText.replace(variant, "").trim();
+          break;
+        }
+      }
 
-      console.log("💬 Normalized message text:", normalizedText);
       console.log("📥 Raw message text:", rawText);
-      console.log("🧽 After normalization:", normalizedText);
-
+      console.log("💬 Normalized message text:", normalizedText);
 
       if (normalizedText === "submit handoff") {
         console.log("🧾 Sending handoff form...");
@@ -140,7 +135,6 @@ botNameVariants.forEach(variant => {
 
     if (resource === "attachmentActions") {
       const actionId = data.id;
-
       const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${actionId}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
@@ -150,14 +144,13 @@ botNameVariants.forEach(variant => {
       return res.sendStatus(200);
     }
 
-    res.sendStatus(200); // default
+    res.sendStatus(200);
   } catch (error) {
     console.error("❌ Bot error:", error.response?.data || error.message);
     res.sendStatus(500);
   }
 });
 
-// 🔊 Start Express server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Sales-CX-Interlock bot listening on port ${PORT}`);

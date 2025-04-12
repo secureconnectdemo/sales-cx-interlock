@@ -125,21 +125,55 @@ async function sendHandoffForm(roomId) {
 async function handleHandoffSubmission(roomId, formData) {
   console.log("📬 Received handoff form data:", formData);
   await addHandoffEntry(formData);
-
+  const entitlementMessages = {
+    "PREMIUM": `
+  **Entitlement: Premium Support**
+  - High Touch CSS & Technical CSS (Full Lifecycle)
+  `,
+  
+    "200K_PLUS": `
+   **Entitlement: Enhanced Support – $200K+**
+  - Onboarding CSS: 12 Sessions within 90 Days
+  - High Touch CSS (Full Lifecycle)
+  - Technical CSS (5 Sessions per Year)
+  `,
+  
+    "100K_200K": `
+   **Entitlement: Enhanced Support – $100K–$200K**
+  - Onboarding CSS: 12 Sessions within 90 Days
+  - At Scale CSS (Full Lifecycle)
+  - Adoption CSS (4 Sessions per Year)
+  `,
+  
+    "25K_100K": `
+  **Entitlement: Enhanced Support – $25K–$100K**
+  - Onboarding CSS: 10 Sessions within 60 Days
+  - At Scale CSS (Full Lifecycle)
+  - Adoption CSS (4 Sessions per Year)
+  `,
+  
+    "UNDER_25K": `
+   **Entitlement: Enhanced Support – <$25K**
+  - Onboarding CSS: 4 Sessions within 60 Days
+  - One-To-Many Engagements (Full Lifecycle)
+  - Adoption CSS (4 Sessions per Year)
+  `
+  };
+  
   const summary = `
 **🧾 Sales to Post-Sales Handoff Summary**
 
-📍 **Region:** ${formData.region}
-💰 **ARR Tier:** ${formData.arrTier}
-👤 **Sales Rep:** ${formData.salesRep}
-🏢 **Customer:** ${formData.customerName}
-📬 **Customer POC:** ${formData.customerPOC}
-🔧 **Product:** ${formData.product}
-🎯 **Use Cases:** ${formData.useCases}
-🚨 **Urgency:** ${formData.urgency}
-📝 **Notes:** ${formData.notes}
-🌱 **Seeded/NFR:** ${formData.nfrStatus}
-📅 **Follow Up:** ${formData.followUpNeeded}
+**Region:** ${formData.region}
+**ARR Tier:** ${formData.arrTier}
+**Sales Rep:** ${formData.salesRep}
+**Customer:** ${formData.customerName}
+**Customer POC:** ${formData.customerPOC}
+**Product:** ${formData.product}
+**Use Cases:** ${formData.useCases}
+**Urgency:** ${formData.urgency}
+**Notes:** ${formData.notes}
+**Seeded/NFR:** ${formData.nfrStatus}
+**Follow Up:** ${formData.followUpNeeded}
 `;
 
   const key = formData.arrTier === "PREMIUM" ? "PREMIUM" : `${formData.region}_${formData.arrTier}`;
@@ -159,6 +193,14 @@ async function handleHandoffSubmission(roomId, formData) {
     headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
   });
 }
+const entitlement = entitlementMessages[formData.arrTier] || "";
+
+await axios.post("https://webexapis.com/v1/messages", {
+  roomId,
+  markdown: `✅ Sales handoff submitted for *${formData.customerName}*. Thank you!${entitlement}`
+}, {
+  headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+});
 
 app.post("/webhook", async (req, res) => {
   console.log("📥 Incoming Webhook Event:");

@@ -214,7 +214,7 @@ async function handleHandoffSubmission(roomId, formData) {
   // Confirm back to sender room with entitlement info
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
-    markdown: `✅ Sales handoff submitted for *${formData.customerName}*. Thank you!\n${entitlement}`
+    markdown: `✅ Sales handoff submitted for *${formData.customerName}*. Thank you!\n${entitlement}\n\n${onboardingAdoptionExpectations}`
   }, {
     headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
   });

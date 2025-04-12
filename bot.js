@@ -1,3 +1,7 @@
+const regionARRRoomMap = {
+  "AMER_200K_PLUS": "YWE0ODUzYzYtOGE1ZS00NjFmLWEzZjktNmJiMGI3MjA4ZjM1ODhlM2RkNDctYjlh_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f",
+  "DEFAULT": "YWE0ODUzYzYtOGE1ZS00NjFmLWEzZjktNmJiMGI3MjA4ZjM1ODhlM2RkNDctYjlh_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
+};
 
 const express = require("express");
 const axios = require("axios");

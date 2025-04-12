@@ -1,8 +1,6 @@
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
-  console.log("📄 Writing to Sheet:", formData);
-
   try {
     // your sheets logic (e.g. `appendRow`, `sheets.spreadsheets.values.append`, etc.)
   } catch (error) {

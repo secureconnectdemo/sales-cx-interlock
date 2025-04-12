@@ -1,13 +1,6 @@
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
-  try {
-    // your sheets logic (e.g. `appendRow`, `sheets.spreadsheets.values.append`, etc.)
-  } catch (error) {
-    console.error("❌ Sheet write failed:", error);
-  }
-}
-
 
 const app = express();
 app.use(express.json());

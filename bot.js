@@ -1,3 +1,4 @@
+
 const regionARRRoomMap = {
   "AMER_200K_PLUS": "WEBEX_ROOM_ID_1",
   "AMER_100K_200K": "WEBEX_ROOM_ID_2",
@@ -16,7 +17,7 @@ const regionARRRoomMap = {
 
   "PREMIUM": "WEBEX_ROOM_ID_PREMIUM",
   "DEFAULT": "WEBEX_ROOM_ID_FALLBACK"
-};
+}
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");

@@ -1,6 +1,9 @@
 const { google } = require("googleapis");
+
+// ✅ Load credentials from Render environment
 const keys = JSON.parse(process.env.GOOGLE_CREDS);
 
+// 🔐 Auth setup using JWT
 const auth = new google.auth.JWT(
   keys.client_email,
   null,
@@ -8,13 +11,17 @@ const auth = new google.auth.JWT(
   ["https://www.googleapis.com/auth/spreadsheets"]
 );
 
+// 📊 Google Sheets instance
 const sheets = google.sheets({ version: "v4", auth });
 
+// 📌 Target Sheet & Range
 const SPREADSHEET_ID = "1SbihsAk6t_6J8psGa2nHxtywqAsysvM-AsppQ_me3EM";
-const RANGE = "Sheet1!A2:M"; // Assumes you have headers on Row 1
+const RANGE = "Sheet1!A2:M"; // Assuming Row 1 has headers
 
+// 🚀 Append one handoff row
 async function addHandoffEntry(formData) {
-  console.log("📄 Writing to Google Sheet with values:", formData);
+  console.log("📄 Preparing to write to Google Sheet...");
+  console.log("📋 Incoming formData:", JSON.stringify(formData, null, 2));
 
   const values = [[
     new Date().toLocaleString(),
@@ -28,8 +35,8 @@ async function addHandoffEntry(formData) {
     formData.notes || "",
     formData.pocConfirmed || "",
     formData.pmPromise || "",
-    formData.seededNFR || "",
-    formData.followUpDate || ""
+    formData.seededNFR || formData.nfrStatus || "", // fallback
+    formData.followUpDate || formData.followUpNeeded || "" // fallback
   ]];
 
   try {
@@ -39,10 +46,11 @@ async function addHandoffEntry(formData) {
       valueInputOption: "USER_ENTERED",
       resource: { values }
     });
-    console.log("✅ Google Sheet append response:", response.statusText);
+    console.log("✅ Google Sheet append success:", response.statusText);
   } catch (error) {
-    console.error("❌ Google Sheet write failed:", error.message);
+    console.error("❌ Google Sheet append failed:", error.response?.data || error.message);
   }
 }
 
 module.exports = { addHandoffEntry };
+

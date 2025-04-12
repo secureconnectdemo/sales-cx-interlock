@@ -1,6 +1,16 @@
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
+async function addHandoffEntry(formData) {
+  console.log("📄 Writing to Sheet:", formData);
+
+  try {
+    // your sheets logic (e.g. `appendRow`, `sheets.spreadsheets.values.append`, etc.)
+  } catch (error) {
+    console.error("❌ Sheet write failed:", error);
+  }
+}
+
 
 const app = express();
 app.use(express.json());
@@ -145,15 +155,17 @@ app.post("/webhook", async (req, res) => {
         return res.sendStatus(200);
       }
     }
-
+    console.log("📎 Attachment Action detected, pulling form inputs...");
     if (resource === "attachmentActions") {
       const actionId = data.id;
-      const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${actionId}`, {
-        headers: { Authorization: WEBEX_BOT_TOKEN }
-      });
+const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${actionId}`, {
+  headers: { Authorization: WEBEX_BOT_TOKEN }
+});
 
-      const formData = actionRes.data.inputs;
-      await handleHandoffSubmission(roomId, formData);
+console.log("✅ Form submission payload received:", actionRes.data.inputs); // Add this!
+
+const formData = actionRes.data.inputs;
+await handleHandoffSubmission(roomId, formData);
       return res.sendStatus(200);
     }
 

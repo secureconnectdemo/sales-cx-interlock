@@ -133,53 +133,34 @@ async function handleHandoffSubmission(roomId, formData) {
 - Onboarding CSS: 12 Sessions within 90 Days
 - High Touch CSS (Full Lifecycle)
 - Technical CSS (5 Sessions per Year)
+- Contact us at  cloudsecurity-assignments@cisco.com
 `,
     "100K_200K": `
 **Entitlement: Enhanced Support – $100K–$200K**
 - Onboarding CSS: 12 Sessions within 90 Days
 - At Scale CSS (Full Lifecycle)
 - Adoption CSS (4 Sessions per Year)
+- Contact us at  cloudsecurity-assignments@cisco.com
 `,
     "25K_100K": `
 **Entitlement: Enhanced Support – $25K–$100K**
 - Onboarding CSS: 10 Sessions within 60 Days
 - At Scale CSS (Full Lifecycle)
 - Adoption CSS (4 Sessions per Year)
+- Contact us at  cloudsecurity-assignments@cisco.com
 `,
     "UNDER_25K": `
 **Entitlement: Enhanced Support – <$25K**
 - Onboarding CSS: 4 Sessions within 60 Days
 - One-To-Many Engagements (Full Lifecycle)
 - Adoption CSS (4 Sessions per Year)
+- Contact us at  cloudsecurity-assignments@cisco.com
 `
   };
 
   const onboardingAdoptionExpectations = `
-🔐 **What to Expect from Onboarding & Adoption**
-Setting the stage for early wins and long-term value.
+💬 Have questions or want to set up an internal sync? Just reach out to the appropriate contact listed above—we're here to help and happy to coordinate with your Customer Success team.
 
-✅ **Onboarding (First 30–60 Days)**  
-**Objective:** Establish a functional pilot aligned to business goals.  
-- Provision access and licenses  
-- Align on use cases and success criteria  
-- Configure initial pilot setup  
-- Educate key stakeholders (Execs, IT, Security, Users)  
-- Test and validate initial setup  
-- Deliver handoff with adoption plan  
-🎯 *Outcome:* Customer is confident in the technology and prepared to scale with purpose.
-
-🚀 **Adoption (Next 60–90+ Days)**  
-**Objective:** Maximize usage, enable advanced features, and demonstrate business value.  
-- Scale rollout to more users/sites (IPSec tunnels, PAC files, virtual appliances, etc.)  
-- Enable advanced features (AD integration, HTTPS inspection, SWG, ZTNA, DNS, DLP, etc.)  
-- Track adoption and key usage metrics  
-- Conduct executive reviews and health checks  
-- Gather user feedback and reduce friction  
-- Develop champions and expand use cases  
-🎯 *Outcome:* Customer achieves business outcomes, adoption grows, and executive stakeholders see measurable value.
-
-💬 **Need Support?**  
-Feel free to contact the corresponding SC Manager if you have any questions or would like to coordinate an internal meeting with the Customer Success team involved.
 `;
 
   const summary = `

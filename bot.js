@@ -8,6 +8,7 @@ const app = express();
 app.use(express.json());
 
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
+const BOT_EMAIL = "sse-cx-hub@webex.bot"; // Replace with your bot's actual email
 
 const regionARRRoomMap = {
   "AMER_200K_PLUS": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1",
@@ -38,7 +39,13 @@ app.post("/webhook", async (req, res) => {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 
-      const text = (messageRes.data.text || "").toLowerCase().trim();
+      let text = (messageRes.data.text || "").toLowerCase().trim();
+
+      // 🔧 Handle group space mentions by removing bot mention
+      const mentionRegex = new RegExp(`<@personEmail:${BOT_EMAIL}>`, "gi");
+      text = text.replace(mentionRegex, "").trim();
+      console.log("📨 Final parsed command:", text);
+
       if (text === "/submit handoff") {
         await sendForm(roomId, "handoff");
         return res.sendStatus(200);
@@ -164,3 +171,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`);
 });
+

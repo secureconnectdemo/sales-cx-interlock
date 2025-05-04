@@ -59,6 +59,28 @@
       "label": "File Upload Info (optional)"
     },
     {
+      "type": "Input.ChoiceSet",
+      "id": "region",
+      "label": "Region",
+      "style": "compact",
+      "choices": [
+        { "title": "AMER", "value": "AMER" },
+        { "title": "EMEA", "value": "EMEA" },
+        { "title": "APJC", "value": "APJC" }
+      ]
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "arrTier",
+      "label": "ARR Tier",
+      "style": "compact",
+      "choices": [
+        { "title": "$0 - $50K", "value": "0_50K" },
+        { "title": "$50K - $200K", "value": "50K_200K" },
+        { "title": "$200K+", "value": "200K_PLUS" }
+      ]
+    },
+    {
       "type": "Input.Hidden",
       "id": "formType",
       "value": "deployment"
@@ -71,3 +93,4 @@
     }
   ]
 }
+

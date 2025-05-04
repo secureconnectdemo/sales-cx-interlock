@@ -31,11 +31,12 @@ app.post("/webhook", async (req, res) => {
   const { data, resource } = req.body;
   const roomId = data?.roomId;
   const roomType = data?.roomType;
-  if (!roomId) return res.sendStatus(400);
+  const messageId = data?.id;
+  if (!roomId || !messageId) return res.sendStatus(400);
 
   try {
     if (resource === "messages") {
-      const messageRes = await axios.get(`https://webexapis.com/v1/messages/${data.id}`, {
+      const messageRes = await axios.get(`https://webexapis.com/v1/messages/${messageId}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 
@@ -50,13 +51,25 @@ app.post("/webhook", async (req, res) => {
 
       console.log("📨 Final parsed command:", text);
 
-      // Match supported commands
       if (text.endsWith("/submit handoff")) {
         await sendForm(roomId, "handoff");
       } else if (text.endsWith("/submit deployment")) {
         await sendForm(roomId, "deployment");
       } else if (text.endsWith("/submit form") || text.endsWith("/start")) {
         await sendForm(roomId, "picker");
+      } else if (text.endsWith("/help")) {
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: `
+**🤖 SSE-CX-Hub Bot Commands**
+
+- \`/submit handoff\` – Start Sales to Post-Sales Handoff form
+- \`/submit deployment\` – Start Engineering Deployment Planning form
+- \`/submit form\` or \`/start\` – Choose which form to submit
+- \`/help\` – Show this help message`
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
       }
 
       return res.sendStatus(200);
@@ -72,7 +85,7 @@ app.post("/webhook", async (req, res) => {
       if (formData.formType === "handoff" || formData.formType === "deployment") {
         await sendForm(roomId, formData.formType);
       } else {
-        await handleFormSubmission(roomId, formData);
+        await handleFormSubmission(roomId, formData, messageId);
       }
 
       return res.sendStatus(200);
@@ -101,7 +114,7 @@ async function sendForm(roomId, type) {
   });
 }
 
-async function handleFormSubmission(roomId, formData) {
+async function handleFormSubmission(roomId, formData, messageId) {
   if (formData.formType === "deployment") {
     const summary = `
 **Secure Access – Deployment Notification**
@@ -130,6 +143,7 @@ File Upload Info: ${formData.fileUploadInfo || "To be sent via follow-up"}
       headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
     });
 
+    await addReaction(messageId, "thumbsup");
     return;
   }
 
@@ -167,6 +181,22 @@ Follow Up: ${formData.followUpNeeded}
   }, {
     headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
   });
+
+  await addReaction(messageId, "thumbsup");
+}
+
+async function addReaction(messageId, emoji) {
+  try {
+    await axios.post("https://webexapis.com/v1/message/reactions", {
+      messageId,
+      emoji
+    }, {
+      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+    });
+    console.log(`👍 Added reaction: ${emoji}`);
+  } catch (err) {
+    console.error("❌ Failed to add reaction:", err.response?.data || err.message);
+  }
 }
 
 // 🚀 Start the server only after fetching the bot's personId

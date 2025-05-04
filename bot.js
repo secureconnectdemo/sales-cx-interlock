@@ -128,20 +128,30 @@ Deployment Plan: ${formData.deploymentPlan}
 File Upload Info: ${formData.fileUploadInfo || "To be sent via follow-up"}
     `;
 
-    const engineeringRoom = regionARRRoomMap["AMER_200K_PLUS"];
-    await axios.post("https://webexapis.com/v1/messages", {
-      roomId: engineeringRoom,
-      markdown: summary
-    }, {
-      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-    });
+    const engineeringRoom = regionARRRoomMap["AMER_200K_PLUS"] || regionARRRoomMap["DEFAULT"];
+    console.log("📨 Engineering Room ID:", engineeringRoom);
 
-    await axios.post("https://webexapis.com/v1/messages", {
-      roomId,
-      markdown: `✅ Deployment form submitted for *${formData.customerName}*.`
-    }, {
-      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-    });
+    try {
+      await axios.post("https://webexapis.com/v1/messages", {
+        roomId: engineeringRoom,
+        markdown: summary
+      }, {
+        headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+      });
+    } catch (err) {
+      console.error("❌ Failed to post to engineering room:", err.response?.data || err.message);
+    }
+
+    try {
+      await axios.post("https://webexapis.com/v1/messages", {
+        roomId,
+        markdown: `✅ Deployment form submitted for *${formData.customerName}*.`
+      }, {
+        headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+      });
+    } catch (err) {
+      console.error("❌ Failed to send confirmation back to user:", err.response?.data || err.message);
+    }
 
     await addReaction(messageId, "thumbsup");
     return;
@@ -168,22 +178,27 @@ Follow Up: ${formData.followUpNeeded}
   const key = formData.arrTier === "PREMIUM" ? "PREMIUM" : `${formData.region}_${formData.arrTier}`;
   const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
 
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: targetRoom,
-    markdown: summary
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
+  try {
+    await axios.post("https://webexapis.com/v1/messages", {
+      roomId: targetRoom,
+      markdown: summary
+    }, {
+      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+    });
 
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId,
-    markdown: `✅ Sales handoff submitted for *${formData.customerName}*.`
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
+    await axios.post("https://webexapis.com/v1/messages", {
+      roomId,
+      markdown: `✅ Sales handoff submitted for *${formData.customerName}*.`
+    }, {
+      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+    });
 
-  await addReaction(messageId, "thumbsup");
+    await addReaction(messageId, "thumbsup");
+  } catch (err) {
+    console.error("❌ Failed during handoff summary post:", err.response?.data || err.message);
+  }
 }
+
 
 async function addReaction(messageId, emoji) {
   try {

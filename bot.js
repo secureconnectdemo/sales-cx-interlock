@@ -1,3 +1,4 @@
+// bot.js - Cleaned up version
 
 const fs = require("fs");
 const path = require("path");
@@ -6,14 +7,16 @@ const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
 
 const app = express();
+
+
 app.use(express.json());
 
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
-let BOT_PERSON_ID = ""; // Will be set dynamically
+let BOT_PERSON_ID = "";
 
 const regionARRRoomMap = {
-  "AMER_200K_PLUS": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1",
-  "DEFAULT": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1"
+  "AMER_200K_PLUS": "<engineering-room-id>",
+  "DEFAULT": "<default-room-id>"
 };
 
 const formMap = {
@@ -41,14 +44,11 @@ app.post("/webhook", async (req, res) => {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 
-      let text = (messageRes.data.text || "").toLowerCase().trim();
+      const text = (messageRes.data.text || "").toLowerCase().trim();
       const mentioned = data?.mentionedPeople?.includes(BOT_PERSON_ID);
       const isDirect = roomType === "direct";
 
-      if (!mentioned && !isDirect) {
-        console.log("🟡 Bot not mentioned in group space. Ignoring message.");
-        return res.sendStatus(200);
-      }
+      if (!mentioned && !isDirect) return res.sendStatus(200);
 
       console.log("📨 Final parsed command:", text);
 
@@ -61,13 +61,7 @@ app.post("/webhook", async (req, res) => {
       } else if (text.endsWith("/help")) {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: `
-**🤖 SSE-CX-Hub Bot Commands**
-
-- \`/submit handoff\` – Start Sales to Post-Sales Handoff form
-- \`/submit deployment\` – Start Engineering Deployment Planning form
-- \`/submit form\` or \`/start\` – Choose which form to submit
-- \`/help\` – Show this help message`
+          markdown: `**🤖 SSE-CX-Hub Bot Commands**\n\n- \`/submit handoff\` – Start Sales to Post-Sales Handoff form\n- \`/submit deployment\` – Start Engineering Deployment Planning form\n- \`/submit form\` or \`/start\` – Choose which form to submit\n- \`/help\` – Show this help message`
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
@@ -82,13 +76,7 @@ app.post("/webhook", async (req, res) => {
       });
 
       const formData = actionRes.data.inputs;
-
-      if (formData.formType === "handoff" || formData.formType === "deployment") {
-        await sendForm(roomId, formData.formType);
-      } else {
-        await handleFormSubmission(roomId, formData, messageId);
-      }
-
+      await handleFormSubmission(roomId, formData, messageId);
       return res.sendStatus(200);
     }
 
@@ -102,31 +90,30 @@ app.post("/webhook", async (req, res) => {
 async function sendForm(roomId, type) {
   const form = formMap[type];
   if (!form) return;
-try {
-  const roomCheck = await axios.get(`https://webexapis.com/v1/rooms/${roomId}`, {
-    headers: { Authorization: WEBEX_BOT_TOKEN }
-  });
-  console.log("✅ Bot has access to room:", roomCheck.data.title);
-} catch (err) {
-  console.error("❌ Bot does not have access to the room:", err.response?.data || err.message);
-}
+
+  try {
+    await axios.get(`https://webexapis.com/v1/rooms/${roomId}`, {
+      headers: { Authorization: WEBEX_BOT_TOKEN }
+    });
+  } catch (err) {
+    console.error("❌ Bot cannot access room:", err.response?.data || err.message);
+  }
 
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
     markdown: `📋 Please complete the **${type}** form:`,
-    attachments: [{
-      contentType: "application/vnd.microsoft.card.adaptive",
-      content: form
-    }]
+    attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: form }]
   }, {
     headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
   });
 }
 
 async function handleFormSubmission(roomId, formData, messageId) {
+  const key = `${formData.region}_${formData.arrTier}`;
+  const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
+
   if (formData.formType === "deployment") {
     await addHandoffEntry(formData);
-
     const summary = `
 **📦 Secure Access - Onboard & Deployment Notification**
 
@@ -135,41 +122,15 @@ async function handleFormSubmission(roomId, formData, messageId) {
 📊 **Total Licenses:** ${formData.totalLicenses}
 🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}
 📅 **Planned Rollout:** ${formData.plannedRollout}
-📍 **Deployment Plan Info:**
-${formData.deploymentPlan}
-📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent via follow-up"}
-`;
+📍 **Deployment Plan Info:**\n${formData.deploymentPlan}
+📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent via follow-up"}`;
 
-    const key = `${formData.region}_${formData.arrTier}`;
-    const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
-
-    try {
-      await axios.post("https://webexapis.com/v1/messages", {
-        roomId: targetRoom,
-        markdown: summary
-      }, {
-        headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-      });
-
-      await axios.post("https://webexapis.com/v1/messages", {
-        roomId,
-        markdown: `✅ Deployment form submitted for *${formData.customerName}*.`
-      }, {
-        headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-      });
-
-      await addReaction(messageId, "thumbsup");
-    } catch (err) {
-      console.error("❌ Failed during deployment post:", err.response?.data || err.message);
-    }
-
-    return; // ✅ Prevent fallback
+    await postSummary(roomId, targetRoom, summary, formData.customerName, messageId);
+    return;
   }
 
-  // 🛑 Only handle handoff if it's *not* a deployment form
   if (formData.formType === "handoff") {
     await addHandoffEntry(formData);
-
     const summary = `
 **🧾 Sales to Post-Sales Handoff Summary**
 
@@ -183,34 +144,33 @@ Use Cases: ${formData.useCases || "undefined"}
 Urgency: ${formData.urgency || "undefined"}
 Notes: ${formData.notes || "undefined"}
 Seeded/NFR: ${formData.nfrStatus || "undefined"}
-Follow Up: ${formData.followUpNeeded || "undefined"}
-`;
+Follow Up: ${formData.followUpNeeded || "undefined"}`;
 
-    const key = `${formData.region}_${formData.arrTier}`;
-    const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
-
-    try {
-      await axios.post("https://webexapis.com/v1/messages", {
-        roomId: targetRoom,
-        markdown: summary
-      }, {
-        headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-      });
-
-      await axios.post("https://webexapis.com/v1/messages", {
-        roomId,
-        markdown: `✅ Sales handoff submitted for *${formData.customerName}*.`
-      }, {
-        headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-      });
-
-      await addReaction(messageId, "thumbsup");
-    } catch (err) {
-      console.error("❌ Failed during handoff post:", err.response?.data || err.message);
-    }
+    await postSummary(roomId, targetRoom, summary, formData.customerName, messageId);
   }
 }
 
+async function postSummary(originRoom, targetRoom, summary, customerName, messageId) {
+  try {
+    await axios.post("https://webexapis.com/v1/messages", {
+      roomId: targetRoom,
+      markdown: summary
+    }, {
+      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+    });
+
+    await axios.post("https://webexapis.com/v1/messages", {
+      roomId: originRoom,
+      markdown: `✅ Submission received for *${customerName}*.`
+    }, {
+      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+    });
+
+    await addReaction(messageId, "thumbsup");
+  } catch (err) {
+    console.error("❌ Failed during message post:", err.response?.data || err.message);
+  }
+}
 
 async function addReaction(messageId, emoji) {
   try {
@@ -220,7 +180,6 @@ async function addReaction(messageId, emoji) {
     }, {
       headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
     });
-    console.log(`👍 Added reaction: ${emoji}`);
   } catch (err) {
     console.error("❌ Failed to add reaction:", err.response?.data || err.message);
   }
@@ -232,11 +191,9 @@ async function startBot() {
       headers: { Authorization: WEBEX_BOT_TOKEN }
     });
     BOT_PERSON_ID = res.data.id;
-    console.log("🤖 Bot Person ID:", BOT_PERSON_ID);
-
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-      console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`);
+      console.log("🚀 SSE-CX-Hub listening on port", PORT);
     });
   } catch (err) {
     console.error("❌ Failed to get bot info:", err.response?.data || err.message);
@@ -245,4 +202,5 @@ async function startBot() {
 }
 
 startBot();
+
 

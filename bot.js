@@ -1,9 +1,9 @@
+
 const fs = require("fs");
 const path = require("path");
 const engineeringForm = JSON.parse(
   fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")
 );
-
 
 const express = require("express");
 const axios = require("axios");
@@ -34,39 +34,6 @@ const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 app.get("/test", (req, res) => {
   res.send("✅ Webex bot is up and reachable");
 });
-
-if (formData.formType === "deployment") {
-  const summary = `
-📦 **Secure Access – Onboard & Deployment Notification**
-
-👤 **Customer:** ${formData.customerName}  
-🆔 **Org ID:** ${formData.orgId}  
-📊 **Total Licenses:** ${formData.totalLicenses}  
-🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  
-🗓️ **Planned Rollout:** ${formData.plannedRollout}  
-📍 **Deployment Plan Info:**  
-${formData.deploymentPlan}
-
-📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent via follow-up"}
-`;
-
-  const engineeringRoom = regionARRRoomMap["AMER_200K_PLUS"]; // or a dedicated ID
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: engineeringRoom,
-    markdown: summary
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
-
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId,
-    markdown: `✅ Deployment form submitted for *${formData.customerName}*. Thank you!`
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
-
-  return res.sendStatus(200);
-}
 
 async function sendHandoffForm(roomId) {
   const handoffCard = {
@@ -159,85 +126,6 @@ async function sendHandoffForm(roomId) {
   });
 }
 
-async function handleHandoffSubmission(roomId, formData) {
-  console.log("📬 Received handoff form data:", formData);
-  await addHandoffEntry(formData);
-
-  const entitlementMessages = {
-    "PREMIUM": `
-**Entitlement: Premium Support**
-- High Touch CSS & Technical CSS (Full Lifecycle)
-`,
-    "200K_PLUS": `
-**Entitlement: Enhanced Support – $200K+**
-- Onboarding CSS: 12 Sessions within 90 Days
-- High Touch CSS (Full Lifecycle)
-- Technical CSS (5 Sessions per Year)
-- Contact us at  cloudsecurity-assignments@cisco.com
-`,
-    "100K_200K": `
-**Entitlement: Enhanced Support – $100K–$200K**
-- Onboarding CSS: 12 Sessions within 90 Days
-- At Scale CSS (Full Lifecycle)
-- Adoption CSS (4 Sessions per Year)
-- Contact us at  cloudsecurity-assignments@cisco.com
-`,
-    "25K_100K": `
-**Entitlement: Enhanced Support – $25K–$100K**
-- Onboarding CSS: 10 Sessions within 60 Days
-- At Scale CSS (Full Lifecycle)
-- Adoption CSS (4 Sessions per Year)
-- Contact us at  cloudsecurity-assignments@cisco.com
-`,
-    "UNDER_25K": `
-**Entitlement: Enhanced Support – <$25K**
-- Onboarding CSS: 4 Sessions within 60 Days
-- One-To-Many Engagements (Full Lifecycle)
-- Adoption CSS (4 Sessions per Year)
-- Contact us at  cloudsecurity-assignments@cisco.com
-`
-  };
-
-  const onboardingAdoptionExpectations = `
-💬 Have questions or want to set up an internal sync? Just reach out to the appropriate contact listed above—we're here to help and happy to coordinate with your Customer Success team.
-
-`;
-
-  const summary = `
-**🧾 Sales to Post-Sales Handoff Summary**
-
-**Region:** ${formData.region}
-**ARR Tier:** ${formData.arrTier}
-**Sales Rep:** ${formData.salesRep}
-**Customer:** ${formData.customerName}
-**Customer POC:** ${formData.customerPOC}
-**Product:** ${formData.product}
-**Use Cases:** ${formData.useCases}
-**Urgency:** ${formData.urgency}
-**Notes:** ${formData.notes}
-**Seeded/NFR:** ${formData.nfrStatus}
-**Follow Up:** ${formData.followUpNeeded}
-`;
-
-  const key = formData.arrTier === "PREMIUM" ? "PREMIUM" : `${formData.region}_${formData.arrTier}`;
-  const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
-  const entitlement = entitlementMessages[formData.arrTier] || "";
-
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: targetRoom,
-    markdown: summary
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
-
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId,
-    markdown: `✅ Sales handoff submitted for *${formData.customerName}*. Thank you!\n\n${entitlement}\n\n${onboardingAdoptionExpectations}`
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
-}
-
 app.post("/webhook", async (req, res) => {
   const { data, resource } = req.body;
   const roomId = data?.roomId;
@@ -252,8 +140,22 @@ app.post("/webhook", async (req, res) => {
 
       let normalizedText = (messageRes.data.text || "").toLowerCase().trim();
 
-      if (normalizedText === "secure access sales handoff process submit handoff" || normalizedText === "submit handoff") {
+      if (normalizedText === "submit handoff") {
         await sendHandoffForm(roomId);
+        return res.sendStatus(200);
+      }
+
+      if (normalizedText === "/submit deployment") {
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: "📦 Please complete the **Secure Access – Onboard and Deployment** form:",
+          attachments: [{
+            contentType: "application/vnd.microsoft.card.adaptive",
+            content: engineeringForm
+          }]
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
         return res.sendStatus(200);
       }
     }
@@ -264,8 +166,38 @@ app.post("/webhook", async (req, res) => {
       });
 
       const formData = actionRes.data.inputs;
-      await handleHandoffSubmission(roomId, formData);
-      return res.sendStatus(200);
+
+      if (formData.formType === "deployment") {
+        const summary = `
+📦 **Secure Access – Onboard & Deployment Notification**
+
+👤 **Customer:** ${formData.customerName}
+🆔 **Org ID:** ${formData.orgId}
+📊 **Total Licenses:** ${formData.totalLicenses}
+🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}
+🗓️ **Planned Rollout:** ${formData.plannedRollout}
+📍 **Deployment Plan Info:**
+${formData.deploymentPlan}
+
+📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent via follow-up"}
+`;
+        const engineeringRoom = regionARRRoomMap["AMER_200K_PLUS"];
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId: engineeringRoom,
+          markdown: summary
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: `✅ Deployment form submitted for *${formData.customerName}*. Thank you!`
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+
+        return res.sendStatus(200);
+      }
     }
 
     res.sendStatus(200);

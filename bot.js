@@ -31,7 +31,7 @@ async function sendForm(roomId, type) {
 
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
-    markdown: `📋 Please complete the **${type}** form:\`,
+    markdown: `📋 Please complete the **${type}** form:`,
     attachments: [{
       contentType: "application/vnd.microsoft.card.adaptive",
       content: form
@@ -43,8 +43,7 @@ async function sendForm(roomId, type) {
 
 async function handleFormSubmission(roomId, formData) {
   if (formData.formType === "deployment") {
-
-const summary = `
+    const summary = `
 **Secure Access – Deployment Notification**
 
 Customer: ${formData.customerName}  
@@ -55,8 +54,6 @@ Planned Rollout: ${formData.plannedRollout}
 Deployment Plan: ${formData.deploymentPlan}  
 File Upload Info: ${formData.fileUploadInfo || "To be sent via follow-up"}
 `;
-
-
 
     const engineeringRoom = regionARRRoomMap["AMER_200K_PLUS"];
     await axios.post("https://webexapis.com/v1/messages", {
@@ -78,15 +75,19 @@ File Upload Info: ${formData.fileUploadInfo || "To be sent via follow-up"}
   // Default to sales handoff handling
   await addHandoffEntry(formData);
   const summary = `
-**Secure Access – Deployment Notification**
+**🧾 Sales to Post-Sales Handoff Summary**
 
+Region: ${formData.region}  
+ARR Tier: ${formData.arrTier}  
+Sales Rep: ${formData.salesRep}  
 Customer: ${formData.customerName}  
-Org ID: ${formData.orgId}  
-Total Licenses: ${formData.totalLicenses}  
-Already Deployed: ${formData.alreadyDeployed || "N/A"}  
-Planned Rollout: ${formData.plannedRollout}  
-Deployment Plan: ${formData.deploymentPlan}  
-File Upload Info: ${formData.fileUploadInfo || "To be sent via follow-up"}
+Customer POC: ${formData.customerPOC}  
+Product: ${formData.product}  
+Use Cases: ${formData.useCases}  
+Urgency: ${formData.urgency}  
+Notes: ${formData.notes}  
+Seeded/NFR: ${formData.nfrStatus}  
+Follow Up: ${formData.followUpNeeded}
 `;
 
   const key = formData.arrTier === "PREMIUM" ? "PREMIUM" : `${formData.region}_${formData.arrTier}`;
@@ -128,6 +129,12 @@ app.post("/webhook", async (req, res) => {
         return res.sendStatus(200);
       }
       if (text === "/submit form" || text === "/start") {
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: "👋 Welcome to the SSE-CX-Hub! Please select which form you’d like to submit:"
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
         await sendForm(roomId, "picker");
         return res.sendStatus(200);
       }

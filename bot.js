@@ -8,8 +8,8 @@ const app = express();
 app.use(express.json());
 
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
-const BOT_EMAIL = "sse-cx-hub@webex.bot"; // Replace with your actual bot email
-const BOT_PERSON_ID = "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8zMTY5MmY2ZS1lYzVkLTQxMWYtODk2OS0xZTQ4YzQwYmU2MjY"; // Replace with your bot's personId
+
+let BOT_PERSON_ID = ""; // Will be set dynamically
 
 const regionARRRoomMap = {
   "AMER_200K_PLUS": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1",
@@ -31,41 +31,35 @@ app.post("/webhook", async (req, res) => {
 
   const { data, resource } = req.body;
   const roomId = data?.roomId;
+  const roomType = data?.roomType;
   if (!roomId) return res.sendStatus(400);
 
   try {
     if (resource === "messages") {
-      // ✅ Skip unmentioned group messages
-      if (
-        data.roomType === "group" &&
-        !(data.mentionedPeople || []).includes(BOT_PERSON_ID)
-      ) {
-        console.log("⚠️ Bot not mentioned in group space. Ignoring message.");
-        return res.sendStatus(200);
-      }
-
       const messageRes = await axios.get(`https://webexapis.com/v1/messages/${data.id}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 
-      let text = (messageRes.data.text || "").toLowerCase().trim();
-      const mentionRegex = new RegExp(`<@personEmail:${BOT_EMAIL}>`, "gi");
-      text = text.replace(mentionRegex, "").trim();
+      const text = (messageRes.data.text || "").toLowerCase().trim();
+      const mentioned = data?.mentionedPeople?.includes(BOT_PERSON_ID);
+      const isDirect = roomType === "direct";
+
+      if (!mentioned && !isDirect) {
+        console.log("🟡 Bot not mentioned in group space. Ignoring message.");
+        return res.sendStatus(200);
+      }
 
       console.log("📨 Final parsed command:", text);
 
       if (text === "/submit handoff") {
         await sendForm(roomId, "handoff");
-        return res.sendStatus(200);
-      }
-      if (text === "/submit deployment") {
+      } else if (text === "/submit deployment") {
         await sendForm(roomId, "deployment");
-        return res.sendStatus(200);
-      }
-      if (text === "/submit form" || text === "/start") {
+      } else if (text === "/submit form" || text === "/start") {
         await sendForm(roomId, "picker");
-        return res.sendStatus(200);
       }
+
+      return res.sendStatus(200);
     }
 
     if (resource === "attachmentActions") {
@@ -175,7 +169,24 @@ Follow Up: ${formData.followUpNeeded}
   });
 }
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`);
-});
+// 🚀 Start the server only after fetching the bot's personId
+async function startBot() {
+  try {
+    const res = await axios.get("https://webexapis.com/v1/people/me", {
+      headers: { Authorization: WEBEX_BOT_TOKEN }
+    });
+    BOT_PERSON_ID = res.data.id;
+    console.log("🤖 Bot Person ID:", BOT_PERSON_ID);
+
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("❌ Failed to get bot info:", err.response?.data || err.message);
+    process.exit(1);
+  }
+}
+
+startBot();
+

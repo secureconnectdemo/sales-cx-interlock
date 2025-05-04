@@ -64,7 +64,17 @@ async function handleFormSubmission(roomId, formData) {
 
   // Default to sales handoff handling
   await addHandoffEntry(formData);
-  const summary = `**🧾 Sales to Post-Sales Handoff Summary**\n\nRegion: ${formData.region}\nARR Tier: ${formData.arrTier}\nSales Rep: ${formData.salesRep}\nCustomer: ${formData.customerName}\nCustomer POC: ${formData.customerPOC}\nProduct: ${formData.product}\nUse Cases: ${formData.useCases}\nUrgency: ${formData.urgency}\nNotes: ${formData.notes}\nSeeded/NFR: ${formData.nfrStatus}\nFollow Up: ${formData.followUpNeeded}`;
+  const summary = `
+**Secure Access – Deployment Notification**
+
+Customer: ${formData.customerName}  
+Org ID: ${formData.orgId}  
+Total Licenses: ${formData.totalLicenses}  
+Already Deployed: ${formData.alreadyDeployed || "N/A"}  
+Planned Rollout: ${formData.plannedRollout}  
+Deployment Plan: ${formData.deploymentPlan}  
+File Upload Info: ${formData.fileUploadInfo || "To be sent via follow-up"}
+`;
 
   const key = formData.arrTier === "PREMIUM" ? "PREMIUM" : `${formData.region}_${formData.arrTier}`;
   const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];

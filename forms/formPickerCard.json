@@ -1,0 +1,24 @@
+{
+  "type": "AdaptiveCard",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "What type of form would you like to submit?",
+      "wrap": true
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "formType",
+      "style": "expanded",
+      "choices": [
+        { "title": "Sales Handoff", "value": "handoff" },
+        { "title": "Deployment", "value": "deployment" }
+      ]
+    }
+  ],
+  "actions": [
+    { "type": "Action.Submit", "title": "Continue" }
+  ],
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "version": "1.3"
+}

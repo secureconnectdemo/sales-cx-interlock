@@ -109,9 +109,7 @@ Follow Up: ${formData.followUpNeeded}
 }
 
 app.post("/webhook", async (req, res) => {
-  // ✅ Add this line
   console.log("🔔 Incoming Webhook Event:", JSON.stringify(req.body, null, 2));
-
   const { data, resource } = req.body;
   const roomId = data?.roomId;
   if (!roomId) return res.sendStatus(400);

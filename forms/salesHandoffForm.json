@@ -1,0 +1,18 @@
+{
+  "type": "AdaptiveCard",
+  "body": [
+    { "type": "TextBlock", "text": "Sales to Post-Sales Handoff", "weight": "Bolder", "size": "Medium" },
+    { "type": "Input.Text", "id": "salesRep", "placeholder": "Sales Rep" },
+    { "type": "Input.Text", "id": "customerName", "placeholder": "Customer Name" },
+    { "type": "Input.Text", "id": "customerPOC", "placeholder": "Customer POC (email)" },
+    { "type": "Input.Text", "id": "useCases", "placeholder": "Use Cases" },
+    { "type": "Input.ChoiceSet", "id": "region", "placeholder": "Select Region", "choices": [
+      { "title": "AMER", "value": "AMER" },
+      { "title": "EMEA", "value": "EMEA" },
+      { "title": "APJC", "value": "APJC" }
+    ]}
+  ],
+  "actions": [{ "type": "Action.Submit", "title": "Submit Handoff", "data": { "formType": "handoff" } }],
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "version": "1.3"
+}

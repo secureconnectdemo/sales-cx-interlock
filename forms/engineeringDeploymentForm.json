@@ -67,7 +67,8 @@
         { "title": "AMER", "value": "AMER" },
         { "title": "EMEA", "value": "EMEA" },
         { "title": "APJC", "value": "APJC" }
-      ]
+      ],
+      "isRequired": true
     },
     {
       "type": "Input.ChoiceSet",
@@ -78,7 +79,8 @@
         { "title": "$0 - $50K", "value": "0_50K" },
         { "title": "$50K - $200K", "value": "50K_200K" },
         { "title": "$200K+", "value": "200K_PLUS" }
-      ]
+      ],
+      "isRequired": true
     },
     {
       "type": "Input.Hidden",
@@ -93,4 +95,3 @@
     }
   ]
 }
-

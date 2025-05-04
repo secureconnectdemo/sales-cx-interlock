@@ -8,7 +8,6 @@ const app = express();
 app.use(express.json());
 
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
-
 let BOT_PERSON_ID = ""; // Will be set dynamically
 
 const regionARRRoomMap = {
@@ -40,7 +39,7 @@ app.post("/webhook", async (req, res) => {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 
-      const text = (messageRes.data.text || "").toLowerCase().trim();
+      let text = (messageRes.data.text || "").toLowerCase().trim();
       const mentioned = data?.mentionedPeople?.includes(BOT_PERSON_ID);
       const isDirect = roomType === "direct";
 
@@ -51,11 +50,12 @@ app.post("/webhook", async (req, res) => {
 
       console.log("📨 Final parsed command:", text);
 
-      if (text === "/submit handoff") {
+      // Match supported commands
+      if (text.endsWith("/submit handoff")) {
         await sendForm(roomId, "handoff");
-      } else if (text === "/submit deployment") {
+      } else if (text.endsWith("/submit deployment")) {
         await sendForm(roomId, "deployment");
-      } else if (text === "/submit form" || text === "/start") {
+      } else if (text.endsWith("/submit form") || text.endsWith("/start")) {
         await sendForm(roomId, "picker");
       }
 
@@ -189,4 +189,3 @@ async function startBot() {
 }
 
 startBot();
-

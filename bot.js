@@ -214,43 +214,6 @@ Follow Up: ${formData.followUpNeeded}
   }
 }
 
-
-
-async function addReaction(messageId, emoji) {
-  try {
-    await axios.post("https://webexapis.com/v1/message/reactions", {
-      messageId,
-      emoji
-    }, {
-      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-    });
-    console.log(`👍 Added reaction: ${emoji}`);
-  } catch (err) {
-    console.error("❌ Failed to add reaction:", err.response?.data || err.message);
-  }
-}
-
-// 🚀 Start the server only after fetching the bot's personId
-async function startBot() {
-  try {
-    const res = await axios.get("https://webexapis.com/v1/people/me", {
-      headers: { Authorization: WEBEX_BOT_TOKEN }
-    });
-    BOT_PERSON_ID = res.data.id;
-    console.log("🤖 Bot Person ID:", BOT_PERSON_ID);
-
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-      console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`);
-    });
-  } catch (err) {
-    console.error("❌ Failed to get bot info:", err.response?.data || err.message);
-    process.exit(1);
-  }
-}
-
-startBot();
-
 async function addReaction(messageId, emoji) {
   try {
     await axios.post("https://webexapis.com/v1/message/reactions", {
@@ -284,3 +247,4 @@ async function startBot() {
 }
 
 startBot();
+

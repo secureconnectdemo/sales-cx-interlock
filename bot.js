@@ -101,6 +101,14 @@ app.post("/webhook", async (req, res) => {
 async function sendForm(roomId, type) {
   const form = formMap[type];
   if (!form) return;
+try {
+  const roomCheck = await axios.get(`https://webexapis.com/v1/rooms/${roomId}`, {
+    headers: { Authorization: WEBEX_BOT_TOKEN }
+  });
+  console.log("✅ Bot has access to room:", roomCheck.data.title);
+} catch (err) {
+  console.error("❌ Bot does not have access to the room:", err.response?.data || err.message);
+}
 
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,

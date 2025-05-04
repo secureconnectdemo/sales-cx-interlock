@@ -1,3 +1,10 @@
+const fs = require("fs");
+const path = require("path");
+const engineeringForm = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")
+);
+
+
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
@@ -27,6 +34,39 @@ const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 app.get("/test", (req, res) => {
   res.send("✅ Webex bot is up and reachable");
 });
+
+if (formData.formType === "deployment") {
+  const summary = `
+📦 **Secure Access – Onboard & Deployment Notification**
+
+👤 **Customer:** ${formData.customerName}  
+🆔 **Org ID:** ${formData.orgId}  
+📊 **Total Licenses:** ${formData.totalLicenses}  
+🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  
+🗓️ **Planned Rollout:** ${formData.plannedRollout}  
+📍 **Deployment Plan Info:**  
+${formData.deploymentPlan}
+
+📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent via follow-up"}
+`;
+
+  const engineeringRoom = regionARRRoomMap["AMER_200K_PLUS"]; // or a dedicated ID
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId: engineeringRoom,
+    markdown: summary
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
+
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId,
+    markdown: `✅ Deployment form submitted for *${formData.customerName}*. Thank you!`
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
+
+  return res.sendStatus(200);
+}
 
 async function sendHandoffForm(roomId) {
   const handoffCard = {

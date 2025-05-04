@@ -124,24 +124,29 @@ try {
 
 async function handleFormSubmission(roomId, formData, messageId) {
   if (formData.formType === "deployment") {
+    await addHandoffEntry(formData); // still logs to Google Sheet
+
     const summary = `
-**Secure Access – Deployment Notification**
+**📦 Secure Access - Onboard & Deployment Notification**
 
-Customer: ${formData.customerName}  
-Org ID: ${formData.orgId}  
-Total Licenses: ${formData.totalLicenses}  
-Already Deployed: ${formData.alreadyDeployed || "N/A"}  
-Planned Rollout: ${formData.plannedRollout}  
-Deployment Plan: ${formData.deploymentPlan}  
-File Upload Info: ${formData.fileUploadInfo || "To be sent via follow-up"}
-    `;
+👤 **Customer:** ${formData.customerName}  
+🆔 **Org ID:** ${formData.orgId}  
+📊 **Total Licenses:** ${formData.totalLicenses}  
+🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  
+📅 **Planned Rollout:** ${formData.plannedRollout}  
+📍 **Deployment Plan Info:**  
+${formData.deploymentPlan}  
+📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent via follow-up"}
+`;
 
-    const engineeringRoom = regionARRRoomMap["AMER_200K_PLUS"] || regionARRRoomMap["DEFAULT"];
-    console.log("📨 Engineering Room ID:", engineeringRoom);
+    const key = `${formData.region}_${formData.arrTier}`;
+    const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
+
+    console.log("📨 Engineering Room ID:", targetRoom);
 
     try {
       await axios.post("https://webexapis.com/v1/messages", {
-        roomId: engineeringRoom,
+        roomId: targetRoom,
         markdown: summary
       }, {
         headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
@@ -165,23 +170,10 @@ File Upload Info: ${formData.fileUploadInfo || "To be sent via follow-up"}
     return;
   }
 
-  await addHandoffEntry(formData);
+  // fallback in case a non-deployment form arrives
+  console.warn("⚠️ Unknown formType or fallback handoff form detected.");
+}
 
-  const summary = `
-**🧾 Sales to Post-Sales Handoff Summary**
-
-Region: ${formData.region}  
-ARR Tier: ${formData.arrTier}  
-Sales Rep: ${formData.salesRep}  
-Customer: ${formData.customerName}  
-Customer POC: ${formData.customerPOC}  
-Product: ${formData.product}  
-Use Cases: ${formData.useCases}  
-Urgency: ${formData.urgency}  
-Notes: ${formData.notes}  
-Seeded/NFR: ${formData.nfrStatus}  
-Follow Up: ${formData.followUpNeeded}
-  `;
 
   const key = formData.arrTier === "PREMIUM" ? "PREMIUM" : `${formData.region}_${formData.arrTier}`;
   const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];

@@ -43,7 +43,19 @@ async function sendForm(roomId, type) {
 
 async function handleFormSubmission(roomId, formData) {
   if (formData.formType === "deployment") {
-    const summary = `📦 **Secure Access – Deployment Notification**\n\n👤 Customer: ${formData.customerName}\n🆔 Org ID: ${formData.orgId}\n📊 Total Licenses: ${formData.totalLicenses}\n🚀 Already Deployed: ${formData.alreadyDeployed || "N/A"}\n🗓️ Planned Rollout: ${formData.plannedRollout}\n📍 Deployment Plan: ${formData.deploymentPlan}\n📎 File Upload Info: ${formData.fileUploadInfo || "To be sent via follow-up"}`;
+
+const summary = `
+**Secure Access – Deployment Notification**
+
+Customer: ${formData.customerName}  
+Org ID: ${formData.orgId}  
+Total Licenses: ${formData.totalLicenses}  
+Already Deployed: ${formData.alreadyDeployed || "N/A"}  
+Planned Rollout: ${formData.plannedRollout}  
+Deployment Plan: ${formData.deploymentPlan}  
+File Upload Info: ${formData.fileUploadInfo || "To be sent via follow-up"}
+`;
+
 
     const engineeringRoom = regionARRRoomMap["AMER_200K_PLUS"];
     await axios.post("https://webexapis.com/v1/messages", {

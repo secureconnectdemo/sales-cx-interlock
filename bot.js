@@ -171,8 +171,47 @@ ${formData.deploymentPlan}
     return;
   }
 
-  // fallback in case a non-deployment form arrives
-  console.warn("⚠️ Unknown formType or fallback handoff form detected.");
+  // fallback for handoff form
+  await addHandoffEntry(formData);
+
+  const summary = `
+**🧾 Sales to Post-Sales Handoff Summary**
+
+Region: ${formData.region}  
+ARR Tier: ${formData.arrTier}  
+Sales Rep: ${formData.salesRep}  
+Customer: ${formData.customerName}  
+Customer POC: ${formData.customerPOC}  
+Product: ${formData.product}  
+Use Cases: ${formData.useCases}  
+Urgency: ${formData.urgency}  
+Notes: ${formData.notes}  
+Seeded/NFR: ${formData.nfrStatus}  
+Follow Up: ${formData.followUpNeeded}
+  `;
+
+  const key = formData.arrTier === "PREMIUM" ? "PREMIUM" : `${formData.region}_${formData.arrTier}`;
+  const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
+
+  try {
+    await axios.post("https://webexapis.com/v1/messages", {
+      roomId: targetRoom,
+      markdown: summary
+    }, {
+      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+    });
+
+    await axios.post("https://webexapis.com/v1/messages", {
+      roomId,
+      markdown: `✅ Sales handoff submitted for *${formData.customerName}*.`
+    }, {
+      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+    });
+
+    await addReaction(messageId, "thumbsup");
+  } catch (err) {
+    console.error("❌ Failed during handoff summary post:", err.response?.data || err.message);
+  }
 }
 
 

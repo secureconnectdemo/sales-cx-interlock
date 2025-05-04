@@ -1,25 +1,19 @@
 {
   "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
   "type": "AdaptiveCard",
-  "version": "1.3",
+  "version": "1.4",
   "body": [
     {
-      "type": "Input.Text",
-      "id": "formType",
-      "value": "deployment",
-      "isVisible": false
-    },
-    {
       "type": "TextBlock",
-      "text": "Secure Access – Onboard and Deployment",
+      "text": "Secure Access \u2013 Onboard and Deployment",
+      "wrap": true,
       "weight": "Bolder",
       "size": "Medium"
     },
     {
       "type": "TextBlock",
       "text": "Please fill out this form when a customer plans to deploy more than 2000 users in a short timeframe.",
-      "wrap": true,
-      "spacing": "Small"
+      "wrap": true
     },
     {
       "type": "Input.Text",
@@ -63,6 +57,11 @@
       "id": "fileUploadInfo",
       "placeholder": "Add upload link or write 'To be sent'",
       "label": "File Upload Info (optional)"
+    },
+    {
+      "type": "Input.Hidden",
+      "id": "formType",
+      "value": "deployment"
     }
   ],
   "actions": [

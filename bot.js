@@ -8,7 +8,8 @@ const app = express();
 app.use(express.json());
 
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
-const BOT_EMAIL = "sse-cx-hub@webex.bot"; // Replace with your bot's actual email
+const BOT_EMAIL = "sse-cx-hub@webex.bot"; // Replace with your actual bot email
+const BOT_PERSON_ID = "Y2lzY29zcGFyazovL3VzL1BFT1BMRS8zMTY5MmY2ZS1lYzVkLTQxMWYtODk2OS0xZTQ4YzQwYmU2MjY"; // Replace with your bot's personId
 
 const regionARRRoomMap = {
   "AMER_200K_PLUS": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1",
@@ -25,7 +26,6 @@ app.get("/test", (req, res) => {
   res.send("✅ SSE-CX-Hub bot is up and running");
 });
 
-// 🟢 This logs all incoming webhook traffic from Webex
 app.post("/webhook", async (req, res) => {
   console.log("🔔 Incoming Webhook Event:", JSON.stringify(req.body, null, 2));
 
@@ -35,15 +35,23 @@ app.post("/webhook", async (req, res) => {
 
   try {
     if (resource === "messages") {
+      // ✅ Skip unmentioned group messages
+      if (
+        data.roomType === "group" &&
+        !(data.mentionedPeople || []).includes(BOT_PERSON_ID)
+      ) {
+        console.log("⚠️ Bot not mentioned in group space. Ignoring message.");
+        return res.sendStatus(200);
+      }
+
       const messageRes = await axios.get(`https://webexapis.com/v1/messages/${data.id}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 
       let text = (messageRes.data.text || "").toLowerCase().trim();
-
-      // 🔧 Handle group space mentions by removing bot mention
       const mentionRegex = new RegExp(`<@personEmail:${BOT_EMAIL}>`, "gi");
       text = text.replace(mentionRegex, "").trim();
+
       console.log("📨 Final parsed command:", text);
 
       if (text === "/submit handoff") {
@@ -171,4 +179,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`);
 });
-

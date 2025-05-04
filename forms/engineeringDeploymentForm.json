@@ -1,79 +1,15 @@
 {
   "type": "AdaptiveCard",
-  "version": "1.3",
   "body": [
-    {
-      "type": "TextBlock",
-      "text": "Secure Access \u2013 Onboard and Deployment",
-      "weight": "Bolder",
-      "size": "Medium"
-    },
-    {
-      "type": "TextBlock",
-      "text": "Please fill out this form when a customer plans to deploy more than 2000 users in a short timeframe.",
-      "wrap": true
-    },
-    {
-      "type": "Input.Text",
-      "id": "customerName",
-      "placeholder": "Enter customer name",
-      "label": "Customer Name",
-      "isRequired": true,
-      "errorMessage": "Required"
-    },
-    {
-      "type": "Input.Text",
-      "id": "orgId",
-      "placeholder": "Enter Org ID",
-      "label": "Customer Org ID",
-      "isRequired": true,
-      "errorMessage": "Required"
-    },
-    {
-      "type": "Input.Text",
-      "id": "totalLicenses",
-      "placeholder": "e.g.: 3500 SIA / 3000 SPA",
-      "label": "Total Licenses (SIA/SPA)",
-      "isRequired": true,
-      "errorMessage": "Required"
-    },
-    {
-      "type": "Input.Text",
-      "id": "alreadyDeployed",
-      "placeholder": "e.g.: 1500 SIA / 500 SPA",
-      "label": "Already Deployed (SIA/SPA)"
-    },
-    {
-      "type": "Input.Text",
-      "id": "plannedRollout",
-      "placeholder": "e.g.: 2000 SIA / 2500 SPA",
-      "label": "Planned Rollout (SIA/SPA)",
-      "isRequired": true,
-      "errorMessage": "Required"
-    },
-    {
-      "type": "Input.Text",
-      "id": "deploymentPlan",
-      "placeholder": "Provide deployment plan details",
-      "label": "Deployment Plan Info",
-      "isMultiline": true,
-      "isRequired": true,
-      "errorMessage": "Required"
-    },
-    {
-      "type": "Input.Text",
-      "id": "fileUploadInfo",
-      "placeholder": "Add upload link or write 'To be sent'",
-      "label": "File Upload Info (optional)"
-    }
+    { "type": "TextBlock", "text": "Engineering Deployment Form", "weight": "Bolder", "size": "Medium" },
+    { "type": "Input.Text", "id": "customerName", "placeholder": "Customer Name" },
+    { "type": "Input.Text", "id": "orgId", "placeholder": "Org ID" },
+    { "type": "Input.Text", "id": "totalLicenses", "placeholder": "Total Licenses" },
+    { "type": "Input.Text", "id": "alreadyDeployed", "placeholder": "Already Deployed?" },
+    { "type": "Input.Text", "id": "plannedRollout", "placeholder": "Planned Rollout" },
+    { "type": "Input.Text", "id": "deploymentPlan", "placeholder": "Deployment Plan Info" }
   ],
-  "actions": [
-    {
-      "type": "Action.Submit",
-      "title": "Submit Deployment Form",
-      "data": {
-        "formType": "deployment"
-      }
-    }
-  ]
+  "actions": [{ "type": "Action.Submit", "title": "Submit Deployment", "data": { "formType": "deployment" } }],
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "version": "1.3"
 }

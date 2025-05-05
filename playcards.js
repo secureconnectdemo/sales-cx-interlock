@@ -8,7 +8,10 @@ const playcardData = JSON.parse(
 function getPlaycard(segment, task) {
   const seg = playcardData[segment];
   if (!seg) return null;
-  return seg[task] || null;
+
+  const matchKey = Object.keys(seg).find(k => k.toLowerCase() === task.toLowerCase());
+  return matchKey ? seg[matchKey] : null;
 }
+
 
 module.exports = { getPlaycard };

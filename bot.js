@@ -68,7 +68,7 @@ app.post("/webhook", async (req, res) => {
         const card = getPlaycard(segment, task);
 
         if (card) {
-          const response = `📋 **${segment} – ${task}**\n\n👤 **Owner:** ${card.owner}\n📝 **Title:** ${card.title}\n\n${card.description.map(d => "- " + d).join("\n")}`;
+        const response = `📋 **${segment} - ${task}**\n\n👤 **Owner:** ${card.owner}\n📝 **Title:** ${card.title}\n\n${card.description.map(d => "- " + d).join("\n")}`;
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
             markdown: response

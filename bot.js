@@ -1,5 +1,3 @@
-// bot.js - Cleaned up version
-
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
@@ -7,16 +5,14 @@ const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
 
 const app = express();
-
-
 app.use(express.json());
 
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 let BOT_PERSON_ID = "";
 
 const regionARRRoomMap = {
-  "AMER_200K_PLUS": "<engineering-room-id>",
-  "DEFAULT": "<default-room-id>"
+  "AMER_200K_PLUS": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1",
+  "DEFAULT": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1"
 };
 
 const formMap = {
@@ -24,6 +20,15 @@ const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
   picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8"))
 };
+
+function normalizeARR(arrTier) {
+  switch (arrTier) {
+    case "$200K+": return "200K_PLUS";
+    case "$50K - $200K": return "50K_200K";
+    case "$0 - $50K": return "0_50K";
+    default: return arrTier.replace(/\W+/g, "_").toUpperCase();
+  }
+}
 
 app.get("/test", (req, res) => {
   res.send("✅ SSE-CX-Hub bot is up and running");
@@ -48,7 +53,10 @@ app.post("/webhook", async (req, res) => {
       const mentioned = data?.mentionedPeople?.includes(BOT_PERSON_ID);
       const isDirect = roomType === "direct";
 
-      if (!mentioned && !isDirect) return res.sendStatus(200);
+      if (!mentioned && !isDirect) {
+        console.log("🟡 Bot not mentioned in group space. Ignoring message.");
+        return res.sendStatus(200);
+      }
 
       console.log("📨 Final parsed command:", text);
 
@@ -61,7 +69,12 @@ app.post("/webhook", async (req, res) => {
       } else if (text.endsWith("/help")) {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: `**🤖 SSE-CX-Hub Bot Commands**\n\n- \`/submit handoff\` – Start Sales to Post-Sales Handoff form\n- \`/submit deployment\` – Start Engineering Deployment Planning form\n- \`/submit form\` or \`/start\` – Choose which form to submit\n- \`/help\` – Show this help message`
+          markdown:
+            "**🤖 SSE-CX-Hub Bot Commands**\n\n" +
+            "- `/submit handoff` – Start Sales to Post-Sales Handoff form\n" +
+            "- `/submit deployment` – Start Engineering Deployment Planning form\n" +
+            "- `/submit form` or `/start` – Choose which form to submit\n" +
+            "- `/help` – Show this help message"
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
@@ -92,65 +105,62 @@ async function sendForm(roomId, type) {
   if (!form) return;
 
   try {
-    await axios.get(`https://webexapis.com/v1/rooms/${roomId}`, {
+    const roomCheck = await axios.get(`https://webexapis.com/v1/rooms/${roomId}`, {
       headers: { Authorization: WEBEX_BOT_TOKEN }
     });
+    console.log("✅ Bot has access to room:", roomCheck.data.title);
   } catch (err) {
-    console.error("❌ Bot cannot access room:", err.response?.data || err.message);
+    console.error("❌ Bot does not have access to the room:", err.response?.data || err.message);
   }
 
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
     markdown: `📋 Please complete the **${type}** form:`,
-    attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: form }]
+    attachments: [{
+      contentType: "application/vnd.microsoft.card.adaptive",
+      content: form
+    }]
   }, {
     headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
   });
 }
 
 async function handleFormSubmission(roomId, formData, messageId) {
-  const key = `${formData.region}_${formData.arrTier}`;
+  const normalizedARR = normalizeARR(formData.arrTier);
+  const key = `${formData.region}_${normalizedARR}`;
   const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
+
+  let summary = "";
 
   if (formData.formType === "deployment") {
     await addHandoffEntry(formData);
-    const summary = `
-**📦 Secure Access - Onboard & Deployment Notification**
+    summary = `**📦 Secure Access - Onboard & Deployment Notification**
 
-👤 **Customer:** ${formData.customerName}
-🆔 **Org ID:** ${formData.orgId}
-📊 **Total Licenses:** ${formData.totalLicenses}
-🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}
-📅 **Planned Rollout:** ${formData.plannedRollout}
-📍 **Deployment Plan Info:**\n${formData.deploymentPlan}
+👤 **Customer:** ${formData.customerName}  
+🆔 **Org ID:** ${formData.orgId}  
+📊 **Total Licenses:** ${formData.totalLicenses}  
+🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  
+📅 **Planned Rollout:** ${formData.plannedRollout}  
+📍 **Deployment Plan Info:**  
+${formData.deploymentPlan}  
 📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent via follow-up"}`;
-
-    await postSummary(roomId, targetRoom, summary, formData.customerName, messageId);
-    return;
-  }
-
-  if (formData.formType === "handoff") {
+  } else {
     await addHandoffEntry(formData);
-    const summary = `
-**🧾 Sales to Post-Sales Handoff Summary**
+    summary = `**🧾 Sales to Post-Sales Handoff Summary**
 
-Region: ${formData.region}
-ARR Tier: ${formData.arrTier}
-Sales Rep: ${formData.salesRep || "undefined"}
-Customer: ${formData.customerName || "undefined"}
-Customer POC: ${formData.customerPOC || "undefined"}
-Product: ${formData.product || "undefined"}
-Use Cases: ${formData.useCases || "undefined"}
-Urgency: ${formData.urgency || "undefined"}
-Notes: ${formData.notes || "undefined"}
-Seeded/NFR: ${formData.nfrStatus || "undefined"}
-Follow Up: ${formData.followUpNeeded || "undefined"}`;
-
-    await postSummary(roomId, targetRoom, summary, formData.customerName, messageId);
+Region: ${formData.region}  
+ARR Tier: ${formData.arrTier}  
+Sales Rep: ${formData.salesRep}  
+Customer: ${formData.customerName}  
+Customer POC: ${formData.customerPOC}  
+Product: ${formData.product}  
+Use Cases: ${formData.useCases}  
+Urgency: ${formData.urgency}  
+Notes: ${formData.notes}  
+Seeded/NFR: ${formData.nfrStatus}  
+Follow Up: ${formData.followUpNeeded}`;
   }
-}
 
-async function postSummary(originRoom, targetRoom, summary, customerName, messageId) {
   try {
     await axios.post("https://webexapis.com/v1/messages", {
       roomId: targetRoom,
@@ -160,15 +170,15 @@ async function postSummary(originRoom, targetRoom, summary, customerName, messag
     });
 
     await axios.post("https://webexapis.com/v1/messages", {
-      roomId: originRoom,
-      markdown: `✅ Submission received for *${customerName}*.`
+      roomId,
+      markdown: `✅ Submission received for *${formData.customerName}*.`
     }, {
       headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
     });
 
     await addReaction(messageId, "thumbsup");
   } catch (err) {
-    console.error("❌ Failed during message post:", err.response?.data || err.message);
+    console.error("❌ Failed to post summary:", err.response?.data || err.message);
   }
 }
 
@@ -180,6 +190,7 @@ async function addReaction(messageId, emoji) {
     }, {
       headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
     });
+    console.log(`👍 Added reaction: ${emoji}`);
   } catch (err) {
     console.error("❌ Failed to add reaction:", err.response?.data || err.message);
   }
@@ -191,9 +202,11 @@ async function startBot() {
       headers: { Authorization: WEBEX_BOT_TOKEN }
     });
     BOT_PERSON_ID = res.data.id;
+    console.log("🤖 Bot Person ID:", BOT_PERSON_ID);
+
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-      console.log("🚀 SSE-CX-Hub listening on port", PORT);
+      console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`);
     });
   } catch (err) {
     console.error("❌ Failed to get bot info:", err.response?.data || err.message);
@@ -202,5 +215,3 @@ async function startBot() {
 }
 
 startBot();
-
-

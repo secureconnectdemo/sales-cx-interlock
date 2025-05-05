@@ -59,6 +59,31 @@ app.post("/webhook", async (req, res) => {
       }
 
       console.log("📨 Final parsed command:", text);
+      if (text.startsWith("/playcard")) {
+  const [, segmentRaw, ...taskParts] = text.split(" ");
+  const segment = capitalize(segmentRaw); // e.g., "digital" => "Digital"
+  const task = taskParts.join(" ").replace(/-/g, " ");
+  const card = getPlaycard(segment, task);
+
+  if (card) {
+    const response = `📋 **${segment} – ${task}**\n\n👤 **Owner:** ${card.owner}\n📝 **Title:** ${card.title}\n\n${card.description.map(d => "- " + d).join("\n")}`;
+    await axios.post("https://webexapis.com/v1/messages", {
+      roomId,
+      markdown: response
+    }, {
+      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+    });
+  } else {
+    await axios.post("https://webexapis.com/v1/messages", {
+      roomId,
+      markdown: `❌ No playcard found for segment **${segment}** and task **${task}**.`
+    }, {
+      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+    });
+  }
+  return res.sendStatus(200); // exit early after handling
+}
+
 
 if (text.endsWith("/submit deployment")) {
   await sendForm(roomId, "deployment");
@@ -219,5 +244,7 @@ function getReportsMarkdown() {
 🔹 **Dashboard Launch Pad (Security Section)**  
 [CS LaunchPad – Tableau](https://tableau.cisco.com/#/site/CXAccelerationMetrics/views/CSDashboardsLaunchPad/CSLaunchPad?:iid=1)`;
 }
-
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
 startBot();

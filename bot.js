@@ -16,7 +16,6 @@ const regionARRRoomMap = {
 };
 
 const formMap = {
-  handoff: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "salesHandoffForm.json"), "utf8")),
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
   picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8"))
 };
@@ -60,9 +59,7 @@ app.post("/webhook", async (req, res) => {
 
       console.log("📨 Final parsed command:", text);
 
-      if (text.endsWith("/submit handoff")) {
-        await sendForm(roomId, "handoff");
-      } else if (text.endsWith("/submit deployment")) {
+      if (text.endsWith("/submit deployment")) {
         await sendForm(roomId, "deployment");
       } else if (text.endsWith("/submit form") || text.endsWith("/start")) {
         await sendForm(roomId, "picker");
@@ -71,7 +68,6 @@ app.post("/webhook", async (req, res) => {
           roomId,
           markdown:
             "**🤖 SSE-CX-Hub Bot Commands**\n\n" +
-            "- `/submit handoff` – Start Sales to Post-Sales Handoff form\n" +
             "- `/submit deployment` – Start Engineering Deployment Planning form\n" +
             "- `/submit form` or `/start` – Choose which form to submit\n" +
             "- `/help` – Show this help message"
@@ -130,11 +126,7 @@ async function handleFormSubmission(roomId, formData, messageId) {
   const key = `${formData.region}_${normalizedARR}`;
   const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
 
-  let summary = "";
-
-  if (formData.formType === "deployment") {
-    await addHandoffEntry(formData);
-    summary = `**📦 Secure Access - Onboard & Deployment Notification**
+  const summary = `**📦 Secure Access - Onboard & Deployment Notification**
 
 👤 **Customer:** ${formData.customerName}  
 🆔 **Org ID:** ${formData.orgId}  
@@ -144,22 +136,8 @@ async function handleFormSubmission(roomId, formData, messageId) {
 📍 **Deployment Plan Info:**  
 ${formData.deploymentPlan}  
 📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent via follow-up"}`;
-  } else {
-    await addHandoffEntry(formData);
-    summary = `**🧾 Sales to Post-Sales Handoff Summary**
 
-Region: ${formData.region}  
-ARR Tier: ${formData.arrTier}  
-Sales Rep: ${formData.salesRep}  
-Customer: ${formData.customerName}  
-Customer POC: ${formData.customerPOC}  
-Product: ${formData.product}  
-Use Cases: ${formData.useCases}  
-Urgency: ${formData.urgency}  
-Notes: ${formData.notes}  
-Seeded/NFR: ${formData.nfrStatus}  
-Follow Up: ${formData.followUpNeeded}`;
-  }
+  await addHandoffEntry(formData); // still logs to Google Sheet
 
   try {
     await axios.post("https://webexapis.com/v1/messages", {

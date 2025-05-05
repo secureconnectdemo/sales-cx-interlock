@@ -1,14 +1,13 @@
-const fs = require("fs");
-const path = require("path");
-
-const playcardData = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "data", "playcards.json"), "utf8")
-);
-
-function getPlaycard(segment, task) {
-  const seg = playcardData[segment];
-  if (!seg) return null;
-  return seg[task] || null;
+{
+  "Digital": {
+    "Internal Kick Off": {
+      "owner": "Onboarding CSS",
+      "title": "Internal Kick Off",
+      "description": [
+        "Identify Cisco contacts: Sales, CX, Renewals",
+        "Use CS Console to gather contact info",
+        "Send internal sync invite and handoff questionnaire"
+      ]
+    }
+  }
 }
-
-module.exports = { getPlaycard };

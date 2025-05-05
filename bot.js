@@ -59,22 +59,31 @@ app.post("/webhook", async (req, res) => {
 
       console.log("📨 Final parsed command:", text);
 
-      if (text.endsWith("/submit deployment")) {
-        await sendForm(roomId, "deployment");
-      } else if (text.endsWith("/submit form") || text.endsWith("/start")) {
-        await sendForm(roomId, "picker");
-      } else if (text.endsWith("/help")) {
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId,
-          markdown:
-            "**🤖 SSE-CX-Hub Bot Commands**\n\n" +
-            "- `/submit deployment` – Start Engineering Deployment Planning form\n" +
-            "- `/submit form` or `/start` – Choose which form to submit\n" +
-            "- `/help` – Show this help message"
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
-      }
+if (text.endsWith("/submit deployment")) {
+  await sendForm(roomId, "deployment");
+} else if (text.endsWith("/submit form") || text.endsWith("/start")) {
+  await sendForm(roomId, "picker");
+} else if (text.endsWith("/reports")) {
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId,
+    markdown: getReportsMarkdown()
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
+} else if (text.endsWith("/help")) {
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId,
+    markdown:
+      "**🤖 SSE-CX-Hub Bot Commands**\n\n" +
+      "- `/submit deployment` – Start Engineering Deployment Planning form\n" +
+      "- `/submit form` or `/start` – Choose which form to submit\n" +
+      "- `/reports` – Get links to EVP, Adoption, and Tableau dashboards\n" +
+      "- `/help` – Show this help message"
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
+}
+
 
       return res.sendStatus(200);
     }

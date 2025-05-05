@@ -1,3 +1,5 @@
+// ✳️ Add this block to your existing Node.js bot to implement an interactive /Playcards command
+
 const { getPlaycard } = require("./playcards");
 const fs = require("fs");
 const path = require("path");
@@ -60,66 +62,170 @@ app.post("/webhook", async (req, res) => {
 
       console.log("📨 Final parsed command:", text);
       if (text.startsWith("/playcard")) {
-  const [, segmentRaw, ...taskParts] = text.split(" ");
-  const segment = capitalize(segmentRaw); // e.g., "digital" => "Digital"
-  const task = taskParts.join(" ").replace(/-/g, " ");
-  const card = getPlaycard(segment, task);
+        const [, segmentRaw, ...taskParts] = text.split(" ");
+        const segment = capitalize(segmentRaw);
+        const task = taskParts.join(" ").replace(/-/g, " ");
+        const card = getPlaycard(segment, task);
 
-  if (card) {
-    const response = `📋 **${segment} – ${task}**\n\n👤 **Owner:** ${card.owner}\n📝 **Title:** ${card.title}\n\n${card.description.map(d => "- " + d).join("\n")}`;
-    await axios.post("https://webexapis.com/v1/messages", {
-      roomId,
-      markdown: response
-    }, {
-      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-    });
-  } else {
-    await axios.post("https://webexapis.com/v1/messages", {
-      roomId,
-      markdown: `❌ No playcard found for segment **${segment}** and task **${task}**.`
-    }, {
-      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-    });
-  }
-  return res.sendStatus(200); // exit early after handling
-}
+        if (card) {
+          const response = `📋 **${segment} – ${task}**\n\n👤 **Owner:** ${card.owner}\n📝 **Title:** ${card.title}\n\n${card.description.map(d => "- " + d).join("\n")}`;
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: response
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+        } else {
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: `❌ No playcard found for segment **${segment}** and task **${task}**.`
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+        }
+        return res.sendStatus(200);
+      }
 
+      if (text === "/playcards") {
+        const segmentCard = {
+          type: "AdaptiveCard",
+          version: "1.3",
+          body: [
+            {
+              type: "TextBlock",
+              text: "Select a Segment",
+              weight: "Bolder"
+            },
+            {
+              type: "Input.ChoiceSet",
+              id: "segment",
+              style: "compact",
+              choices: [
+                { title: "Digital", value: "Digital" },
+                { title: "Scale", value: "Scale" },
+                { title: "Enterprise", value: "Enterprise" }
+              ]
+            }
+          ],
+          actions: [
+            {
+              type: "Action.Submit",
+              title: "Next",
+              data: { action: "selectSegment" }
+            }
+          ]
+        };
 
-if (text.endsWith("/submit deployment")) {
-  await sendForm(roomId, "deployment");
-} else if (text.endsWith("/submit form") || text.endsWith("/start")) {
-  await sendForm(roomId, "picker");
-} else if (text.endsWith("/reports")) {
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId,
-    markdown: getReportsMarkdown()
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
-} else if (text.endsWith("/help")) {
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId,
-    markdown:
-      "**🤖 SSE-CX-Hub Bot Commands**\n\n" +
-      "- `/submit deployment` – Start Engineering Deployment Planning form\n" +
-      "- `/submit form` or `/start` – Choose which form to submit\n" +
-      "- `/reports` – Get links to EVP, Adoption, and Tableau dashboards\n" +
-      "- `/help` – Show this help message"
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
-}
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: "📋 Choose a segment to view tasks:",
+          attachments: [{
+            contentType: "application/vnd.microsoft.card.adaptive",
+            content: segmentCard
+          }]
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+        return res.sendStatus(200);
+      }
 
+      if (text.endsWith("/submit deployment")) {
+        await sendForm(roomId, "deployment");
+      } else if (text.endsWith("/submit form") || text.endsWith("/start")) {
+        await sendForm(roomId, "picker");
+      } else if (text.endsWith("/reports")) {
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: getReportsMarkdown()
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+      } else if (text.endsWith("/help")) {
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown:
+            "**🤖 SSE-CX-Hub Bot Commands**\n\n" +
+            "- `/submit deployment` – Start Engineering Deployment Planning form\n" +
+            "- `/submit form` or `/start` – Choose which form to submit\n" +
+            "- `/reports` – Get links to EVP, Adoption, and Tableau dashboards\n" +
+            "- `/playcard <Segment> <Task>` – View a specific playcard\n" +
+            "- `/playcards` – Interactive playcard browser\n" +
+            "- `/help` – Show this help message"
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+      }
 
       return res.sendStatus(200);
     }
 
     if (resource === "attachmentActions") {
-      const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
-        headers: { Authorization: WEBEX_BOT_TOKEN }
-      });
-
+      const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`,
+        { headers: { Authorization: WEBEX_BOT_TOKEN } });
       const formData = actionRes.data.inputs;
+
+      if (formData.action === "selectSegment") {
+        const segment = formData.segment;
+        const playcardModule = require("./playcards");
+        const tasks = Object.keys(playcardModule[segment] || {});
+        const taskCard = {
+          type: "AdaptiveCard",
+          version: "1.3",
+          body: [
+            { type: "TextBlock", text: `Select a task for ${segment}`, weight: "Bolder" },
+            {
+              type: "Input.ChoiceSet",
+              id: "task",
+              style: "compact",
+              choices: tasks.map(t => ({ title: t, value: t }))
+            }
+          ],
+          actions: [
+            {
+              type: "Action.Submit",
+              title: "Show Playcard",
+              data: { action: "selectTask", segment }
+            }
+          ]
+        };
+
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: `📋 Select a task for **${segment}**:",
+          attachments: [{
+            contentType: "application/vnd.microsoft.card.adaptive",
+            content: taskCard
+          }]
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+        return res.sendStatus(200);
+      }
+
+      if (formData.action === "selectTask") {
+        const segment = formData.segment;
+        const task = formData.task;
+        const card = getPlaycard(segment, task);
+
+        if (card) {
+          const response = `📋 **${segment} – ${task}**\n\n👤 **Owner:** ${card.owner}\n📝 **Title:** ${card.title}\n\n${card.description.map(d => "- " + d).join("\n")}`;
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: response
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+        } else {
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: `❌ No playcard found for **${segment} – ${task}**.`
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+        }
+        return res.sendStatus(200);
+      }
+
       await handleFormSubmission(roomId, formData, messageId);
       return res.sendStatus(200);
     }

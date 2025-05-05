@@ -200,5 +200,23 @@ async function startBot() {
     process.exit(1);
   }
 }
+function getReportsMarkdown() {
+  return `**📊 Secure Access Reports & Dashboards**
+
+🔹 **EVP Tracker**  
+[Customer EVP Secure Access (SharePoint)](https://cisco.sharepoint.com/:x:/r/sites/SecureAccessEVP/_layouts/15/Doc.aspx?sourcedoc=%7B9C407F58-85B2-4117-AE0A-E351493EDA81%7D&file=Customer%20EVP%20Secure%20Access.xlsx)
+
+🔹 **Secure Access Paying Accounts – Tableau**  
+[SecureAccessPayingAccts](https://tableau.cisco.com/#/site/CiscoUmbrella/views/secure_access_paying_accts/SecureAccessPayingAccts?:iid=1)
+
+🔹 **Digital Experience Monitoring – ThousandEyes**  
+[SecureAccess-DEM](https://tableau.cisco.com/#/site/CiscoUmbrella/views/Secure_access_digital_experience_management/SecureAccess-DEM?:iid=1)
+
+🔹 **Adoption Executive Dashboard (Vidcast)**  
+[Vidcast Recording](https://app.vidcast.io/share/945e0997-79f0-4a80-abb2-12ff06af22c3?playerMode=vidcast)
+
+🔹 **Dashboard Launch Pad (Security Section)**  
+[CS LaunchPad – Tableau](https://tableau.cisco.com/#/site/CXAccelerationMetrics/views/CSDashboardsLaunchPad/CSLaunchPad?:iid=1)`;
+}
 
 startBot();

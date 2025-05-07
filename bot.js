@@ -55,31 +55,27 @@ app.post("/webhook", async (req, res) => {
 
       if (!mentioned && !isDirect) return res.sendStatus(200);
 
+      // 📋 /playcard command (manual)
       if (text.startsWith("/playcard")) {
         const [, segmentRaw, ...taskParts] = text.split(" ");
         const segment = capitalize(segmentRaw);
         const task = taskParts.join(" ").replace(/-/g, " ");
         const card = getPlaycard(segment, task);
 
-        if (card) {
-          const response = `**${segment} - ${task}**\n\n**Owner:** ${card.owner}\n**Title:** ${card.title}\n\n${(card.description || []).map(d => "- " + d).join("\n")}`;
-          await axios.post("https://webexapis.com/v1/messages", {
-            roomId,
-            markdown: response
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
-        } else {
-          await axios.post("https://webexapis.com/v1/messages", {
-            roomId,
-            markdown: `❌ No playcard found for segment **${segment}** and task **${task}**.`
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
-        }
+        const response = card
+          ? `**${segment} - ${task}**\n\n**Owner:** ${card.owner}\n**Title:** ${card.title}\n\n${(card.description || []).map(d => "- " + d).join("\n")}`
+          : `❌ No playcard found for segment **${segment}** and task **${task}**.`;
+
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: response
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
         return res.sendStatus(200);
       }
 
+      // 📋 /playcards interactive flow
       if (text === "/playcards") {
         const segmentCard = {
           type: "AdaptiveCard",
@@ -124,6 +120,7 @@ app.post("/webhook", async (req, res) => {
       }
     }
 
+    // 🧠 Handle Adaptive Card Responses
     if (resource === "attachmentActions") {
       const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
@@ -133,7 +130,18 @@ app.post("/webhook", async (req, res) => {
       if (formData.action === "selectSegment") {
         const segment = formData.segment;
         const playcardModule = require("./playcards");
-        const tasks = Object.keys(playcardModule[segment] || {});
+        const segmentData = playcardModule[segment];
+
+        if (!segmentData) {
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: `❌ No tasks found for segment **${segment}**.`
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+          return res.sendStatus(200);
+        }
+
         const taskCard = {
           type: "AdaptiveCard",
           version: "1.3",
@@ -143,7 +151,7 @@ app.post("/webhook", async (req, res) => {
               type: "Input.ChoiceSet",
               id: "task",
               style: "compact",
-              choices: tasks.map(t => ({ title: t, value: t }))
+              choices: Object.keys(segmentData).map(t => ({ title: t, value: t }))
             }
           ],
           actions: [
@@ -157,7 +165,7 @@ app.post("/webhook", async (req, res) => {
 
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: `📋 Select a task for **${segment}**:",
+          markdown: `📋 Select a task for **${segment}**:`,
           attachments: [{
             contentType: "application/vnd.microsoft.card.adaptive",
             content: taskCard
@@ -171,24 +179,28 @@ app.post("/webhook", async (req, res) => {
       if (formData.action === "selectTask") {
         const segment = formData.segment;
         const task = formData.task;
-        const card = getPlaycard(segment, task);
-
-        if (card) {
-          const response = `**${segment} - ${task}**\n\n**Owner:** ${card.owner}\n**Title:** ${card.title}\n\n${(card.description || []).map(d => "- " + d).join("\n")}`;
+        if (!task) {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
-            markdown: response
+            markdown: "❌ No task selected. Please try again."
           }, {
             headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
           });
-        } else {
-          await axios.post("https://webexapis.com/v1/messages", {
-            roomId,
-            markdown: `❌ No playcard found for **${segment} – ${task}**.`
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
+          return res.sendStatus(200);
         }
+
+        const card = getPlaycard(segment, task);
+        const response = card
+          ? `**${segment} - ${task}**\n\n**Owner:** ${card.owner}\n**Title:** ${card.title}\n\n${(card.description || []).map(d => "- " + d).join("\n")}`
+          : `❌ No playcard found for **${segment} – ${task}**.`;
+
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: response
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+
         return res.sendStatus(200);
       }
     }
@@ -204,7 +216,7 @@ function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
-startBot = async () => {
+async function startBot() {
   try {
     const res = await axios.get("https://webexapis.com/v1/people/me", {
       headers: { Authorization: WEBEX_BOT_TOKEN }
@@ -216,6 +228,6 @@ startBot = async () => {
     console.error("❌ Failed to get bot info:", err.response?.data || err.message);
     process.exit(1);
   }
-};
+}
 
 startBot();

@@ -1,5 +1,4 @@
 {
-  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
   "type": "AdaptiveCard",
   "version": "1.2",
   "body": [
@@ -48,9 +47,9 @@
     {
       "type": "Input.Text",
       "id": "deploymentPlan",
-      "placeholder": "Provide deployment plan details",
-      "isMultiline": true,
-      "label": "Deployment Plan Info"
+      "placeholder": "Add information using this format: Country/US State, # seats (e.g., US/CA, 3000)",
+      "label": "Deployment Plan Info",
+      "isMultiline": true
     },
     {
       "type": "Input.Text",
@@ -81,17 +80,15 @@
         { "title": "$200K+", "value": "200K_PLUS" }
       ],
       "isRequired": true
-    },
-    {
-      "type": "Input.Hidden",
-      "id": "formType",
-      "value": "deployment"
     }
   ],
   "actions": [
     {
       "type": "Action.Submit",
-      "title": "Submit Deployment Form"
+      "title": "Submit Deployment Form",
+      "data": {
+        "formType": "deployment"
+      }
     }
   ]
 }

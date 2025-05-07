@@ -32,6 +32,7 @@ app.post("/webhook", async (req, res) => {
   const messageId = data?.id;
   if (!roomId || !messageId) return res.sendStatus(400);
 
+
   try {
     if (resource === "messages") {
       const messageRes = await axios.get(`https://webexapis.com/v1/messages/${messageId}`, {
@@ -41,14 +42,30 @@ app.post("/webhook", async (req, res) => {
       const text = (messageRes.data.text || "").toLowerCase().trim();
       const mentioned = data?.mentionedPeople?.includes(BOT_PERSON_ID);
       const isDirect = roomType === "direct";
+console.log("📨 Final parsed command:", text);
 
       if (!mentioned && !isDirect) return res.sendStatus(200);
 
-      // /submit deployment
-      if (text === "/submit deployment") {
-        await sendForm(roomId, "deployment");
-        return res.sendStatus(200);
-      }
+   // ✅ /submit deployment
+if (text === "/submit deployment") {
+  console.log("📨 Matched '/submit deployment' command");
+
+  try {
+    await sendForm(roomId, "deployment");
+    console.log("✅ Deployment form sent successfully");
+  } catch (err) {
+    console.error("❌ Error sending deployment form:", err.message);
+    await axios.post("https://webexapis.com/v1/messages", {
+      roomId,
+      markdown: `❌ Failed to send deployment form: ${err.message}`
+    }, {
+      headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+    });
+  }
+
+  return res.sendStatus(200);
+}
+
 
       // /playcard segment task-name
       if (text.startsWith("/playcard")) {

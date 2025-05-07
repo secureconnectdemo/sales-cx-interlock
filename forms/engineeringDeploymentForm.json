@@ -47,7 +47,7 @@
     {
       "type": "Input.Text",
       "id": "deploymentPlan",
-      "placeholder": "Add information using this format: Country/US State, # seats (e.g., US/CA, 3000)",
+      "placeholder": "Add info using this format: Country/US State, # seats (e.g., US/CA, 3000)",
       "label": "Deployment Plan Info",
       "isMultiline": true
     },
@@ -56,30 +56,6 @@
       "id": "fileUploadInfo",
       "placeholder": "Add upload link or write 'To be sent'",
       "label": "File Upload Info (optional)"
-    },
-    {
-      "type": "Input.ChoiceSet",
-      "id": "region",
-      "label": "Region",
-      "style": "compact",
-      "choices": [
-        { "title": "AMER", "value": "AMER" },
-        { "title": "EMEA", "value": "EMEA" },
-        { "title": "APJC", "value": "APJC" }
-      ],
-      "isRequired": true
-    },
-    {
-      "type": "Input.ChoiceSet",
-      "id": "arrTier",
-      "label": "ARR Tier",
-      "style": "compact",
-      "choices": [
-        { "title": "$0 - $50K", "value": "0_50K" },
-        { "title": "$50K - $200K", "value": "50K_200K" },
-        { "title": "$200K+", "value": "200K_PLUS" }
-      ],
-      "isRequired": true
     }
   ],
   "actions": [
@@ -92,3 +68,4 @@
     }
   ]
 }
+

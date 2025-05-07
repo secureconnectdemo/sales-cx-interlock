@@ -1,4 +1,5 @@
 {
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
   "type": "AdaptiveCard",
   "version": "1.2",
   "body": [
@@ -47,7 +48,7 @@
     {
       "type": "Input.Text",
       "id": "deploymentPlan",
-      "placeholder": "Add info using this format: Country/US State, # seats (e.g., US/CA, 3000)",
+      "placeholder": "Add info using this format: Country/US State, # seats",
       "label": "Deployment Plan Info",
       "isMultiline": true
     },
@@ -56,16 +57,17 @@
       "id": "fileUploadInfo",
       "placeholder": "Add upload link or write 'To be sent'",
       "label": "File Upload Info (optional)"
+    },
+    {
+      "type": "Input.Hidden",
+      "id": "formType",
+      "value": "deployment"
     }
   ],
   "actions": [
     {
       "type": "Action.Submit",
-      "title": "Submit Deployment Form",
-      "data": {
-        "formType": "deployment"
-      }
+      "title": "Submit Deployment Form"
     }
   ]
 }
-

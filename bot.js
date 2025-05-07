@@ -1,5 +1,3 @@
-// ✫️ Interactive /Playcards Command Node.js Bot
-
 const { getPlaycard } = require("./playcards");
 const fs = require("fs");
 const path = require("path");
@@ -22,15 +20,6 @@ const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
   picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8"))
 };
-
-function normalizeARR(arrTier) {
-  switch (arrTier) {
-    case "$200K+": return "200K_PLUS";
-    case "$50K - $200K": return "50K_200K";
-    case "$0 - $50K": return "0_50K";
-    default: return arrTier.replace(/\W+/g, "_").toUpperCase();
-  }
-}
 
 app.get("/test", (req, res) => {
   res.send("✅ SSE-CX-Hub bot is up and running");
@@ -55,7 +44,13 @@ app.post("/webhook", async (req, res) => {
 
       if (!mentioned && !isDirect) return res.sendStatus(200);
 
-      // 📋 /playcard command (manual)
+      // /submit deployment
+      if (text === "/submit deployment") {
+        await sendForm(roomId, "deployment");
+        return res.sendStatus(200);
+      }
+
+      // /playcard segment task-name
       if (text.startsWith("/playcard")) {
         const [, segmentRaw, ...taskParts] = text.split(" ");
         const segment = capitalize(segmentRaw);
@@ -75,7 +70,7 @@ app.post("/webhook", async (req, res) => {
         return res.sendStatus(200);
       }
 
-      // 📋 /playcards interactive flow
+      // /playcards interactive picker
       if (text === "/playcards") {
         const segmentCard = {
           type: "AdaptiveCard",
@@ -120,7 +115,7 @@ app.post("/webhook", async (req, res) => {
       }
     }
 
-    // 🧠 Handle Adaptive Card Responses
+    // Adaptive Card Responses
     if (resource === "attachmentActions") {
       const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
@@ -179,17 +174,8 @@ app.post("/webhook", async (req, res) => {
       if (formData.action === "selectTask") {
         const segment = formData.segment;
         const task = formData.task;
-        if (!task) {
-          await axios.post("https://webexapis.com/v1/messages", {
-            roomId,
-            markdown: "❌ No task selected. Please try again."
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
-          return res.sendStatus(200);
-        }
-
         const card = getPlaycard(segment, task);
+
         const response = card
           ? `**${segment} - ${task}**\n\n**Owner:** ${card.owner}\n**Title:** ${card.title}\n\n${(card.description || []).map(d => "- " + d).join("\n")}`
           : `❌ No playcard found for **${segment} – ${task}**.`;
@@ -200,8 +186,41 @@ app.post("/webhook", async (req, res) => {
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
-
         return res.sendStatus(200);
+      }
+
+      // Form Submission Handler (Optional)
+      if (formData.formType === "deployment") {
+        const normalizedARR = normalizeARR(formData.arrTier);
+        const key = `${formData.region}_${normalizedARR}`;
+        const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
+
+        const summary = `**📦 Secure Access - Onboard & Deployment Notification**
+
+👤 **Customer:** ${formData.customerName}  
+🆔 **Org ID:** ${formData.orgId}  
+📊 **Total Licenses:** ${formData.totalLicenses}  
+🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  
+📅 **Planned Rollout:** ${formData.plannedRollout}  
+📍 **Deployment Plan Info:**  
+${formData.deploymentPlan}  
+📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}`;
+
+        await addHandoffEntry(formData);
+
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId: targetRoom,
+          markdown: summary
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: `✅ Submission received for *${formData.customerName}*.`
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
       }
     }
 
@@ -214,6 +233,22 @@ app.post("/webhook", async (req, res) => {
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+async function sendForm(roomId, type) {
+  const form = formMap[type];
+  if (!form) return;
+
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId,
+    markdown: `📋 Please complete the **${type}** form:`,
+    attachments: [{
+      contentType: "application/vnd.microsoft.card.adaptive",
+      content: form
+    }]
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
 }
 
 async function startBot() {

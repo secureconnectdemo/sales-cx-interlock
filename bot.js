@@ -11,11 +11,6 @@ app.use(express.json());
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 let BOT_PERSON_ID = "";
 
-const regionARRRoomMap = {
-  "AMER_200K_PLUS": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1",
-  "DEFAULT": "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1"
-};
-
 const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
   picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8"))
@@ -81,6 +76,43 @@ app.post("/webhook", async (req, res) => {
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
+        return res.sendStatus(200);
+      }
+    }
+
+    if (resource === "attachmentActions") {
+      const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
+        headers: { Authorization: WEBEX_BOT_TOKEN }
+      });
+      const formData = actionRes.data.inputs;
+
+      if (formData.formType === "deployment") {
+        const summary = `**📦 Secure Access - Onboard & Deployment Notification**\n\n👤 **Customer:** ${formData.customerName}  \n🆔 **Org ID:** ${formData.orgId}  \n📊 **Total Licenses:** ${formData.totalLicenses}  \n🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  \n📅 **Planned Rollout:** ${formData.plannedRollout}  \n📍 **Deployment Plan Info:**  \n${formData.deploymentPlan}  \n📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}`;
+
+        await addHandoffEntry(formData);
+
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId: roomId,
+          markdown: summary
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+
+        const CAPACITY_PLANNING_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId: CAPACITY_PLANNING_ROOM_ID,
+          markdown: `📢 **New Form Submission Notification**\n\n👤 **Customer:** ${formData.customerName}  \n🆔 **Org ID:** ${formData.orgId}  \n📅 **Planned Rollout:** ${formData.plannedRollout}  \n📍 **Deployment Plan:** ${formData.deploymentPlan}`
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: `✅ Submission received for *${formData.customerName}*.`
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+
         return res.sendStatus(200);
       }
     }

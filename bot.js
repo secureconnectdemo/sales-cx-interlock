@@ -4,6 +4,7 @@ const path = require("path");
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
+const { getAccountsWithBarrier } = require("./airtable");
 
 const app = express();
 app.use(express.json());

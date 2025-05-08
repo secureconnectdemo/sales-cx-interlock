@@ -100,12 +100,23 @@ app.post("/webhook", async (req, res) => {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
 
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId: CAPACITY_PLANNING_ROOM_ID,
-          markdown: `📢 **New Form Submission Notification**\n\n👤 **Customer:** ${formData.customerName}  \n🆔 **Org ID:** ${formData.orgId}  \n📅 **Planned Rollout:** ${formData.plannedRollout}  \n📍 **Deployment Plan:** ${formData.deploymentPlan}`
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
+      await axios.post("https://webexapis.com/v1/messages", {
+  roomId: CAPACITY_PLANNING_ROOM_ID,
+  markdown: `📢 **New Form Submission Notification**
+
+👤 **Customer:** ${formData.customerName}  
+🆔 **Org ID:** ${formData.orgId}  
+📊 **Total Licenses:** ${formData.totalLicenses}  
+🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  
+📅 **Planned Rollout:** ${formData.plannedRollout}  
+📍 **Deployment Plan Info:**  
+${formData.deploymentPlan}  
+📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}  
+👤 **Submitted By:** ${formData.submittedBy || "N/A"}`
+}, {
+  headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+});
+
 
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,

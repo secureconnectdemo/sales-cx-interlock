@@ -16,12 +16,11 @@
       "wrap": true
     },
     {
-  "type": "Input.Text",
-  "id": "submittedBy",
-  "label": "Submitted By (Name or Email)",
-  "placeholder": "e.g., josfonse@cisco.com"
-},
-
+      "type": "Input.Text",
+      "id": "submittedBy",
+      "label": "Submitted By (Name or Email)",
+      "placeholder": "e.g., johndoe@cisco.com"
+    },
     {
       "type": "Input.Text",
       "id": "customerName",
@@ -74,7 +73,11 @@
   "actions": [
     {
       "type": "Action.Submit",
-      "title": "Submit Deployment Form"
+      "title": "Submit Deployment Form",
+      "data": {
+        "action": "submitDeployment",
+        "formType": "deployment"
+      }
     }
   ]
 }

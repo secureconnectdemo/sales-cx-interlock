@@ -24,8 +24,8 @@ const formMap = {
 app.get("/test", (req, res) => {
   res.send("✅ SSE-CX-Hub bot is up and running");
 });
-console.log("📨 Final parsed command:", text);
-      console.log("🔥 Incoming webhook hit");
+
+console.log("🔥 Incoming webhook hit");
 console.log("BODY:", JSON.stringify(req.body, null, 2));
 app.post("/webhook", async (req, res) => {
   const { data, resource } = req.body;

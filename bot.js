@@ -274,7 +274,7 @@ async function startBot() {
       headers: { Authorization: WEBEX_BOT_TOKEN }
     });
     BOT_PERSON_ID = res.data.id;
-    const PORT = process.env.PORT || 3000;
+   const PORT = process.env.PORT || 10000; // must match Render-assigned port
     app.listen(PORT, () => console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`));
   } catch (err) {
     console.error("❌ Failed to get bot info:", err.response?.data || err.message);

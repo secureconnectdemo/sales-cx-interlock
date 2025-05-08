@@ -239,17 +239,19 @@ ${formData.deploymentPlan}
 
   // ✅ Also notify "Capacity Planning" room
   const CAPACITY_PLANNING_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: CAPACITY_PLANNING_ROOM_ID,
-    markdown: `📢 **New Form Submission Notification**
+ await axios.post("https://webexapis.com/v1/messages", {
+  roomId: CAPACITY_PLANNING_ROOM_ID,
+  markdown: `📢 **New Form Submission Notification**
 
 👤 **Customer:** ${formData.customerName}  
 🆔 **Org ID:** ${formData.orgId}  
 📅 **Planned Rollout:** ${formData.plannedRollout}  
-📍 **Deployment Plan:** ${formData.deploymentPlan}`
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
+📍 **Deployment Plan:** ${formData.deploymentPlan}  
+👤 **Submitted By:** ${formData.submittedBy || "N/A"}`
+}, {
+  headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+});
+
 
   // ✅ Acknowledge user in the original chat
   await axios.post("https://webexapis.com/v1/messages", {

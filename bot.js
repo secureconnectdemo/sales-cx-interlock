@@ -24,7 +24,9 @@ const formMap = {
 app.get("/test", (req, res) => {
   res.send("✅ SSE-CX-Hub bot is up and running");
 });
-
+console.log("📨 Final parsed command:", text);
+      console.log("🔥 Incoming webhook hit");
+console.log("BODY:", JSON.stringify(req.body, null, 2));
 app.post("/webhook", async (req, res) => {
   const { data, resource } = req.body;
   const roomId = data?.roomId;
@@ -42,9 +44,7 @@ app.post("/webhook", async (req, res) => {
       const text = (messageRes.data.text || "").toLowerCase().trim();
       const mentioned = data?.mentionedPeople?.includes(BOT_PERSON_ID);
       const isDirect = roomType === "direct";
-console.log("📨 Final parsed command:", text);
-      console.log("🔥 Incoming webhook hit");
-console.log("BODY:", JSON.stringify(req.body, null, 2));
+
 
 
       if (!mentioned && !isDirect) return res.sendStatus(200);

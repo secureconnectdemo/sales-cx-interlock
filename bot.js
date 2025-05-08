@@ -11,6 +11,8 @@ app.use(express.json());
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 let BOT_PERSON_ID = "";
 
+const CAPACITY_PLANNING_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
+
 const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
   picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8"))
@@ -92,13 +94,12 @@ app.post("/webhook", async (req, res) => {
         await addHandoffEntry(formData);
 
         await axios.post("https://webexapis.com/v1/messages", {
-          roomId: roomId,
+          roomId,
           markdown: summary
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
 
-        const CAPACITY_PLANNING_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
         await axios.post("https://webexapis.com/v1/messages", {
           roomId: CAPACITY_PLANNING_ROOM_ID,
           markdown: `📢 **New Form Submission Notification**\n\n👤 **Customer:** ${formData.customerName}  \n🆔 **Org ID:** ${formData.orgId}  \n📅 **Planned Rollout:** ${formData.plannedRollout}  \n📍 **Deployment Plan:** ${formData.deploymentPlan}`

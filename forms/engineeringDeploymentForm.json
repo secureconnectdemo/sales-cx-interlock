@@ -16,6 +16,13 @@
       "wrap": true
     },
     {
+  "type": "Input.Text",
+  "id": "submittedBy",
+  "label": "Submitted By (Name or Email)",
+  "placeholder": "e.g., josfonse@cisco.com"
+},
+
+    {
       "type": "Input.Text",
       "id": "customerName",
       "placeholder": "Enter customer name",

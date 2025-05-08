@@ -211,12 +211,12 @@ if (text === "/submit deployment") {
       }
 
       // Form Submission Handler (Optional)
-      if (formData.formType === "deployment") {
-        const normalizedARR = normalizeARR(formData.arrTier);
-        const key = `${formData.region}_${normalizedARR}`;
-        const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
+    if (formData.formType === "deployment") {
+  const normalizedARR = normalizeARR(formData.arrTier);
+  const key = `${formData.region}_${normalizedARR}`;
+  const targetRoom = regionARRRoomMap[key] || regionARRRoomMap["DEFAULT"];
 
-        const summary = `**📦 Secure Access - Onboard & Deployment Notification**
+  const summary = `**📦 Secure Access - Onboard & Deployment Notification**
 
 👤 **Customer:** ${formData.customerName}  
 🆔 **Org ID:** ${formData.orgId}  
@@ -227,23 +227,40 @@ if (text === "/submit deployment") {
 ${formData.deploymentPlan}  
 📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}`;
 
-        await addHandoffEntry(formData);
+  await addHandoffEntry(formData);
 
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId: targetRoom,
-          markdown: summary
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
+  // ✅ Notify ARR-targeted room
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId: targetRoom,
+    markdown: summary
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
 
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId,
-          markdown: `✅ Submission received for *${formData.customerName}*.`
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
-      }
-    }
+  // ✅ Also notify "Capacity Planning" room
+  const CAPACITY_PLANNING_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId: CAPACITY_PLANNING_ROOM_ID,
+    markdown: `📢 **New Form Submission Notification**
+
+👤 **Customer:** ${formData.customerName}  
+🆔 **Org ID:** ${formData.orgId}  
+📅 **Planned Rollout:** ${formData.plannedRollout}  
+📍 **Deployment Plan:** ${formData.deploymentPlan}`
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
+
+  // ✅ Acknowledge user in the original chat
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId,
+    markdown: `✅ Submission received for *${formData.customerName}*.`
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
+
+  return res.sendStatus(200);
+}
 
     res.sendStatus(200);
   } catch (err) {

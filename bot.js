@@ -25,9 +25,10 @@ app.get("/test", (req, res) => {
   res.send("✅ SSE-CX-Hub bot is up and running");
 });
 
-console.log("🔥 Incoming webhook hit");
-console.log("BODY:", JSON.stringify(req.body, null, 2));
+
 app.post("/webhook", async (req, res) => {
+  console.log("🔥 Incoming webhook hit");
+console.log("BODY:", JSON.stringify(req.body, null, 2));
   const { data, resource } = req.body;
   const roomId = data?.roomId;
   const roomType = data?.roomType;

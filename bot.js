@@ -58,7 +58,6 @@ if (text === "/submit deployment") {
     await sendForm(roomId, "deployment");
     console.log("✅ Deployment form sent successfully");
   } catch (err) {
-
     console.error("❌ Error sending deployment form:", err.message);
     await axios.post("https://webexapis.com/v1/messages", {
       roomId,
@@ -70,6 +69,7 @@ if (text === "/submit deployment") {
 
   return res.sendStatus(200);
 }
+
 
 
       // /playcard segment task-name

@@ -4,7 +4,7 @@ const path = require("path");
 const express = require("express");
 const axios = require("axios");
 const { addHandoffEntry } = require("./sheet");
-const { getAccountsWithBarrier } = require("./airtable");
+// const { getAccountsWithBarrier } = require("./airtable"); // Airtable disabled for now
 
 const app = express();
 app.use(express.json());
@@ -101,9 +101,9 @@ app.post("/webhook", async (req, res) => {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
 
-      await axios.post("https://webexapis.com/v1/messages", {
-  roomId: CAPACITY_PLANNING_ROOM_ID,
-  markdown: `📢 **New Form Submission Notification**
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId: CAPACITY_PLANNING_ROOM_ID,
+          markdown: `📢 **New Form Submission Notification**
 
 👤 **Customer:** ${formData.customerName}  
 🆔 **Org ID:** ${formData.orgId}  
@@ -114,10 +114,9 @@ app.post("/webhook", async (req, res) => {
 ${formData.deploymentPlan}  
 📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}  
 👤 **Submitted By:** ${formData.submittedBy || "N/A"}`
-}, {
-  headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-});
-
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
 
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,

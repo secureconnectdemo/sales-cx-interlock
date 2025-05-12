@@ -19,44 +19,58 @@
       "type": "Input.Text",
       "id": "submittedBy",
       "label": "Submitted By (Name or Email)",
-      "placeholder": "e.g., johndoe@cisco.com"
+      "placeholder": "e.g., johndoe@cisco.com",
+      "isRequired": true,
+      "errorMessage": "Please enter your name or email."
     },
     {
       "type": "Input.Text",
       "id": "customerName",
       "placeholder": "Enter customer name",
-      "label": "Customer Name"
+      "label": "Customer Name",
+      "isRequired": true,
+      "errorMessage": "Customer name is required."
     },
     {
       "type": "Input.Text",
       "id": "orgId",
       "placeholder": "Enter Org ID",
-      "label": "Customer Org ID"
+      "label": "Customer Org ID",
+      "isRequired": true,
+      "errorMessage": "Customer Org ID is required."
     },
     {
       "type": "Input.Text",
       "id": "totalLicenses",
       "placeholder": "e.g.: 3500 SIA / 3000 SPA",
-      "label": "Total Licenses (SIA/SPA)"
+      "label": "Total Licenses (SIA/SPA)",
+      "isRequired": true,
+      "errorMessage": "Total licenses are required."
     },
     {
       "type": "Input.Text",
       "id": "alreadyDeployed",
       "placeholder": "e.g.: 1500 SIA / 500 SPA",
-      "label": "Already Deployed (SIA/SPA)"
+      "label": "Already Deployed (SIA/SPA)",
+      "isRequired": true,
+      "errorMessage": "Already deployed value is required."
     },
     {
       "type": "Input.Text",
       "id": "plannedRollout",
       "placeholder": "e.g.: 2000 SIA / 2500 SPA",
-      "label": "Planned Rollout (SIA/SPA)"
+      "label": "Planned Rollout (SIA/SPA)",
+      "isRequired": true,
+      "errorMessage": "Planned rollout is required."
     },
     {
       "type": "Input.Text",
       "id": "deploymentPlan",
       "placeholder": "Add info using this format: Country/US State, # seats",
       "label": "Deployment Plan Info",
-      "isMultiline": true
+      "isMultiline": true,
+      "isRequired": true,
+      "errorMessage": "Deployment plan info is required."
     },
     {
       "type": "Input.Text",

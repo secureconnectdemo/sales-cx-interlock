@@ -77,7 +77,7 @@ app.post("/webhook", async (req, res) => {
 Here are the available commands:
 
 - \`/submit deployment\` – Open the Secure Access Onboarding & Deployment form  
-- \`/playcard [segment] [task-name]\` – Retrieve a task playcard (e.g., \`/playcard digital onboarding\`)  
+- \`/playcard [segment] [task-name]\` – Retrieve a task playcard (e.g., \`/playcard digital onboarding\`) (comming soon) 
 - \`/status\` – Check your last deployment form submission (coming soon)  
 - \`/reset\` – Clear current session or inputs (coming soon)
 

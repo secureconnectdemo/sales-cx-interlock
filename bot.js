@@ -81,7 +81,8 @@ Here are the available commands:
 
 ℹ️ *For the form to appear, it might take a few seconds — especially after long periods of inactivity. Please wait patiently for the confirmation message before retrying.*
 
-🛠️ If something's not working, please report the issue to josfonse@cisco.com and complete the following MS Form to provide the information in question [ Deployment Planning](https://forms.office.com/r/zGd6u5MEmt).
+🛠️ Having issues?
+If something's not working, please report the issue to josfonse@cisco.com and complete the following form to provide the necessary deployment details: [ Deployment Planning](https://forms.office.com/r/zGd6u5MEmt).
         `;
 
         await axios.post("https://webexapis.com/v1/messages", {

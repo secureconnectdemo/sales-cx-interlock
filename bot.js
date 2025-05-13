@@ -77,13 +77,13 @@ app.post("/webhook", async (req, res) => {
 Here are the available commands:
 
 - \`/submit deployment\` – Open the Secure Access Onboarding & Deployment form  
-- \`/playcard [segment] [task-name]\` – Retrieve a task playcard (e.g., \`/playcard digital onboarding\`) (coming soon)
+- \`/playcard [segment] [task-name]\` – Retrieve a task playcard (e.g., \`/playcard digital onboarding\`)  
 - \`/status\` – Check your last deployment form submission (coming soon)  
 - \`/reset\` – Clear current session or inputs (coming soon)
 
 ℹ️ *Note: Submitting the form may take a few seconds, especially after long periods of inactivity. Please wait for the confirmation message.*
 
-🛠️ If something's not working, please use this form to provide the information on the acount in question [this form](https://forms.office.com/r/zGd6u5MEmt) and report the issue to josfonse@cisco.com.
+🛠️ If something's not working, please report the issue using [this form](https://forms.office.com/r/zGd6u5MEmt) or contact josfonse@cisco.com.
         `;
 
         await axios.post("https://webexapis.com/v1/messages", {
@@ -103,7 +103,7 @@ Here are the available commands:
         const card = getPlaycard(segment, task);
 
         const response = card
-          ? `**${segment} - ${task}**\n\n**Owner:** ${card.owner}\n**Title:** ${card.title}\n\n${(card.description || []).map(d => "- " + d).join("\n")}`
+          ? `🎯 **Playcard Overview**\n\n---\n**${segment} - ${task}**\n\n**Owner:** ${card.owner}\n**Title:** ${card.title}\n\n${(card.description || []).map(d => "- " + d).join("\n")}`
           : `❌ No playcard found for segment **${segment}** and task **${task}**.`;
 
         await axios.post("https://webexapis.com/v1/messages", {

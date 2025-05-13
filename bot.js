@@ -83,7 +83,7 @@ Here are the available commands:
 
 ℹ️ *Note: Submitting the form may take a few seconds, especially after long periods of inactivity. Please wait for the confirmation message.*
 
-🛠️ If something's not working, please report the issue to josfonse@cisco.com and complete the following MS Form to provide the information in question [ Deployment Planning](https://forms.office.com/r/zGd6u5MEmt)
+🛠️ If something's not working, please report the issue to josfonse@cisco.com and complete the following MS Form to provide the information in question [ Deployment Planning](https://forms.office.com/r/zGd6u5MEmt).
         `;
 
         await axios.post("https://webexapis.com/v1/messages", {
@@ -180,7 +180,7 @@ async function sendForm(roomId, type) {
 
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
-    markdown: `📋 Please complete the **${type}** form:\`,
+    markdown: `📋 Please complete the **${type}** form:`,
     attachments: [{
       contentType: "application/vnd.microsoft.card.adaptive",
       content: form
@@ -197,13 +197,11 @@ async function startBot() {
     });
     BOT_PERSON_ID = res.data.id;
     const PORT = process.env.PORT || 10000;
-    app.listen(PORT, () => console.log(🚀 SSE-CX-Hub listening on port ${PORT}));
+    console.log(🚀 SSE-CX-Hub listening on port ${PORT});
   } catch (err) {
     console.error("❌ Failed to get bot info:", err.response?.data || err.message);
     process.exit(1);
   }
 }
-
-startBot();
 
 startBot();

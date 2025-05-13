@@ -77,11 +77,9 @@ app.post("/webhook", async (req, res) => {
 Here are the available commands:
 
 - \`/submit deployment\` – Open the Secure Access Onboarding & Deployment form  
-- \`/playcard [segment] [task-name]\` – Retrieve a task playcard (e.g., \`/playcard digital onboarding\`) (coming soon)
-- \`/status\` – Check your last deployment form submission (coming soon)  
 - \`/reset\` – Clear current session or inputs (coming soon)
 
-ℹ️ *Note: Submitting the form may take a few seconds, especially after long periods of inactivity. Please wait for the confirmation message.*
+ℹ️ *For the form to appear, it might take a few seconds — especially after long periods of inactivity. Please wait patiently for the confirmation message before retrying.*
 
 🛠️ If something's not working, please report the issue to josfonse@cisco.com and complete the following MS Form to provide the information in question [ Deployment Planning](https://forms.office.com/r/zGd6u5MEmt).
         `;

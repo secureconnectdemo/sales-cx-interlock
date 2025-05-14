@@ -1,0 +1,54 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.3",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "⚠️ TAC Escalation Report",
+      "wrap": true,
+      "weight": "Bolder",
+      "size": "Medium"
+    },
+    {
+      "type": "Input.Text",
+      "id": "accountName",
+      "placeholder": "Customer Name or Account Name",
+      "label": "Account Name"
+    },
+    {
+      "type": "Input.Text",
+      "id": "orgId",
+      "placeholder": "Org ID (if known)",
+      "label": "Org ID"
+    },
+    {
+      "type": "Input.Text",
+      "id": "caseNumber",
+      "placeholder": "TAC Case Number (e.g., 695432167)",
+      "label": "TAC Case Number"
+    },
+    {
+      "type": "Input.Text",
+      "id": "escalationReason",
+      "placeholder": "Briefly explain why this case needs escalation",
+      "isMultiline": true,
+      "label": "Escalation Justification"
+    },
+    {
+      "type": "Input.Text",
+      "id": "submittedBy",
+      "placeholder": "Your name or email",
+      "label": "Submitted By"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Submit Escalation",
+      "data": {
+        "formType": "tacForm"
+      }
+    }
+  ]
+}

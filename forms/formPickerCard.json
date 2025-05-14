@@ -1,24 +1,51 @@
 {
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
   "type": "AdaptiveCard",
+  "version": "1.3",
   "body": [
     {
       "type": "TextBlock",
-      "text": "What type of form would you like to submit?",
-      "wrap": true
+      "text": "📋 What do you want to submit?",
+      "wrap": true,
+      "weight": "Bolder",
+      "size": "Medium"
     },
     {
       "type": "Input.ChoiceSet",
-      "id": "formType",
+      "id": "submissionType",
       "style": "expanded",
+      "isMultiSelect": false,
       "choices": [
-        { "title": "Sales Handoff", "value": "handoff" },
-        { "title": "Deployment", "value": "deployment" }
+        {
+          "title": "🚩 EVP Account Alert",
+          "value": "evp"
+        },
+        {
+          "title": "⚠️ TAC Escalation",
+          "value": "tac"
+        },
+        {
+          "title": "📂 Open Case",
+          "value": "case"
+        },
+        {
+          "title": "💡 Feature Request",
+          "value": "feature"
+        },
+        {
+          "title": "🔒 Adoption Blocker",
+          "value": "blocker"
+        }
       ]
     }
   ],
   "actions": [
-    { "type": "Action.Submit", "title": "Continue" }
-  ],
-  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-  "version": "1.3"
+    {
+      "type": "Action.Submit",
+      "title": "Next",
+      "data": {
+        "formType": "formPicker"
+      }
+    }
+  ]
 }

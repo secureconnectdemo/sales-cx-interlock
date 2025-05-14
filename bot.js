@@ -17,6 +17,8 @@ const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
   picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8")),
   evpForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "evpForm.json"), "utf8"))
+  tacForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "tacForm.json"), "utf8")),
+
 };
 
 app.get("/test", (req, res) => {

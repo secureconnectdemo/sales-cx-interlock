@@ -1,0 +1,61 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.3",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "🔒 Adoption Blocker Report",
+      "wrap": true,
+      "weight": "Bolder",
+      "size": "Medium"
+    },
+    {
+      "type": "Input.Text",
+      "id": "accountName",
+      "placeholder": "Customer Name or Account Name",
+      "label": "Account Name"
+    },
+    {
+      "type": "Input.Text",
+      "id": "orgId",
+      "placeholder": "Org ID (if known)",
+      "label": "Org ID"
+    },
+    {
+      "type": "Input.Text",
+      "id": "blockerTitle",
+      "placeholder": "Short summary of the blocker (e.g., Tunnel config error)",
+      "label": "Blocker Title"
+    },
+    {
+      "type": "Input.Text",
+      "id": "blockerDescription",
+      "placeholder": "Describe the blocker in detail. Include product area, user impact, and steps to reproduce if relevant.",
+      "isMultiline": true,
+      "label": "Blocker Details"
+    },
+    {
+      "type": "Input.Text",
+      "id": "requestedSupport",
+      "placeholder": "What kind of support or resolution are you looking for?",
+      "isMultiline": true,
+      "label": "Requested Support"
+    },
+    {
+      "type": "Input.Text",
+      "id": "submittedBy",
+      "placeholder": "Your name or email",
+      "label": "Submitted By"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Submit Blocker",
+      "data": {
+        "formType": "blockerForm"
+      }
+    }
+  ]
+}

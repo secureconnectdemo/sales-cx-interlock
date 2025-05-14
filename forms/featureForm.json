@@ -1,0 +1,54 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.3",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "💡 Feature Request",
+      "wrap": true,
+      "weight": "Bolder",
+      "size": "Medium"
+    },
+    {
+      "type": "Input.Text",
+      "id": "accountName",
+      "placeholder": "Customer Name or Account Name",
+      "label": "Account Name"
+    },
+    {
+      "type": "Input.Text",
+      "id": "featureTitle",
+      "placeholder": "Short title for the feature",
+      "label": "Feature Title"
+    },
+    {
+      "type": "Input.Text",
+      "id": "featureDetails",
+      "placeholder": "Describe the requested feature and the business need it supports",
+      "isMultiline": true,
+      "label": "Feature Description"
+    },
+    {
+      "type": "Input.Text",
+      "id": "impactLevel",
+      "placeholder": "e.g., Must-have, Nice-to-have, Urgent, etc.",
+      "label": "Impact Level"
+    },
+    {
+      "type": "Input.Text",
+      "id": "submittedBy",
+      "placeholder": "Your name or email",
+      "label": "Submitted By"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Submit Feature Request",
+      "data": {
+        "formType": "featureForm"
+      }
+    }
+  ]
+}

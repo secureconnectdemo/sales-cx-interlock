@@ -16,9 +16,11 @@ const CAPACITY_PLANNING_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjY
 const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
   picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8")),
-  evpForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "evpForm.json"), "utf8"))
+  evpForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "evpForm.json"), "utf8")),
   tacForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "tacForm.json"), "utf8")),
-
+  caseForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "caseForm.json"), "utf8")),
+  featureForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "featureForm.json"), "utf8")),
+  blockerForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "blockerForm.json"), "utf8")),
 };
 
 app.get("/test", (req, res) => {

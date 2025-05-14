@@ -1,0 +1,48 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.3",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "🚩 EVP Account Alert",
+      "wrap": true,
+      "weight": "Bolder",
+      "size": "Medium"
+    },
+    {
+      "type": "Input.Text",
+      "id": "accountName",
+      "placeholder": "Customer Name or Account Name",
+      "label": "Account Name"
+    },
+    {
+      "type": "Input.Text",
+      "id": "orgId",
+      "placeholder": "Org ID (if known)",
+      "label": "Org ID"
+    },
+    {
+      "type": "Input.Text",
+      "id": "riskSummary",
+      "placeholder": "Briefly describe the risk, blocker, or concern",
+      "isMultiline": true,
+      "label": "EVP Concern Summary"
+    },
+    {
+      "type": "Input.Text",
+      "id": "submittedBy",
+      "placeholder": "Your name or email",
+      "label": "Submitted By"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Submit EVP Alert",
+      "data": {
+        "formType": "evpForm"
+      }
+    }
+  ]
+}

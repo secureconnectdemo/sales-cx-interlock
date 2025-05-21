@@ -130,15 +130,15 @@ Please contact: [naas_support@cisco.com](mailto:naas_support@cisco.com)
 if (formData.formType === "deployment") {
   const fullSummary = `📢 **New Form Submission Notification**
 
-👤 **Customer:** ${formData.customerName || "N/A"}  
-🆔 **Org ID:** ${formData.orgId || "N/A"}  
-📊 **Total Licenses:** ${formData.totalLicenses || "N/A"}  
-🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  
-📅 **Planned Rollout:** ${formData.plannedRollout || "N/A"}  
-📍 **Deployment Plan Info:**  
+**Customer:** ${formData.customerName || "N/A"}  
+**Org ID:** ${formData.orgId || "N/A"}  
+**Total Licenses:** ${formData.totalLicenses || "N/A"}  
+**Already Deployed:** ${formData.alreadyDeployed || "N/A"}  
+**Planned Rollout:** ${formData.plannedRollout || "N/A"}  
+**Deployment Plan Info:**  
 ${formData.deploymentPlan || "N/A"}  
-📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}  
-👤 **Submitted By:** ${formData.submittedBy || "N/A"}`;
+**File Upload Info:** ${formData.fileUploadInfo || "To be sent"}  
+**Submitted By:** ${formData.submittedBy || "N/A"}`;
 
   await axios.post("https://webexapis.com/v1/messages", {
     roomId: CAPACITY_PLANNING_ROOM_ID,

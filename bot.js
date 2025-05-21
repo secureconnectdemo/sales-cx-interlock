@@ -127,43 +127,36 @@ Please contact: [naas_support@cisco.com](mailto:naas_support@cisco.com)
         return res.sendStatus(200);
       }
 
-      if (formData.formType === "deployment") {
-        const summary = `**📦 Secure Access - Onboard & Deployment Notification**
+if (formData.formType === "deployment") {
+  const fullSummary = `📢 **New Form Submission Notification**
 
 👤 **Customer:** ${formData.customerName || "N/A"}  
+🆔 **Org ID:** ${formData.orgId || "N/A"}  
+📊 **Total Licenses:** ${formData.totalLicenses || "N/A"}  
+🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  
 📅 **Planned Rollout:** ${formData.plannedRollout || "N/A"}  
-📍 **Deployment Overview:** ${formData.deploymentPlan?.substring(0, 150) || "N/A"}...`;
+📍 **Deployment Plan Info:**  
+${formData.deploymentPlan || "N/A"}  
+📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}  
+👤 **Submitted By:** ${formData.submittedBy || "N/A"}`;
 
-        // DO NOT send to third-party (like Google Sheets)
-        // await addHandoffEntry(formData);
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId: CAPACITY_PLANNING_ROOM_ID,
+    markdown: fullSummary
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
 
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId,
-          markdown: summary
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId,
+    markdown: `✅ Submission received for *${formData.customerName || "Customer"}*.`
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
 
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId: CAPACITY_PLANNING_ROOM_ID,
-          markdown: `📢 **New Form Submission Notification**
+  return res.sendStatus(200);
+}
 
-👤 **Customer:** ${formData.customerName || "N/A"}  
-📅 **Planned Rollout:** ${formData.plannedRollout || "N/A"}  
-📍 **Deployment Overview:** ${formData.deploymentPlan?.substring(0, 150) || "N/A"}...`
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
-
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId,
-          markdown: `✅ Submission received for *${formData.customerName || "Customer"}*.`
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
-
-        return res.sendStatus(200);
-      }
     }
 
     res.sendStatus(200);

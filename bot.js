@@ -27,7 +27,7 @@ app.get("/test", (req, res) => {
 });
 
 app.post("/webhook", async (req, res) => {
-  console.log("🔥 Webhook hit from room:", req.body?.data?.roomId);
+  console.log("🔥 Incoming webhook hit from room:", req.body?.data?.roomId);
   const { data, resource } = req.body;
   const roomId = data?.roomId;
   const roomType = data?.roomType;
@@ -47,13 +47,11 @@ app.post("/webhook", async (req, res) => {
       if (!mentioned && !isDirect) return res.sendStatus(200);
 
       if (text === "/submit") {
-        console.log("📨 Matched '/submit' command");
         await sendForm(roomId, "picker");
         return res.sendStatus(200);
       }
 
       if (text === "/submit deployment") {
-        console.log("📨 Matched '/submit deployment' command");
         try {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
@@ -62,9 +60,7 @@ app.post("/webhook", async (req, res) => {
             headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
           });
           await sendForm(roomId, "deployment");
-          console.log("✅ Deployment form sent successfully");
         } catch (err) {
-          console.error("❌ Error sending deployment form:", err.message);
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
             markdown: `❌ Failed to send deployment form: ${err.message}`
@@ -88,7 +84,7 @@ Here are the available commands:
 ℹ️ *For the form to appear, it might take a few seconds — especially after long periods of inactivity. Please wait patiently for the confirmation message before retrying.*
 
 🛠️ Having issues?
-If something's not working, please report the issue to josfonse@cisco.com and complete the following form to provide the necessary deployment details: [ Deployment Planning](https://forms.office.com/r/zGd6u5MEmt).
+Please contact: [naas_support@cisco.com](mailto:naas_support@cisco.com)
         `;
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
@@ -132,9 +128,13 @@ If something's not working, please report the issue to josfonse@cisco.com and co
       }
 
       if (formData.formType === "deployment") {
-        const summary = `**📦 Secure Access - Onboard & Deployment Notification**\n\n👤 **Customer:** ${formData.customerName}  \n📅 **Planned Rollout:** ${formData.plannedRollout}  \n📍 **Deployment Overview:** ${formData.deploymentPlan.substring(0, 150)}...`;
-        
-        // Removed external logging to avoid data exposure
+        const summary = `**📦 Secure Access - Onboard & Deployment Notification**
+
+👤 **Customer:** ${formData.customerName || "N/A"}  
+📅 **Planned Rollout:** ${formData.plannedRollout || "N/A"}  
+📍 **Deployment Overview:** ${formData.deploymentPlan?.substring(0, 150) || "N/A"}...`;
+
+        // DO NOT send to third-party (like Google Sheets)
         // await addHandoffEntry(formData);
 
         await axios.post("https://webexapis.com/v1/messages", {
@@ -146,17 +146,18 @@ If something's not working, please report the issue to josfonse@cisco.com and co
 
         await axios.post("https://webexapis.com/v1/messages", {
           roomId: CAPACITY_PLANNING_ROOM_ID,
-          markdown: `📢 **New Submission Notification**  
-👤 **Customer:** ${formData.customerName}  
-📅 **Rollout Date:** ${formData.plannedRollout}  
-📍 **Plan Overview:** ${formData.deploymentPlan.substring(0, 150)}...`
+          markdown: `📢 **New Form Submission Notification**
+
+👤 **Customer:** ${formData.customerName || "N/A"}  
+📅 **Planned Rollout:** ${formData.plannedRollout || "N/A"}  
+📍 **Deployment Overview:** ${formData.deploymentPlan?.substring(0, 150) || "N/A"}...`
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
 
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: `✅ Submission received for *${formData.customerName}*.`
+          markdown: `✅ Submission received for *${formData.customerName || "Customer"}*.`
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });

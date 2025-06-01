@@ -5,27 +5,40 @@
   "body": [
     {
       "type": "TextBlock",
-      "text": "Secure Access Handoff Form",
+      "text": "\ud83d\ude80 Secure Access Handoff Form",
       "wrap": true,
       "weight": "Bolder",
-      "size": "Large"
+      "size": "Large",
+      "horizontalAlignment": "Center"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Customer Name",
+      "wrap": true
     },
     {
       "type": "Input.Text",
       "id": "customerName",
-      "placeholder": "Customer Name",
-      "label": "Customer Name"
+      "placeholder": "Enter Customer Name"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Org ID",
+      "wrap": true
     },
     {
       "type": "Input.Text",
       "id": "orgId",
-      "placeholder": "Organization ID",
-      "label": "Org ID"
+      "placeholder": "Enter Org ID"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Pilot Status",
+      "wrap": true
     },
     {
       "type": "Input.ChoiceSet",
       "id": "pilotStatus",
-      "label": "Pilot Status",
       "style": "compact",
       "choices": [
         {
@@ -33,7 +46,7 @@
           "value": "Good"
         },
         {
-          "title": "\ud83d\udfe1 Needs Additional Assistance",
+          "title": "\ud83d\udfe1 Needs Assistance",
           "value": "Needs Assistance"
         },
         {
@@ -43,9 +56,13 @@
       ]
     },
     {
+      "type": "TextBlock",
+      "text": "Select Adoption Barriers",
+      "wrap": true
+    },
+    {
       "type": "Input.ChoiceSet",
       "id": "risks",
-      "label": "Select Adoption Barriers",
       "isMultiSelect": true,
       "style": "expanded",
       "choices": [
@@ -84,22 +101,30 @@
       ]
     },
     {
+      "type": "TextBlock",
+      "text": "Final Score (optional, external calculation)",
+      "wrap": true
+    },
+    {
       "type": "Input.Text",
       "id": "finalScore",
-      "label": "Final Score (auto-calculated externally)",
       "placeholder": "e.g. 85"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Submitted By",
+      "wrap": true
     },
     {
       "type": "Input.Text",
       "id": "submittedBy",
-      "placeholder": "Your Name or Email",
-      "label": "Submitted By"
+      "placeholder": "Your Name or Email"
     }
   ],
   "actions": [
     {
       "type": "Action.Submit",
-      "title": "Submit",
+      "title": "\ud83d\udce8 Submit",
       "data": {
         "formType": "handoff"
       }

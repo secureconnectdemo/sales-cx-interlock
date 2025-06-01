@@ -1,306 +1,55 @@
 {
   "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
   "type": "AdaptiveCard",
-  "version": "1.3",
+  "version": "1.4",
   "body": [
     {
       "type": "TextBlock",
-      "text": "\u2705 Secure Access IT Handover Checklist",
-      "size": "Large",
+      "text": "🔐 Secure Access IT Handoff Checklist",
       "weight": "Bolder",
+      "size": "Large",
       "horizontalAlignment": "Center"
     },
     {
       "type": "TextBlock",
-      "text": "\ud83d\udcd8 Step 1 of 2 \u2013 Complete Readiness Checklist",
-      "color": "Accent",
-      "spacing": "Small",
+      "text": "Completion Score",
+      "weight": "Bolder",
       "wrap": true
     },
     {
       "type": "TextBlock",
-      "text": "\ud83e\uddee Auto-scoring and section-by-section comments included. Use this to confirm readiness and leave relevant observations.",
-      "wrap": true,
-      "spacing": "Small"
-    },
-    {
-      "type": "TextBlock",
-      "text": "\ud83d\udcc2 Platform Access & Roles",
-      "weight": "Bolder",
-      "wrap": true,
-      "spacing": "Medium",
-      "separator": true
+      "id": "scoreColorFeedback",
+      "text": "🔴 55% - Action Required",
+      "color": "Attention",
+      "wrap": true
     },
     {
       "type": "Input.Toggle",
       "title": "Secure Access dashboard admin access granted to primary IT owner(s)",
-      "id": "pla_1",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "User roles and permissions reviewed and adjusted",
-      "id": "pla_2",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Audit of who has access completed (optional)",
-      "id": "pla_3",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Text",
-      "id": "pla_comment",
-      "placeholder": "Add comments or risks for 'Platform Access & Roles'...",
-      "isMultiline": true,
-      "spacing": "Small"
-    },
-    {
-      "type": "TextBlock",
-      "text": "\ud83d\udcc2 Configuration Review",
-      "weight": "Bolder",
-      "wrap": true,
-      "spacing": "Medium",
-      "separator": true
+      "id": "dashboardAccess",
+      "valueOff": "false",
+      "valueOn": "true"
     },
     {
       "type": "Input.Toggle",
       "title": "Connectivity established (Secure Client, IPsec tunnels)",
-      "id": "con_1",
-      "valueOn": "true",
-      "valueOff": "false"
+      "id": "connectivity",
+      "valueOff": "false",
+      "valueOn": "true"
     },
     {
       "type": "Input.Toggle",
       "title": "DNS redirection active and verified",
-      "id": "con_2",
-      "valueOn": "true",
-      "valueOff": "false"
+      "id": "dnsRedirect",
+      "valueOff": "false",
+      "valueOn": "true"
     },
     {
       "type": "Input.Toggle",
       "title": "SWG or ZTNA policies configured and active",
-      "id": "con_3",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Root CA deployed on all necessary endpoints",
-      "id": "con_4",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Experience Insights has been enabled and confirmed via dashboard",
-      "id": "con_5",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "SaaS tenant integrations configured and validated",
-      "id": "con_6",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Text",
-      "id": "con_comment",
-      "placeholder": "Add comments or risks for 'Configuration Review'...",
-      "isMultiline": true,
-      "spacing": "Small"
-    },
-    {
-      "type": "TextBlock",
-      "text": "\ud83d\udcc2 Policy & Rules Handoff",
-      "weight": "Bolder",
-      "wrap": true,
-      "spacing": "Medium",
-      "separator": true
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Web profiles reviewed",
-      "id": "pol_1",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Internet access rules understood by IT",
-      "id": "pol_2",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "DLP, RBI, IPS settings reviewed",
-      "id": "pol_3",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "VPN profiles and posture settings transferred",
-      "id": "pol_4",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Customer has interacted with the AI Assistant at least once",
-      "id": "pol_5",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Text",
-      "id": "pol_comment",
-      "placeholder": "Add comments or risks for 'Policy & Rules Handoff'...",
-      "isMultiline": true,
-      "spacing": "Small"
-    },
-    {
-      "type": "TextBlock",
-      "text": "\ud83d\udcc2 Visibility & Monitoring",
-      "weight": "Bolder",
-      "wrap": true,
-      "spacing": "Medium",
-      "separator": true
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "IT owner shown how to use dashboard reports (e.g., Security Overview)",
-      "id": "vis_1",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Email reports configured for key stakeholders",
-      "id": "vis_2",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Block hit data explained and correlated to policy efficacy",
-      "id": "vis_3",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Text",
-      "id": "vis_comment",
-      "placeholder": "Add comments or risks for 'Visibility & Monitoring'...",
-      "isMultiline": true,
-      "spacing": "Small"
-    },
-    {
-      "type": "TextBlock",
-      "text": "\ud83d\udcc2 Operational Ownership",
-      "weight": "Bolder",
-      "wrap": true,
-      "spacing": "Medium",
-      "separator": true
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Internal process established for making policy changes",
-      "id": "ope_1",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Change control and rollback strategy discussed",
-      "id": "ope_2",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Owner shown how to engage Cisco Support/TAC",
-      "id": "ope_3",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Customer is aware of upcoming webinars",
-      "id": "ope_4",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Customer is subscribed to Secure Access newsletter and Community",
-      "id": "ope_5",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Text",
-      "id": "ope_comment",
-      "placeholder": "Add comments or risks for 'Operational Ownership'...",
-      "isMultiline": true,
-      "spacing": "Small"
-    },
-    {
-      "type": "TextBlock",
-      "text": "\ud83d\udcc2 Success Plan Reference",
-      "weight": "Bolder",
-      "wrap": true,
-      "spacing": "Medium",
-      "separator": true
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Original business outcomes reviewed with IT owner",
-      "id": "suc_1",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Pilot use case confirmed as delivered",
-      "id": "suc_2",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Additional features identified (Optimize/Expand phase)",
-      "id": "suc_3",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Toggle",
-      "title": "Ownership handoff logged in internal Success Plan",
-      "id": "suc_4",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
-      "type": "Input.Text",
-      "id": "suc_comment",
-      "placeholder": "Add comments or risks for 'Success Plan Reference'...",
-      "isMultiline": true,
-      "spacing": "Small"
-    },
-    {
-      "type": "TextBlock",
-      "text": "\ud83d\udea7 Adoption Blockers (will subtract from score)",
-      "weight": "Bolder",
-      "wrap": true,
-      "spacing": "Medium"
+      "id": "ztnaConfigured",
+      "valueOff": "false",
+      "valueOn": "true"
     },
     {
       "type": "Input.ChoiceSet",
@@ -308,86 +57,31 @@
       "isMultiSelect": true,
       "style": "expanded",
       "choices": [
-        {
-          "title": "\ud83d\udd34 No Budget / Not a Priority",
-          "value": "high-budget"
-        },
-        {
-          "title": "\ud83d\udd34 Infrastructure Not Ready",
-          "value": "high-infra"
-        },
-        {
-          "title": "\ud83d\udd34 Product Not GA or Missing Features",
-          "value": "high-ga"
-        },
-        {
-          "title": "\ud83d\udfe1 Training or Configuration Support Needed",
-          "value": "med-training"
-        },
-        {
-          "title": "\ud83d\udfe1 Customer Perceives Product as Complex",
-          "value": "med-complex"
-        },
-        {
-          "title": "\ud83d\udfe1 Partner Unresponsive or Unenabled",
-          "value": "med-partner"
-        },
-        {
-          "title": "\ud83d\udfe2 Documentation Not Found",
-          "value": "low-doc"
-        },
-        {
-          "title": "\ud83d\udfe2 Invalid or Missing Contact Info",
-          "value": "low-contact"
-        },
-        {
-          "title": "\ud83d\udfe2 Ownership or Success Plan Unclear",
-          "value": "low-plan"
-        }
+        { "title": "🔴 No Budget / Not a Priority", "value": "noBudget" },
+        { "title": "🔴 Infrastructure Not Ready", "value": "infraNotReady" },
+        { "title": "🔴 Product Not GA or Missing Features", "value": "productNotGA" },
+        { "title": "🚫 Training or Configuration Support Needed", "value": "trainingNeeded" },
+        { "title": "🚫 Customer Perceives Product as Complex", "value": "productComplex" },
+        { "title": "🚫 Partner Unresponsive or Unenabled", "value": "partnerIssue" },
+        { "title": "🟢 Documentation Not Found", "value": "docMissing" },
+        { "title": "🟢 Invalid or Missing Contact Info", "value": "contactMissing" },
+        { "title": "🟢 Ownership or Success Plan Unclear", "value": "ownershipUnclear" }
       ]
     },
     {
-      "type": "TextBlock",
-      "id": "autoScoreResult",
-      "text": "\ud83d\udcca Final Score: [calculated externally]",
-      "wrap": true,
-      "color": "Good",
-      "spacing": "Medium"
-    },
-    {
-      "type": "TextBlock",
-      "id": "scoreColorFeedback",
-      "text": "\ud83d\udfe2 Status: Good \u2013 Onboarding Complete",
-      "wrap": true,
-      "spacing": "Medium",
-      "color": "Good"
-    },
-    {
-      "type": "TextBlock",
-      "text": "\ud83d\udcd8 Step 2 of 2 \u2013 Notification Preview",
-      "color": "Accent",
-      "wrap": true,
-      "spacing": "Medium"
-    },
-    {
-      "type": "TextBlock",
-      "text": "\ud83e\uddfe The following summary will be sent to Strategic CSS for adoption planning:",
-      "wrap": true
-    },
-    {
       "type": "Input.Text",
-      "id": "handoffSummaryNote",
+      "id": "comments",
       "isMultiline": true,
-      "placeholder": "E.g., Customer has delivered core use cases but needs help with SSL decryption and adoption blockers remain.",
-      "spacing": "Small"
+      "placeholder": "Add any final notes here"
     }
   ],
   "actions": [
     {
       "type": "Action.Submit",
-      "title": "\ud83d\ude80 Submit and Notify Strategic CSS",
+      "title": "📨 Submit Handoff",
       "data": {
-        "formType": "secureAccessChecklistDetailed"
+        "formType": "secureAccessHandoff",
+        "triggerWebexNotification": true
       }
     }
   ]

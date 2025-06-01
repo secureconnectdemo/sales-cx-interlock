@@ -56,7 +56,7 @@ app.post("/webhook", async (req, res) => {
       if (text === "/submit deployment") {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: "📝 Opening the **Secure Access Deployment Form**...
+          markdown: "Opening the **Secure Access Deployment Form**...
 
 ⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
         }, {
@@ -69,7 +69,7 @@ app.post("/webhook", async (req, res) => {
       if (text === "/submit handoff") {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: "📋 Opening the **Secure Access Handoff Form**...
+          markdown: " Opening the **Secure Access Handoff Form**...
 
 ⌛ *Please wait a few seconds if the bot was idle.*"
         }, {

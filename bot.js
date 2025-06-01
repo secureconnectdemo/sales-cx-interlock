@@ -1,4 +1,3 @@
-
 const { getPlaycard } = require("./playcards");
 const fs = require("fs");
 const path = require("path");
@@ -25,11 +24,11 @@ const formMap = {
 };
 
 app.get("/test", (req, res) => {
-  res.send("✅ SSE-CX-Hub bot is up and running");
+  res.send("SSE-CX-Hub bot is up and running");
 });
 
 app.post("/webhook", async (req, res) => {
-  console.log("🔥 Incoming webhook hit from room:", req.body?.data?.roomId);
+  console.log("Incoming webhook hit from room:", req.body?.data?.roomId);
   const { data, resource } = req.body;
   const roomId = data?.roomId;
   const roomType = data?.roomType;
@@ -56,10 +55,7 @@ app.post("/webhook", async (req, res) => {
       if (text === "/submit deployment") {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: "Opening the **Secure Access Deployment Form**...
-
-
-⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
+          markdown: "Opening the **Secure Access Deployment Form**...\n\nPlease wait a few seconds if the bot was idle."
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
@@ -70,9 +66,7 @@ app.post("/webhook", async (req, res) => {
       if (text === "/submit handoff") {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: " Opening the **Secure Access Handoff Form**...
-
-⌛ *Please wait a few seconds if the bot was idle.*"
+          markdown: "Opening the **Secure Access Handoff Form**...\n\nPlease wait a few seconds if the bot was idle."
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
@@ -82,7 +76,7 @@ app.post("/webhook", async (req, res) => {
 
       if (text === "/help") {
         const helpMessage = `
-🤖 **SSE-CX-Hub Bot – Help Menu**
+**SSE-CX-Hub Bot – Help Menu**
 
 Here are the available commands:
 
@@ -91,8 +85,8 @@ Here are the available commands:
 - \`/submit handoff\` – Open the Secure Access Handoff form  
 - \`/reset\` – Clear current session or inputs (coming soon)
 
-🛠️ Having issues?
-Please contact: [naas_support@cisco.com](mailto:naas_support@cisco.com)
+Having issues?
+Please contact: naas_support@cisco.com
         `;
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
@@ -120,19 +114,19 @@ Please contact: [naas_support@cisco.com](mailto:naas_support@cisco.com)
 
       if (formData.formType === "handoff") {
         const score = parseInt(formData.finalScore) || 0;
-        const tier = score >= 90 ? "🟢 Good – No handoff needed"
-                   : score >= 70 ? "🟡 Needs Assistance – Handoff recommended"
-                   : "🔴 At-Risk – Handoff required";
+        const tier = score >= 90 ? "Good – No handoff needed"
+                   : score >= 70 ? "Needs Assistance – Handoff recommended"
+                   : "At-Risk – Handoff required";
 
-        const summary = `📦 **Secure Access Handoff Submitted**
+        const summary = `Secure Access Handoff Submitted
 
-**Customer:** ${formData.customerName || "N/A"}  
-**Org ID:** ${formData.orgId || "N/A"}  
-**Pilot Tier:** ${formData.pilotStatus || "N/A"}  
-**Score:** ${formData.finalScore || "N/A"}  
-**Blockers:** ${(formData.risks || []).join(", ") || "None"}  
-**Tier Assessment:** ${tier}  
-**Submitted By:** ${formData.submittedBy || "N/A"}`;
+Customer: ${formData.customerName || "N/A"}  
+Org ID: ${formData.orgId || "N/A"}  
+Pilot Tier: ${formData.pilotStatus || "N/A"}  
+Score: ${formData.finalScore || "N/A"}  
+Blockers: ${(formData.risks || []).join(", ") || "None"}  
+Tier Assessment: ${tier}  
+Submitted By: ${formData.submittedBy || "N/A"}`;
 
         await axios.post("https://webexapis.com/v1/messages", {
           roomId: CAPACITY_PLANNING_ROOM_ID,
@@ -143,7 +137,7 @@ Please contact: [naas_support@cisco.com](mailto:naas_support@cisco.com)
 
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: `✅ Handoff for *${formData.customerName || "Customer"}* submitted.`
+          markdown: `Handoff for ${formData.customerName || "Customer"} submitted.`
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
@@ -154,7 +148,7 @@ Please contact: [naas_support@cisco.com](mailto:naas_support@cisco.com)
 
     res.sendStatus(200);
   } catch (err) {
-    console.error("❌ Webhook error:", err.response?.data || err.message);
+    console.error("Webhook error:", err.response?.data || err.message);
     res.sendStatus(500);
   }
 });
@@ -168,7 +162,7 @@ async function sendForm(roomId, type) {
   if (!form) return;
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
-    markdown: `📋 Please complete the **${type.replace(/Form$/, '')}** form:`,
+    markdown: `Please complete the ${type.replace(/Form$/, '')} form:`,
     attachments: [{
       contentType: "application/vnd.microsoft.card.adaptive",
       content: form
@@ -185,9 +179,9 @@ async function startBot() {
     });
     BOT_PERSON_ID = res.data.id;
     const PORT = process.env.PORT || 10000;
-    app.listen(PORT, () => console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`));
+    app.listen(PORT, () => console.log(`SSE-CX-Hub listening on port ${PORT}`));
   } catch (err) {
-    console.error("❌ Failed to get bot info:", err.response?.data || err.message);
+    console.error("Failed to get bot info:", err.response?.data || err.message);
     process.exit(1);
   }
 }

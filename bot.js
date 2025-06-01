@@ -10,7 +10,7 @@ app.use(express.json());
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 let BOT_PERSON_ID = "";
 
-const CAPACITY_PLANNING_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vYTYzYWFmNjAtMWJjMC0xMWYwLWEwYmMtM2I5ZmNhY2JjZDgy";
+const STRATEGIC_CSS_ROOM_ID = process.env.STRATEGIC_CSS_ROOM_ID || "Y2lzY29zcGFyazovL3VzL1JPT00vYTYzYWFmNjAtMWJjMC0xMWYwLWEwYmMtM2I5ZmNhY2JjZDgy";
 
 const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
@@ -129,7 +129,7 @@ Tier Assessment: ${tier}
 Submitted By: ${formData.submittedBy || "N/A"}`;
 
         await axios.post("https://webexapis.com/v1/messages", {
-          roomId: CAPACITY_PLANNING_ROOM_ID,
+          roomId: STRATEGIC_CSS_ROOM_ID,
           markdown: summary
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }

@@ -5,7 +5,21 @@
   "body": [
     {
       "type": "TextBlock",
-      "text": "\ud83d\udcc2 Platform Access & Roles",
+      "text": "✅ Completion Score (Auto-calculated)",
+      "weight": "Bolder",
+      "wrap": true,
+      "spacing": "Medium"
+    },
+    {
+      "type": "TextBlock",
+      "id": "completionScoreText",
+      "text": "Completion: 0%",
+      "wrap": true,
+      "color": "Attention"
+    },
+    {
+      "type": "TextBlock",
+      "text": "📂 Platform Access & Roles",
       "weight": "Bolder",
       "wrap": true,
       "spacing": "Medium"
@@ -25,8 +39,15 @@
       "valueOff": "false"
     },
     {
+      "type": "Input.Toggle",
+      "title": "Audit of who has access completed (optional)",
+      "id": "pla_3",
+      "valueOn": "true",
+      "valueOff": "false"
+    },
+    {
       "type": "TextBlock",
-      "text": "\ud83d\udcc2 Configuration Review",
+      "text": "📂 Configuration Review",
       "weight": "Bolder",
       "wrap": true,
       "spacing": "Medium"
@@ -75,7 +96,7 @@
     },
     {
       "type": "TextBlock",
-      "text": "\ud83d\udcc2 Policy & Rules Handoff",
+      "text": "📂 Policy & Rules Handoff",
       "weight": "Bolder",
       "wrap": true,
       "spacing": "Medium"
@@ -117,7 +138,7 @@
     },
     {
       "type": "TextBlock",
-      "text": "\ud83d\udcc2 Visibility & Monitoring",
+      "text": "📂 Visibility & Monitoring",
       "weight": "Bolder",
       "wrap": true,
       "spacing": "Medium"
@@ -145,7 +166,7 @@
     },
     {
       "type": "TextBlock",
-      "text": "\ud83d\udcc2 Operational Ownership",
+      "text": "📂 Operational Ownership",
       "weight": "Bolder",
       "wrap": true,
       "spacing": "Medium"
@@ -187,7 +208,7 @@
     },
     {
       "type": "TextBlock",
-      "text": "\ud83d\udcc2 Success Plan Reference",
+      "text": "📂 Success Plan Reference",
       "weight": "Bolder",
       "wrap": true,
       "spacing": "Medium"
@@ -222,7 +243,7 @@
     },
     {
       "type": "TextBlock",
-      "text": "\ud83d\udea7 Select Adoption Blockers",
+      "text": "🚧 Select Adoption Blockers",
       "weight": "Bolder",
       "wrap": true,
       "spacing": "Medium"
@@ -233,51 +254,25 @@
       "isMultiSelect": true,
       "style": "expanded",
       "choices": [
-        {
-          "title": "\ud83d\udd34 No Budget / Not a Priority",
-          "value": "high-budget"
-        },
-        {
-          "title": "\ud83d\udd34 Infrastructure Not Ready",
-          "value": "high-infra"
-        },
-        {
-          "title": "\ud83d\udd34 Product Not GA or Missing Features",
-          "value": "high-ga"
-        },
-        {
-          "title": "\ud83d\udfe1 Training or Configuration Support Needed",
-          "value": "med-training"
-        },
-        {
-          "title": "\ud83d\udfe1 Customer Perceives Product as Complex",
-          "value": "med-complex"
-        },
-        {
-          "title": "\ud83d\udfe1 Partner Unresponsive or Unenabled",
-          "value": "med-partner"
-        },
-        {
-          "title": "\ud83d\udfe2 Documentation Not Found",
-          "value": "low-doc"
-        },
-        {
-          "title": "\ud83d\udfe2 Invalid or Missing Contact Info",
-          "value": "low-contact"
-        },
-        {
-          "title": "\ud83d\udfe2 Ownership or Success Plan Unclear",
-          "value": "low-plan"
-        }
+        { "title": "🔴 No Budget / Not a Priority", "value": "high-budget" },
+        { "title": "🔴 Infrastructure Not Ready", "value": "high-infra" },
+        { "title": "🔴 Product Not GA or Missing Features", "value": "high-ga" },
+        { "title": "🟠 Training or Configuration Support Needed", "value": "med-training" },
+        { "title": "🟠 Customer Perceives Product as Complex", "value": "med-complex" },
+        { "title": "🟠 Partner Unresponsive or Unenabled", "value": "med-partner" },
+        { "title": "🟢 Documentation Not Found", "value": "low-doc" },
+        { "title": "🟢 Invalid or Missing Contact Info", "value": "low-contact" },
+        { "title": "🟢 Ownership or Success Plan Unclear", "value": "low-plan" }
       ]
     }
   ],
   "actions": [
     {
       "type": "Action.Submit",
-      "title": "\ud83d\udce8 Submit",
+      "title": "📨 Submit",
       "data": {
-        "formType": "secureAccessChecklist"
+        "formType": "secureAccessChecklist",
+        "targetWebexRoom": "Strategic Css"
       }
     }
   ]

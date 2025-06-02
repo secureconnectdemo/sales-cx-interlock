@@ -27,8 +27,11 @@ app.post("/webhook", async (req, res) => {
   console.log("🔥 Incoming webhook hit");
   const { data, resource } = req.body;
 
-  // Ensure submitterEmail is defined
-const submitterEmail = formData.submittedBy || "N/A";
+console.log("formData:", formData);
+
+const submitterEmail = formData?.submittedBy || "N/A";
+
+console.log("submitterEmail:", submitterEmail);
 
 
   const roomId = data?.roomId;

@@ -149,65 +149,21 @@ function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
-function generateSummary(data, customer, submitter) {
-  const comments = data.comments?.trim();
-  const blockers = (data.adoptionBlockers || "")
-    .split(",")
-    .filter(b => b)
-    .map(b => `• ${b.trim()}`)
-    .join("\n") || "None";
+const generateSummaryCard = require("./utils/generateSummaryCard");
 
-  const checklistMap = [
-    { key: "con_1", label: "Secure Client/IPsec Connectivity" },
-    { key: "con_2", label: "DNS Redirection Verified" },
-    { key: "con_3", label: "Rule Configured and Active" },
-    { key: "pla_1", label: "Admin Access Granted" },
-    { key: "pla_2", label: "User Roles Reviewed" },
-    { key: "pol_1", label: "Web Profiles Reviewed" },
-    { key: "pol_2", label: "Decryption + Do Not Decrypt Reviewed" },
-    { key: "suc_2", label: "Pilot Use Case Delivered" },
-    { key: "suc_3", label: "Expansion Opportunities Identified" },
-    { key: "ope_4", label: "Understands Post-Onboarding Support" }
-  ];
+if (data.formType === "secureAccessChecklist") {
+  const card = generateSummaryCard(data.inputs);
 
-  const total = checklistMap.length;
-  const completed = checklistMap.filter(({ key }) => data[key] === "true").length;
-  const score = Math.round((completed / total) * 100);
-  const riskLevel = score >= 90 ? "🟢 Healthy" : score >= 70 ? "🟡 At Risk" : "🔴 Critical";
-
-  const incompleteItems = checklistMap
-    .filter(({ key }) => data[key] !== "true")
-    .map(({ label }) => `❗ ${label}`)
-    .join("\n") || "✅ All key items completed.";
-
-  const expansion = (data.expansionInterests || "")
-    .split(",")
-    .map(e => e.trim())
-    .filter(Boolean);
-
-  const expansionText = expansion.length
-    ? `📈 **Customer Interested in Exploring:**\n• ${expansion.join("\n• ")}`
-    : "";
-
-  return `
-✅ **Secure Access Handoff Summary**
-
-- **Customer Name:** ${capitalize(customer)}
-- **Submitted By:** ${submitter}
-- **Score:** ${score}/100
-- **Risk Level:** ${riskLevel}
-
-🚧 **Items Requiring Follow-Up:**
-${incompleteItems}
-
-🔎 **Adoption Blockers:**
-${blockers}
-
-${expansionText}
-
-💬 **Additional Comments:**  
-> ${comments || "None"}
-`;
+  await webex.messages.create({
+    roomId: "YOUR_ROOM_ID",
+    markdown: "Secure Access Summary",
+    attachments: [
+      {
+        contentType: "application/vnd.microsoft.card.adaptive",
+        content: card
+      }
+    ]
+  });
 }
 
 async function sendForm(roomId, type) {

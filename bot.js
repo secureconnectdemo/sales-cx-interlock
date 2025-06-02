@@ -106,17 +106,19 @@ const blockers = typeof blockersRaw === "string"
   ? blockersRaw.split(",").map(b => b.trim())
   : Array.isArray(blockersRaw) ? blockersRaw : [];
 
+// Calculate the initial score from toggles
 const totalToggles = Object.entries(formData).filter(([k, v]) => k.includes("_") && v === "true").length;
-
 const maxToggleItems = 30;
 let score = Math.round((totalToggles / maxToggleItems) * 100);
 
-// Score adjustments based on blockers
+// Adjust score based on blockers
 blockers.forEach(b => {
   if (b.startsWith("high")) score -= 15;
   else if (b.startsWith("med")) score -= 10;
   else score -= 5;
 });
+
+// Ensure score doesn't go below 0
 if (score < 0) score = 0;
 
 const scoreIcon = score >= 70 ? (score >= 90 ? "🟢" : "🟡") : "🔴";
@@ -135,6 +137,7 @@ const summary = `📋 **Secure Access Onboarding Checklist Summary**
 ${blockerText}
 
 📌 **Status:** ${statusText}`;
+
 
 
 await axios.post("https://webexapis.com/v1/messages", {

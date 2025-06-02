@@ -1,4 +1,3 @@
-const { getPlaycard } = require("./playcards");
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
@@ -16,7 +15,8 @@ const STRATEGIC_CSS_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vYTYzYWFmNjAtMWJjMC0xM
 
 const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
-  picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8"))
+  picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8")),
+  handoffForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "secureAccessHandoffForm.json"), "utf8"))
 };
 
 app.get("/test", (req, res) => {
@@ -70,6 +70,32 @@ app.post("/webhook", async (req, res) => {
         return res.sendStatus(200);
       }
 
+      if (text === "/submit handoff") {
+        console.log("📨 Matched '/submit handoff' command");
+
+        try {
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: "📋 Opening the **Secure Access Handoff Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+
+          await sendForm(roomId, "handoffForm");
+          console.log("✅ Handoff form sent successfully");
+        } catch (err) {
+          console.error("❌ Error sending handoff form:", err.message);
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: `❌ Failed to send handoff form: ${err.message}`
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+        }
+
+        return res.sendStatus(200);
+      }
+
       if (text === "/help") {
         const helpMessage = `
 🤖 **SSE-CX-Hub Bot – Help Menu**
@@ -77,6 +103,7 @@ app.post("/webhook", async (req, res) => {
 Here are the available commands:
 
 - \`/submit deployment\` – Open the Secure Access Onboarding & Deployment form  
+- \`/submit handoff\` – Open the Secure Access Handoff Form  
 - \`/reset\` – Clear current session or inputs (coming soon)
 
 ℹ️ *For the form to appear, it might take a few seconds — especially after long periods of inactivity. Please wait patiently for the confirmation message before retrying.*
@@ -122,38 +149,36 @@ If something's not working, please report the issue to josfonse@cisco.com and co
       });
       const formData = actionRes.data.inputs;
 
-      if (formData.formType === "deployment") {
-        const summary = `**📦 Secure Access - Onboard & Deployment Notification**\n\n👤 **Customer:** ${formData.customerName}  \n🆔 **Org ID:** ${formData.orgId}  \n📊 **Total Licenses:** ${formData.totalLicenses}  \n🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  \n📅 **Planned Rollout:** ${formData.plannedRollout}  \n📍 **Deployment Plan Info:**  \n${formData.deploymentPlan}  \n📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}`;
+      if (formData.formType === "handoff") {
+        const score = Number(formData.finalScore || 0);
+        let scoreColor = "🟢";
+        if (score < 70) scoreColor = "🟡";
+        if (score < 50) scoreColor = "🔴";
 
-        await addHandoffEntry(formData);
+        const tier = score >= 90 ? "✅ No handoff needed"
+                   : score >= 70 ? "⚠️ Handoff recommended"
+                   : "🚨 At-risk handoff required";
+
+        const summary = `📦 **Secure Access Handoff Summary**
+
+👤 **Customer:** ${formData.customerName || "N/A"}  
+🆔 **Org ID:** ${formData.orgId || "N/A"}  
+📐 **Pilot Tier:** ${formData.pilotStatus || "N/A"}  
+📊 **Score:** ${scoreColor} ${score}/100  
+🧱 **Blockers:** ${(formData.risks || []).join(", ") || "None"}  
+📌 **Tier Assessment:** ${tier}  
+🙋 **Submitted By:** ${formData.submittedBy || "N/A"}`;
 
         await axios.post("https://webexapis.com/v1/messages", {
-          roomId,
+          roomId: CAPACITY_PLANNING_ROOM_ID,
           markdown: summary
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
 
         await axios.post("https://webexapis.com/v1/messages", {
-          roomId: CAPACITY_PLANNING_ROOM_ID,
-          markdown: `📢 **New Form Submission Notification**
-
-👤 **Customer:** ${formData.customerName}  
-🆔 **Org ID:** ${formData.orgId}  
-📊 **Total Licenses:** ${formData.totalLicenses}  
-🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  
-📅 **Planned Rollout:** ${formData.plannedRollout}  
-📍 **Deployment Plan Info:**  
-${formData.deploymentPlan}  
-📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}  
-👤 **Submitted By:** ${formData.submittedBy || "N/A"}`
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
-
-        await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: `✅ Submission received for *${formData.customerName}*.`
+          markdown: `✅ Handoff score submitted for *${formData.customerName}*.`
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
@@ -179,7 +204,7 @@ async function sendForm(roomId, type) {
 
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
-    markdown: `📋 Please complete the **${type}** form:`,
+    markdown: `📋 Please complete the **${type}** form:\`,
     attachments: [{
       contentType: "application/vnd.microsoft.card.adaptive",
       content: form

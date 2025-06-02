@@ -115,7 +115,7 @@ if (formData.formType === "secureAccessChecklist") {
 
     // Calculate the initial score from toggles
     const totalToggles = Object.entries(formData).filter(([k, v]) => k.includes("_") && v === "true").length;
-    const maxToggleItems = 30; // Update based on the actual number of toggles
+    const maxToggleItems = 26; // Update based on the actual number of toggles
     let score = Math.round((totalToggles / maxToggleItems) * 100);
 
     // Adjust score based on blockers

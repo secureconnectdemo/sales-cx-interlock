@@ -75,14 +75,15 @@
       "placeholder": "Add any final notes here"
     }
   ],
-  "actions": [
-    {
-      "type": "Action.Submit",
-      "title": "📨 Submit Handoff",
-      "data": {
-        "formType": "secureAccessHandoff",
-        "triggerWebexNotification": true
-      }
+ "actions": [
+  {
+    "type": "Action.Submit",
+    "title": "📨 Submit Handoff",
+    "data": {
+      "formType": "handoff",
+      "triggerWebexNotification": true
     }
+  }
+]
   ]
 }

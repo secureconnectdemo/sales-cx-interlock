@@ -142,7 +142,8 @@ if (resource === "attachmentActions") {
     console.error("❌ Webhook error:", err.stack || err.message);
     res.sendStatus(500);
   }
-}); // ✅ closes app.post("/webhook", ...)
+}); // ✅ THIS is correct: closes the app.post block
+
 
 
 function capitalize(str) {

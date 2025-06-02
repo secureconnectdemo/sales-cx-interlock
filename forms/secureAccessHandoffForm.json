@@ -73,6 +73,22 @@
       "spacing": "Medium"
     },
     {
+  "type": "Input.ChoiceSet",
+  "id": "expansionInterests",
+  "style": "expanded",
+  "isMultiSelect": true,
+  "value": "",
+  "choices": [
+    { "title": "DLP", "value": "DLP" },
+    { "title": "RBI (Browser Isolation)", "value": "RBI" },
+    { "title": "IPS", "value": "IPS" },
+    { "title": "Experience Insights (Advanced)", "value": "Experience Insights advanced" },
+    { "title": "ISE Integration", "value": "ISE" },
+    { "title": "SD-WAN Integration", "value": "SD-WAN" },
+    { "title": "Enterprise Browser", "value": "Enterprise browser" }
+  ]
+}
+    {
       "type": "Input.Text",
       "id": "comments",
       "isMultiline": true,

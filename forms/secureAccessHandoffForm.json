@@ -68,7 +68,7 @@
     },
     {
       "type": "TextBlock",
-      "text": "💬 Additional Comments or Feedback",
+      "text": "💬 Customer interested in exploring more of the following in the future",
       "wrap": true,
       "spacing": "Medium"
     },

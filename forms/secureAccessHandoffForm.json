@@ -56,4 +56,37 @@
       "style": "expanded",
       "choices": [
         { "title": "🔴 No Budget / Not a Priority", "value": "high-budget" },
-        { "title": "🔴 In
+        { "title": "🔴 Infrastructure Not Ready", "value": "high-infra" },
+        { "title": "🔴 Product Not GA or Missing Features", "value": "high-ga" },
+        { "title": "🟠 Training or Configuration Support Needed", "value": "med-training" },
+        { "title": "🟠 Customer Perceives Product as Complex", "value": "med-complex" },
+        { "title": "🟠 Partner Unresponsive or Unenabled", "value": "med-partner" },
+        { "title": "🟢 Documentation Not Found", "value": "low-doc" },
+        { "title": "🟢 Invalid or Missing Contact Info", "value": "low-contact" },
+        { "title": "🟢 Ownership or Success Plan Unclear", "value": "low-plan" }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "💬 Additional Comments or Feedback",
+      "wrap": true,
+      "spacing": "Medium"
+    },
+    {
+      "type": "Input.Text",
+      "id": "comments",
+      "isMultiline": true,
+      "placeholder": "Share any extra context, blockers, or notes here..."
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "📨 Submit",
+      "data": {
+        "formType": "secureAccessChecklist",
+        "targetWebexRoom": "Strategic Css"
+      }
+    }
+  ]
+}

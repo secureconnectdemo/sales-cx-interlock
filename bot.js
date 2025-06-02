@@ -55,15 +55,13 @@ app.post("/webhook", async (req, res) => {
       let commandRecognized = false;
 
       for (const line of lines) {
-        if (commandRecognized) break; // ✅ Stop after first match
+        if (commandRecognized) break;
 
         if (line === "/submit deployment") {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
             markdown: "📝 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
           await sendForm(roomId, "deployment");
           commandRecognized = true;
         }
@@ -72,44 +70,29 @@ app.post("/webhook", async (req, res) => {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
             markdown: "📋 Opening the **Secure Access Handoff Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
           await sendForm(roomId, "handoff");
           commandRecognized = true;
         }
 
         if (line === "/help") {
-          const helpMessage = `
-🤖 **SSE-CX-Hub Bot – Help Menu**
-
-Here are the available commands:
-
-- \`/submit deployment\` – Open the Secure Access Onboarding & Deployment form  
-- \`/submit handoff\` – Open the Secure Access Handoff Form  
-- \`/reset\` – Clear current session or inputs (coming soon)
-
-ℹ️ *If the form doesn't appear immediately, please wait — especially after long inactivity.*
-
-🛠️ Need help? Contact: josfonse@cisco.com  
-📄 [Deployment Planning Form](https://forms.office.com/r/zGd6u5MEmt)
-`;
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
-            markdown: helpMessage
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
+            markdown: `
+🤖 **SSE-CX-Hub Bot – Help Menu**
+\`/submit deployment\` – Open Deployment Form  
+\`/submit handoff\` – Open Handoff Checklist  
+\`/reset\` – (Coming Soon)  
+Contact: josfonse@cisco.com`
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
           commandRecognized = true;
         }
 
         if (line === "/reset") {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
-            markdown: "🔄 Reset command acknowledged. (Reset functionality coming soon.)"
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
+            markdown: "🔄 Reset acknowledged. (Coming soon.)"
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
           commandRecognized = true;
         }
       }
@@ -117,10 +100,8 @@ Here are the available commands:
       if (!commandRecognized) {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: `⚠️ Unknown command. Type \`/help\` to see available options.`
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
+          markdown: "⚠️ Unknown command. Type `/help` for options."
+        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
       }
 
       return res.sendStatus(200);
@@ -130,13 +111,13 @@ Here are the available commands:
       const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
-      const formData = actionRes.data.inputs;
 
+      const formData = actionRes.data.inputs;
       console.log("📝 Processing form submission:", formData);
 
       if (formData?.formType === "secureAccessChecklist") {
         if (!formData.customerName || !formData.submittedBy) {
-          return res.status(400).send("Missing required fields: Customer Name or Submitted By.");
+          return res.status(400).send("Missing Customer Name or Submitted By.");
         }
 
         const customerName = formData.customerName;
@@ -153,7 +134,6 @@ Here are the available commands:
           markdown: summary
         }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-        console.log("✅ Summary posted to Strategic CSS and submitter.");
         return res.sendStatus(200);
       }
     }
@@ -187,16 +167,13 @@ function generateSummary(data, customer, submitter) {
     { key: "pol_2", label: "Decryption + Do Not Decrypt Reviewed" },
     { key: "suc_2", label: "Pilot Use Case Delivered" },
     { key: "suc_3", label: "Expansion Opportunities Identified" },
-    { key: "ope_4", label: "Customer understands Post-Onboarding Support" }
+    { key: "ope_4", label: "Understands Post-Onboarding Support" }
   ];
 
   const total = checklistMap.length;
   const completed = checklistMap.filter(({ key }) => data[key] === "true").length;
   const score = Math.round((completed / total) * 100);
-
-  const riskLevel = score >= 90 ? "🟢 Healthy"
-                   : score >= 70 ? "🟡 At Risk"
-                   : "🔴 Critical";
+  const riskLevel = score >= 90 ? "🟢 Healthy" : score >= 70 ? "🟡 At Risk" : "🔴 Critical";
 
   const incompleteItems = checklistMap
     .filter(({ key }) => data[key] !== "true")
@@ -209,7 +186,7 @@ function generateSummary(data, customer, submitter) {
     .filter(Boolean);
 
   const expansionText = expansion.length
-    ? `\n📈 **Customer Interested in Exploring:**\n• ${expansion.join("\n• ")}`
+    ? `📈 **Customer Interested in Exploring:**\n• ${expansion.join("\n• ")}`
     : "";
 
   return `
@@ -220,36 +197,22 @@ function generateSummary(data, customer, submitter) {
 - **Score:** ${score}/100
 - **Risk Level:** ${riskLevel}
 
-${
-  incomplete.length
-    ? `🚧 **Items Requiring Follow-Up:**\n${incomplete
-        .map(item => `❗ ${item.label}`)
-        .join("\n")}`
-    : "✅ All checklist items completed!"
-}
+🚧 **Items Requiring Follow-Up:**
+${incompleteItems}
 
-${
-  blockers.length
-    ? `\n\n🔎 **Adoption Blockers:**\n• ${blockers.join("\n• ")}`
-    : ""
-}
+🔎 **Adoption Blockers:**
+${blockers}
 
 ${expansionText}
 
 💬 **Additional Comments:**  
-> ${comment}
+> ${comments || "None"}
 `;
-
-
-
+}
 
 async function sendForm(roomId, type) {
   const form = formMap[type];
-  if (!form) {
-    console.warn(`⚠️ Unknown form type: ${type}`);
-    return;
-  }
-
+  if (!form) return;
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
     markdown: `📋 Please complete the **${type}** form:`,
@@ -257,9 +220,7 @@ async function sendForm(roomId, type) {
       contentType: "application/vnd.microsoft.card.adaptive",
       content: form
     }]
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
+  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 }
 
 async function startBot() {

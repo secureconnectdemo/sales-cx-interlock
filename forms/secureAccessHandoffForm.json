@@ -17,6 +17,18 @@
       "label": "Customer Name"
     },
     {
+  "type": "Input.Text",
+  "id": "actionPlanLink",
+  "placeholder": "Paste the Action Plan link (e.g. Salesforce URL)",
+  "label": "📎 Action Plan Link (Optional)"
+},
+{
+  "type": "Input.Text",
+  "id": "actionPlanCloseDate",
+  "placeholder": "e.g. 2025-06-07",
+  "label": "📅 Action Plan Close Date (Optional)"
+},
+    {
       "type": "Input.Text",
       "id": "submittedBy",
       "placeholder": "Your Name or Email",

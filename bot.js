@@ -119,33 +119,23 @@ Contact: josfonse@cisco.com`
 if (formData?.formType === "secureAccessChecklist") {
   const customerName = formData.customerName;
   const submitterEmail = formData.submittedBy;
-
-  if (!customerName || !submitterEmail) {
-    console.error("❌ Missing required fields:", { customerName, submitterEmail });
-    return res.status(400).send("Missing Customer Name or Submitted By.");
-  }
-
   const summary = generateSummary(formData, customerName, submitterEmail);
-  console.log("📤 Markdown Summary:\n", summary);
 
-  // ✅ Only post once — to the Strategic CSS Room
-  try {
-    const result = await axios.post("https://webexapis.com/v1/messages", {
-      roomId: STRATEGIC_CSS_ROOM_ID,
-      markdown: summary
-    }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+  // ✅ Post to Strategic CSS room
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId: STRATEGIC_CSS_ROOM_ID,
+    markdown: summary
+  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-    console.log("✅ Summary posted to Strategic CSS Room:", result.data.id);
-  } catch (err) {
-    console.error("❌ Failed to post to Strategic CSS Room:", err.response?.data || err.message);
-  }
+  // ✅ Post a simple confirmation in the bot chat (original room)
+  await axios.post("https://webexapis.com/v1/messages", {
+    roomId: data.roomId,
+    markdown: "✅ Submission received and summary sent to Strategic CSS room."
+  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
   return res.sendStatus(200);
 }
 
-
-    res.sendStatus(200);
-}
   } catch (err) {
     console.error("❌ Webhook error:", err.stack || err.message);
     res.sendStatus(500);

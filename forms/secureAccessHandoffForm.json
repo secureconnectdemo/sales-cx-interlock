@@ -17,6 +17,18 @@
       "weight": "Bolder"
     },
     {
+  "type": "Input.Text",
+  "id": "customerName",
+  "placeholder": "Customer Name",
+  "label": "Customer Name"
+},
+{
+  "type": "Input.Text",
+  "id": "submittedBy",
+  "placeholder": "Your Name or Email",
+  "label": "Submitted By"
+}
+    {
       "type": "ActionSet",
       "actions": [
         {

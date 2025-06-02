@@ -107,35 +107,37 @@ Contact: josfonse@cisco.com`
       return res.sendStatus(200);
     }
 
-    if (resource === "attachmentActions") {
-      console.log("📩 Attachment Action Triggered");
-      const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
-        headers: { Authorization: WEBEX_BOT_TOKEN }
-      });
+if (resource === "attachmentActions") {
+  try {
+    console.log("📩 Attachment Action Triggered");
+    const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
+      headers: { Authorization: WEBEX_BOT_TOKEN }
+    });
 
-      const formData = actionRes.data.inputs;
-      console.log("📝 Processing form submission:", formData);
+    const formData = actionRes.data.inputs;
+    console.log("📝 Processing form submission:", formData);
 
-if (formData?.formType === "secureAccessChecklist") {
-  const customerName = formData.customerName;
-  const submitterEmail = formData.submittedBy;
-  const summary = generateSummary(formData, customerName, submitterEmail);
+    if (formData?.formType === "secureAccessChecklist") {
+      const customerName = formData.customerName;
+      const submitterEmail = formData.submittedBy;
+      const summary = generateSummary(formData, customerName, submitterEmail);
 
-  // ✅ Post to Strategic CSS room
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: STRATEGIC_CSS_ROOM_ID,
-    markdown: summary
-  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+      // ✅ Post to Strategic CSS room
+      await axios.post("https://webexapis.com/v1/messages", {
+        roomId: STRATEGIC_CSS_ROOM_ID,
+        markdown: summary
+      }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-  // ✅ Post a simple confirmation in the bot chat (original room)
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: data.roomId,
-    markdown: "✅ Submission received and summary sent to Strategic CSS room."
-  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+      // ✅ Confirm in the original chat room
+      await axios.post("https://webexapis.com/v1/messages", {
+        roomId: data.roomId,
+        markdown: "✅ Submission received and summary sent to Strategic CSS room."
+      }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-  return res.sendStatus(200);
-}
+      return res.sendStatus(200);
+    }
 
+    return res.sendStatus(200); // fallback for unhandled formTypes
   } catch (err) {
     console.error("❌ Webhook error:", err.stack || err.message);
     res.sendStatus(500);

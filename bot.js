@@ -37,45 +37,49 @@ app.post("/webhook", async (req, res) => {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 
-      // 🔒 Ignore messages from the bot itself
       if (messageRes.data.personId === BOT_PERSON_ID) {
         console.log("🛑 Ignoring bot's own message");
         return res.sendStatus(200);
       }
 
-      // Clean and normalize the command
       const rawText = messageRes.data.text || "";
-      const cleaned = rawText.replace(/\s+/g, " ").trim().toLowerCase();
+      const lines = rawText
+        .split("\n")
+        .map(line => line.trim().toLowerCase())
+        .filter(line => line.length > 0);
+
       const mentioned = (data?.mentionedPeople || []).some(id => id.toLowerCase() === BOT_PERSON_ID.toLowerCase());
       const isDirect = roomType === "direct";
 
       if (!mentioned && !isDirect) return res.sendStatus(200);
 
-      // ✅ Command matching
-      if (cleaned === "/submit deployment") {
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId,
-          markdown: "📝 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
-        await sendForm(roomId, "deployment");
-        return res.sendStatus(200);
-      }
+      let commandRecognized = false;
 
-      if (cleaned === "/submit handoff") {
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId,
-          markdown: "📋 Opening the **Secure Access Handoff Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
-        await sendForm(roomId, "handoff");
-        return res.sendStatus(200);
-      }
+      for (const line of lines) {
+        if (line === "/submit deployment") {
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: "📝 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+          await sendForm(roomId, "deployment");
+          commandRecognized = true;
+        }
 
-      if (cleaned === "/help") {
-        const helpMessage = `
+        if (line === "/submit handoff") {
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: "📋 Opening the **Secure Access Handoff Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+          await sendForm(roomId, "handoff");
+          commandRecognized = true;
+        }
+
+        if (line === "/help") {
+          const helpMessage = `
 🤖 **SSE-CX-Hub Bot – Help Menu**
 
 Here are the available commands:
@@ -89,26 +93,39 @@ Here are the available commands:
 🛠️ Need help? Contact: josfonse@cisco.com  
 📄 [Deployment Planning Form](https://forms.office.com/r/zGd6u5MEmt)
 `;
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: helpMessage
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+          commandRecognized = true;
+        }
+
+        // Optionally handle "/reset" in the future
+        if (line === "/reset") {
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: "🔄 Reset command acknowledged. (Reset functionality coming soon.)"
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+          commandRecognized = true;
+        }
+      }
+
+      if (!commandRecognized) {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: helpMessage
+          markdown: `⚠️ Unknown command. Type \`/help\` to see available options.`
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
-        return res.sendStatus(200);
       }
 
-      // ❗ Unknown command fallback
-      await axios.post("https://webexapis.com/v1/messages", {
-        roomId,
-        markdown: `⚠️ Unknown command. Type \`/help\` to see available options.`
-      }, {
-        headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-      });
       return res.sendStatus(200);
     }
 
-    // 📥 Form submission
     if (resource === "attachmentActions") {
       const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }

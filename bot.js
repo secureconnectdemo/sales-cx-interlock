@@ -2,7 +2,6 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const axios = require("axios");
-const { addHandoffEntry } = require("./sheet");
 
 const app = express();
 app.use(express.json());
@@ -11,7 +10,6 @@ const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 let BOT_PERSON_ID = "";
 
 const STRATEGIC_CSS_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
-;
 
 const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
@@ -29,6 +27,7 @@ app.post("/webhook", async (req, res) => {
   const roomId = data?.roomId;
   const roomType = data?.roomType;
   const messageId = data?.id;
+
   if (!roomId || !messageId) return res.sendStatus(400);
 
   try {
@@ -37,15 +36,28 @@ app.post("/webhook", async (req, res) => {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 
-      const text = (messageRes.data.text || "").toLowerCase().trim();
-      const mentioned = data?.mentionedPeople?.includes(BOT_PERSON_ID);
+      if (messageRes.data.personId === BOT_PERSON_ID) {
+        console.log("🛑 Ignoring bot's own message");
+        return res.sendStatus(200);
+      }
+
+      const rawText = messageRes.data.text || "";
+      const lines = rawText
+        .split("\n")
+        .map(line => line.trim().toLowerCase())
+        .filter(line => line.length > 0);
+
+      const mentioned = (data?.mentionedPeople || []).some(id => id.toLowerCase() === BOT_PERSON_ID.toLowerCase());
       const isDirect = roomType === "direct";
 
       if (!mentioned && !isDirect) return res.sendStatus(200);
 
-      if (text === "/submit deployment") {
-        console.log("📨 Matched '/submit deployment' command");
-        try {
+      let commandRecognized = false;
+
+      for (const line of lines) {
+        if (commandRecognized) break; // ✅ Stop after first match
+
+        if (line === "/submit deployment") {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
             markdown: "📝 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
@@ -53,22 +65,10 @@ app.post("/webhook", async (req, res) => {
             headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
           });
           await sendForm(roomId, "deployment");
-          console.log("✅ Deployment form sent successfully");
-        } catch (err) {
-          console.error("❌ Error sending deployment form:", err.message);
-          await axios.post("https://webexapis.com/v1/messages", {
-            roomId,
-            markdown: `❌ Failed to send deployment form: ${err.message}`
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
+          commandRecognized = true;
         }
-        return res.sendStatus(200);
-      }
 
-      if (text === "/submit handoff") {
-        console.log("📨 Matched '/submit handoff' command");
-        try {
+        if (line === "/submit handoff") {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
             markdown: "📋 Opening the **Secure Access Handoff Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
@@ -76,21 +76,11 @@ app.post("/webhook", async (req, res) => {
             headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
           });
           await sendForm(roomId, "handoff");
-          console.log("✅ Handoff form sent successfully");
-        } catch (err) {
-          console.error("❌ Error sending handoff form:", err.message);
-          await axios.post("https://webexapis.com/v1/messages", {
-            roomId,
-            markdown: `❌ Failed to send handoff form: ${err.message}`
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
+          commandRecognized = true;
         }
-        return res.sendStatus(200);
-      }
 
-      if (text === "/help") {
-        const helpMessage = `
+        if (line === "/help") {
+          const helpMessage = `
 🤖 **SSE-CX-Hub Bot – Help Menu**
 
 Here are the available commands:
@@ -99,19 +89,41 @@ Here are the available commands:
 - \`/submit handoff\` – Open the Secure Access Handoff Form  
 - \`/reset\` – Clear current session or inputs (coming soon)
 
-ℹ️ *For the form to appear, it might take a few seconds — especially after long periods of inactivity. Please wait patiently for the confirmation message before retrying.*
+ℹ️ *If the form doesn't appear immediately, please wait — especially after long inactivity.*
 
-🛠️ Having issues?
-If something's not working, please report the issue to josfonse@cisco.com and complete the following form to provide the necessary deployment details: [ Deployment Planning](https://forms.office.com/r/zGd6u5MEmt).
-        `;
+🛠️ Need help? Contact: josfonse@cisco.com  
+📄 [Deployment Planning Form](https://forms.office.com/r/zGd6u5MEmt)
+`;
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: helpMessage
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+          commandRecognized = true;
+        }
+
+        if (line === "/reset") {
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: "🔄 Reset command acknowledged. (Reset functionality coming soon.)"
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
+          commandRecognized = true;
+        }
+      }
+
+      if (!commandRecognized) {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: helpMessage
+          markdown: `⚠️ Unknown command. Type \`/help\` to see available options.`
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
-        return res.sendStatus(200);
       }
+
+      return res.sendStatus(200);
     }
 
     if (resource === "attachmentActions") {
@@ -120,47 +132,35 @@ If something's not working, please report the issue to josfonse@cisco.com and co
       });
       const formData = actionRes.data.inputs;
 
-      if (formData.formType === "handoff") {
-        const score = Number(formData.finalScore || 0);
-        let scoreColor = "🟢";
-        if (score < 70) scoreColor = "🟡";
-        if (score < 50) scoreColor = "🔴";
+      console.log("📝 Processing form submission:", formData);
 
-        const tier = score >= 90 ? "✅ No handoff needed"
-                   : score >= 70 ? "⚠️ Handoff recommended"
-                   : "🚨 At-risk handoff required";
+      if (formData?.formType === "secureAccessChecklist") {
+        if (!formData.customerName || !formData.submittedBy) {
+          return res.status(400).send("Missing required fields: Customer Name or Submitted By.");
+        }
 
-        const summary = `📦 **Secure Access Handoff Summary**
-
-👤 **Customer:** ${formData.customerName || "N/A"}  
-🆔 **Org ID:** ${formData.orgId || "N/A"}  
-📐 **Pilot Tier:** ${formData.pilotStatus || "N/A"}  
-📊 **Score:** ${scoreColor} ${score}/100  
-🧱 **Blockers:** ${(formData.risks || []).join(", ") || "None"}  
-📌 **Tier Assessment:** ${tier}  
-🙋 **Submitted By:** ${formData.submittedBy || "N/A"}`;
+        const customerName = formData.customerName;
+        const submitterEmail = formData.submittedBy;
+        const summary = generateSummary(formData, customerName, submitterEmail);
 
         await axios.post("https://webexapis.com/v1/messages", {
-          roomId: CAPACITY_PLANNING_ROOM_ID,
+          roomId: STRATEGIC_CSS_ROOM_ID,
           markdown: summary
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
+        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
         await axios.post("https://webexapis.com/v1/messages", {
-          roomId,
-          markdown: `✅ Handoff score submitted for *${formData.customerName}*.`
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
+          toPersonEmail: submitterEmail,
+          markdown: summary
+        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
+        console.log("✅ Summary posted to Strategic CSS and submitter.");
         return res.sendStatus(200);
       }
     }
 
     res.sendStatus(200);
   } catch (err) {
-    console.error("❌ Webhook error:", err.response?.data || err.message);
+    console.error("❌ Webhook error:", err.stack || err.message);
     res.sendStatus(500);
   }
 });
@@ -169,9 +169,27 @@ function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
+function generateSummary(data, customer, submitter) {
+  return `
+✅ **Secure Access Handoff Summary**
+
+- **Customer Name:** ${capitalize(customer)}
+- **Submitted By:** ${submitter}
+
+📋 **Checklist Responses:**
+\`\`\`json
+${JSON.stringify(data, null, 2)}
+\`\`\`
+`;
+}
+
 async function sendForm(roomId, type) {
   const form = formMap[type];
-  if (!form) return;
+  if (!form) {
+    console.warn(`⚠️ Unknown form type: ${type}`);
+    return;
+  }
+
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
     markdown: `📋 Please complete the **${type}** form:`,
@@ -190,10 +208,10 @@ async function startBot() {
       headers: { Authorization: WEBEX_BOT_TOKEN }
     });
     BOT_PERSON_ID = res.data.id;
-    const PORT = process.env.PORT || 10000;
+    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`));
   } catch (err) {
-    console.error("❌ Failed to get bot info:", err.response?.data || err.message);
+    console.error("❌ Failed to get bot info:", err.stack || err.message);
     process.exit(1);
   }
 }

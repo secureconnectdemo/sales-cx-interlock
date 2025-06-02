@@ -170,6 +170,7 @@ function capitalize(str) {
 }
 
 function generateSummary(data, customer, submitter) {
+  const comments = data.comments?.trim();
   return `
 ✅ **Secure Access Handoff Summary**
 
@@ -180,8 +181,11 @@ function generateSummary(data, customer, submitter) {
 \`\`\`json
 ${JSON.stringify(data, null, 2)}
 \`\`\`
+
+${comments ? `💬 **Additional Comments:**\n> ${comments}` : ''}
 `;
 }
+
 
 async function sendForm(roomId, type) {
   const form = formMap[type];

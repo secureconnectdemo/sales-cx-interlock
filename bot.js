@@ -154,7 +154,7 @@ function generateSummary(data, customer, submitter) {
   const blockers = (data.adoptionBlockers || "")
     .split(",")
     .filter(b => b)
-    .map(b => • ${b.trim()})
+    .map(b => `• ${b.trim()}`)
     .join("\n") || "None";
 
   const checklistMap = [
@@ -177,7 +177,7 @@ function generateSummary(data, customer, submitter) {
 
   const incompleteItems = checklistMap
     .filter(({ key }) => data[key] !== "true")
-    .map(({ label }) => ❗ ${label})
+    .map(({ label }) => `❗ ${label}`)
     .join("\n") || "✅ All key items completed.";
 
   const expansion = (data.expansionInterests || "")
@@ -186,10 +186,10 @@ function generateSummary(data, customer, submitter) {
     .filter(Boolean);
 
   const expansionText = expansion.length
-    ? 📈 **Customer Interested in Exploring:**\n• ${expansion.join("\n• ")}
+    ? `📈 **Customer Interested in Exploring:**\n• ${expansion.join("\n• ")}`
     : "";
 
-  return 
+  return `
 ✅ **Secure Access Handoff Summary**
 
 - **Customer Name:** ${capitalize(customer)}
@@ -207,8 +207,9 @@ ${expansionText}
 
 💬 **Additional Comments:**  
 > ${comments || "None"}
-;
+`;
 }
+
 
 async function sendForm(roomId, type) {
   const form = formMap[type];

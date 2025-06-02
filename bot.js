@@ -163,7 +163,7 @@ const res = await axios.get("https://webexapis.com/v1/people/me", {
 headers: { Authorization: WEBEX_BOT_TOKEN }
 });
 BOT_PERSON_ID = res.data.id;
-const PORT = process.env.PORT || *****;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`));
 } catch (err) {
 console.error("❌ Failed to get bot info:", err.response?.data || err.message);

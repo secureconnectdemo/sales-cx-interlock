@@ -127,8 +127,8 @@ Please contact: [naas_support@cisco.com](mailto:naas_support@cisco.com)
         return res.sendStatus(200);
       }
 
-if (formData.formType === "deployment") {
-  const fullSummary = `📢 **New Form Submission Notification**
+      if (formData.formType === "deployment") {
+        const fullSummary = `📢 **New Form Submission Notification**
 
 **Customer:** ${formData.customerName || "N/A"}  
 **Org ID:** ${formData.orgId || "N/A"}  
@@ -140,23 +140,22 @@ ${formData.deploymentPlan || "N/A"}
 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}  
 **Submitted By:** ${formData.submittedBy || "N/A"}`;
 
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: CAPACITY_PLANNING_ROOM_ID,
-    markdown: fullSummary
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId: CAPACITY_PLANNING_ROOM_ID,
+          markdown: fullSummary
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
 
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId,
-    markdown: `✅ Submission received for *${formData.customerName || "Customer"}*.`
-  }, {
-    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-  });
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: `✅ Submission received for *${formData.customerName || "Customer"}*.`
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
 
-  return res.sendStatus(200);
-}
-
+        return res.sendStatus(200);
+      }
     }
 
     res.sendStatus(200);

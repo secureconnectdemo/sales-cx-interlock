@@ -11,12 +11,6 @@
       "wrap": true
     },
     {
-      "type": "TextBlock",
-      "text": "Completion Percentage: {{COMPLETION_PLACEHOLDER}}",
-      "wrap": true,
-      "weight": "Bolder"
-    },
-    {
       "type": "Input.Text",
       "id": "customerName",
       "placeholder": "Customer Name",

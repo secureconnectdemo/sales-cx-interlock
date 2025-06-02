@@ -25,13 +25,6 @@
       "valueOff": "false"
     },
     {
-      "type": "Input.Toggle",
-      "title": "Audit of who has access completed (optional)",
-      "id": "pla_3",
-      "valueOn": "true",
-      "valueOff": "false"
-    },
-    {
       "type": "TextBlock",
       "text": "\ud83d\udcc2 Configuration Review",
       "weight": "Bolder",

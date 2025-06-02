@@ -1,3 +1,7 @@
+const Airtable = require("airtable");
+
+const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base("appG1ZNhb2KRKQQOI");
+
 const fs = require("fs");
 const path = require("path");
 const express = require("express");

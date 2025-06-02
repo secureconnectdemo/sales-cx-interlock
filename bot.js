@@ -16,7 +16,7 @@ const STRATEGIC_CSS_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vYTYzYWFmNjAtMWJjMC0xM
 const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
   picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8")),
-  handoffForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "secureAccessHandoffForm.json"), "utf8"))
+  handoff: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "secureAccessHandoffForm.json"), "utf8"))
 };
 
 app.get("/test", (req, res) => {
@@ -25,7 +25,6 @@ app.get("/test", (req, res) => {
 
 app.post("/webhook", async (req, res) => {
   console.log("🔥 Incoming webhook hit");
-  console.log("BODY:", JSON.stringify(req.body, null, 2));
   const { data, resource } = req.body;
   const roomId = data?.roomId;
   const roomType = data?.roomType;
@@ -46,7 +45,6 @@ app.post("/webhook", async (req, res) => {
 
       if (text === "/submit deployment") {
         console.log("📨 Matched '/submit deployment' command");
-
         try {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
@@ -54,7 +52,6 @@ app.post("/webhook", async (req, res) => {
           }, {
             headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
           });
-
           await sendForm(roomId, "deployment");
           console.log("✅ Deployment form sent successfully");
         } catch (err) {
@@ -66,13 +63,11 @@ app.post("/webhook", async (req, res) => {
             headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
           });
         }
-
         return res.sendStatus(200);
       }
 
       if (text === "/submit handoff") {
         console.log("📨 Matched '/submit handoff' command");
-
         try {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
@@ -80,8 +75,7 @@ app.post("/webhook", async (req, res) => {
           }, {
             headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
           });
-
-          await sendForm(roomId, "handoffForm");
+          await sendForm(roomId, "handoff");
           console.log("✅ Handoff form sent successfully");
         } catch (err) {
           console.error("❌ Error sending handoff form:", err.message);
@@ -92,7 +86,6 @@ app.post("/webhook", async (req, res) => {
             headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
           });
         }
-
         return res.sendStatus(200);
       }
 
@@ -111,34 +104,12 @@ Here are the available commands:
 🛠️ Having issues?
 If something's not working, please report the issue to josfonse@cisco.com and complete the following form to provide the necessary deployment details: [ Deployment Planning](https://forms.office.com/r/zGd6u5MEmt).
         `;
-
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
           markdown: helpMessage
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
-
-        return res.sendStatus(200);
-      }
-
-      if (text.startsWith("/playcard")) {
-        const [, segmentRaw, ...taskParts] = text.split(" ");
-        const segment = capitalize(segmentRaw);
-        const task = taskParts.join(" ").replace(/-/g, " ");
-        const card = getPlaycard(segment, task);
-
-        const response = card
-          ? `🎯 **Playcard Overview**\n\n---\n**${segment} - ${task}**\n\n**Owner:** ${card.owner}\n**Title:** ${card.title}\n\n${(card.description || []).map(d => "- " + d).join("\n")}`
-          : `❌ No playcard found for segment **${segment}** and task **${task}**.`;
-
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId,
-          markdown: response
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
-
         return res.sendStatus(200);
       }
     }
@@ -201,10 +172,9 @@ function capitalize(str) {
 async function sendForm(roomId, type) {
   const form = formMap[type];
   if (!form) return;
-
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
-    markdown: `📋 Please complete the **${type}** form:\`,
+    markdown: `📋 Please complete the **${type}** form:`,
     attachments: [{
       contentType: "application/vnd.microsoft.card.adaptive",
       content: form
@@ -221,7 +191,7 @@ async function startBot() {
     });
     BOT_PERSON_ID = res.data.id;
     const PORT = process.env.PORT || 10000;
-    app.listen(PORT, () => console.log(`SSE-CX-Hub listening on port ${PORT}`));
+    app.listen(PORT, () => console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`));
   } catch (err) {
     console.error("❌ Failed to get bot info:", err.response?.data || err.message);
     process.exit(1);

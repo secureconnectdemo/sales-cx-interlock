@@ -108,6 +108,7 @@ Contact: josfonse@cisco.com`
     }
 
     if (resource === "attachmentActions") {
+      console.log("📩 Attachment Action Triggered");
       const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
@@ -116,23 +117,36 @@ Contact: josfonse@cisco.com`
       console.log("📝 Processing form submission:", formData);
 
       if (formData?.formType === "secureAccessChecklist") {
-        if (!formData.customerName || !formData.submittedBy) {
+        const customerName = formData.customerName;
+        const submitterEmail = formData.submittedBy;
+
+        if (!customerName || !submitterEmail) {
+          console.error("❌ Missing required fields:", { customerName, submitterEmail });
           return res.status(400).send("Missing Customer Name or Submitted By.");
         }
 
-        const customerName = formData.customerName;
-        const submitterEmail = formData.submittedBy;
         const summary = generateSummary(formData, customerName, submitterEmail);
+        console.log("📤 Markdown Summary:\n", summary);
 
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId: STRATEGIC_CSS_ROOM_ID,
-          markdown: summary
-        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+        try {
+          const sent = await axios.post("https://webexapis.com/v1/messages", {
+            roomId, // post to room where form was submitted
+            markdown: summary
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+          console.log("✅ Summary posted in room:", sent.data.id);
+        } catch (err) {
+          console.error("❌ Failed to send to room:", err.response?.data || err.message);
+        }
 
-        await axios.post("https://webexapis.com/v1/messages", {
-          toPersonEmail: submitterEmail,
-          markdown: summary
-        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+        try {
+          const sent = await axios.post("https://webexapis.com/v1/messages", {
+            toPersonEmail: submitterEmail,
+            markdown: summary
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+          console.log("✅ Summary emailed to submitter:", sent.data.id);
+        } catch (err) {
+          console.error("❌ Failed to email submitter:", err.response?.data || err.message);
+        }
 
         return res.sendStatus(200);
       }
@@ -209,7 +223,6 @@ ${expansionText}
 > ${comments || "None"}
 `;
 }
-
 
 async function sendForm(roomId, type) {
   const form = formMap[type];

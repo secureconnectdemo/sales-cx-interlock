@@ -171,20 +171,56 @@ function capitalize(str) {
 
 function generateSummary(data, customer, submitter) {
   const comments = data.comments?.trim();
+  const blockers = (data.adoptionBlockers || "")
+    .split(",")
+    .filter(b => b)
+    .map(b => `• ${b.trim()}`)
+    .join("\n") || "None";
+
+  const checklistMap = [
+    { key: "con_1", label: "Secure Client/IPsec Connectivity" },
+    { key: "con_2", label: "DNS Redirection Verified" },
+    { key: "con_3", label: "Rule Configured and Active" },
+    { key: "pla_1", label: "Admin Access Granted" },
+    { key: "pla_2", label: "User Roles Reviewed" },
+    { key: "pol_1", label: "Web Profiles Reviewed" },
+    { key: "pol_2", label: "Decryption + Do Not Decrypt Reviewed" },
+    { key: "suc_2", label: "Pilot Use Case Delivered" },
+    { key: "suc_3", label: "Expansion Opportunities Identified" },
+    { key: "ope_4", label: "Customer understands Post-Onboarding Support" }
+  ];
+
+  const total = checklistMap.length;
+  const completed = checklistMap.filter(({ key }) => data[key] === "true").length;
+  const score = Math.round((completed / total) * 100);
+
+  const riskLevel = score >= 90 ? "🟢 Healthy"
+                   : score >= 70 ? "🟡 At Risk"
+                   : "🔴 Critical";
+
+  const incompleteItems = checklistMap
+    .filter(({ key }) => data[key] !== "true")
+    .map(({ label }) => `❗ ${label}`)
+    .join("\n") || "✅ All key items completed.";
+
   return `
 ✅ **Secure Access Handoff Summary**
 
 - **Customer Name:** ${capitalize(customer)}
 - **Submitted By:** ${submitter}
+- **Score:** ${score}/100  
+- **Risk Level:** ${riskLevel}
 
-📋 **Checklist Responses:**
-\`\`\`json
-${JSON.stringify(data, null, 2)}
-\`\`\`
+🚧 **Items Requiring Follow-Up:**
+${incompleteItems}
 
-${comments ? `💬 **Additional Comments:**\n> ${comments}` : ''}
+🔎 **Adoption Blockers:**
+${blockers}
+
+${comments ? `💬 **Additional Comments:**\n> ${comments}` : ""}
 `;
 }
+
 
 
 async function sendForm(roomId, type) {

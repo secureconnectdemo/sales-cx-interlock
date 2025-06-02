@@ -228,4 +228,7 @@ async function startBot() {
   }
 }
 
+startBot(); // This must be last and outside all other blocks
+
+
 startBot();

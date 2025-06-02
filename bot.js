@@ -148,8 +148,15 @@ If something's not working, please report the issue to josfonse@cisco.com and co
         });
 
         await axios.post("https://webexapis.com/v1/messages", {
-          roomId,
-          markdown: `✅ Handoff score submitted for *${formData.customerName}*.`
+          roomId: STRATEGIC_CSS_ROOM_ID,
+          markdown: summary
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+
+        await axios.post("https://webexapis.com/v1/messages", {
+          toPersonEmail: formData.personEmail,
+          markdown: `✅ Handoff score submitted for *${formData.customerName}*.\n\n${summary}`
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });

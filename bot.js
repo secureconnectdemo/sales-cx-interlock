@@ -28,9 +28,14 @@ app.get("/test", (req, res) => {
 app.post("/webhook", async (req, res) => {
   console.log("🔥 Incoming webhook hit");
   const { data, resource } = req.body;
+
+  // Ensure submitterEmail is defined
+  const submitterEmail = data?.personEmail || "default-email@cisco.com"; // Default fallback
+
   const roomId = data?.roomId;
   const roomType = data?.roomType;
   const messageId = data?.id;
+
   if (!roomId || !messageId) return res.sendStatus(400);
 
   try {
@@ -45,6 +50,7 @@ app.post("/webhook", async (req, res) => {
 
       if (!mentioned && !isDirect) return res.sendStatus(200);
 
+      // Handle deployment and handoff commands
       if (text === "/submit deployment") {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
@@ -99,41 +105,39 @@ If something's not working, please report the issue to josfonse@cisco.com and co
       const formData = actionRes.data.inputs;
 
       if (formData.formType === "secureAccessChecklist") {
-        const submitterEmail = data.personEmail;
-const customerName = formData.customerName || "N/A";
+        const customerName = formData.customerName || "N/A";
 
-// Normalize adoptionBlockers to an array
-const blockersRaw = formData.adoptionBlockers || "";
-const blockers = typeof blockersRaw === "string"
-  ? blockersRaw.split(",").map(b => b.trim())
-  : Array.isArray(blockersRaw) ? blockersRaw : [];
+        // Normalize blockers to an array
+        const blockersRaw = formData.adoptionBlockers || "";
+        const blockers = typeof blockersRaw === "string"
+          ? blockersRaw.split(",").map(b => b.trim())
+          : Array.isArray(blockersRaw) ? blockersRaw : [];
 
-// Calculate score from toggles
-const totalToggles = Object.entries(formData).filter(([k, v]) => k.includes("_") && v === "true").length;
-const maxToggleItems = 30;
-let score = Math.round((totalToggles / maxToggleItems) * 100);
+        // Calculate the initial score from toggles
+        const totalToggles = Object.entries(formData).filter(([k, v]) => k.includes("_") && v === "true").length;
+        const maxToggleItems = 30;
+        let score = Math.round((totalToggles / maxToggleItems) * 100);
 
-// Adjust for blockers
-blockers.forEach(b => {
-  if (b.startsWith("high")) score -= 15;
-  else if (b.startsWith("med")) score -= 10;
-  else score -= 5;
-});
+        // Adjust score based on blockers
+        blockers.forEach(b => {
+          if (b.startsWith("high")) score -= 15;
+          else if (b.startsWith("med")) score -= 10;
+          else score -= 5;
+        });
 
-// Ensure score doesn't go below 0
-if (score < 0) score = 0;
+        // Ensure score doesn't go below 0
+        if (score < 0) score = 0;
 
-// Determine icon and status
-const scoreIcon = score >= 70 ? (score >= 90 ? "🟢" : "🟡") : "🔴";
-const statusText = score >= 90 ? "✅ Healthy"
-                 : score >= 70 ? "🟡 Further Assistance May Be Required"
-                 : "🚨 At Risk";
+        // Determine icon and status
+        const scoreIcon = score >= 70 ? (score >= 90 ? "🟢" : "🟡") : "🔴";
+        const statusText = score >= 90 ? "✅ Healthy"
+                         : score >= 70 ? "🟡 Further Assistance May Be Required"
+                         : "🚨 At Risk";
 
-// Format blockers for message
-const blockerText = blockers.length ? blockers.map(b => `- ${b}`).join("\n") : "None";
+        // Format blockers for message
+        const blockerText = blockers.length ? blockers.map(b => `- ${b}`).join("\n") : "None";
 
-// Final summary message
-const summary = `📋 **Secure Access Onboarding Checklist Summary**
+        const summary = `📋 **Secure Access Onboarding Checklist Summary**
 
 👤 **Customer:** ${customerName}
 📧 **Submitted by:** ${submitterEmail}
@@ -143,26 +147,23 @@ ${blockerText}
 
 📌 **Status:** ${statusText}`;
 
+        // Post to Strategic CSS Room
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId: STRATEGIC_CSS_ROOM_ID,
+          markdown: summary
+        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-// Post to Strategic CSS Room
-await axios.post("https://webexapis.com/v1/messages", {
-  roomId: STRATEGIC_CSS_ROOM_ID,
-  markdown: summary
-}, { headers: { Authorization: WEBEX_BOT_TOKEN } });
-
-// Send summary back to submitter
-const personalMessage = `${summary}
+        // Send summary back to submitter
+        const personalMessage = `${summary}
 
 📌 **Action:** Please make sure to copy this output into the Console Notes for the respective account.`;
 
-await axios.post("https://webexapis.com/v1/messages", {
-  toPersonEmail: submitterEmail,
-  markdown: personalMessage
-}, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+        await axios.post("https://webexapis.com/v1/messages", {
+          toPersonEmail: submitterEmail,
+          markdown: personalMessage
+        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-console.log("✅ Summary posted to STRATEGIC_CSS_ROOM_ID");
-
-        // await addHandoffEntry(customerName, score, statusText, blockers.join(", "), submitterEmail);
+        console.log("✅ Summary posted to STRATEGIC_CSS_ROOM_ID");
 
         return res.sendStatus(200);
       }
@@ -174,7 +175,6 @@ console.log("✅ Summary posted to STRATEGIC_CSS_ROOM_ID");
     res.sendStatus(500);
   }
 });
-
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }

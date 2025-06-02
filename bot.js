@@ -116,41 +116,33 @@ Contact: josfonse@cisco.com`
       const formData = actionRes.data.inputs;
       console.log("📝 Processing form submission:", formData);
 
-      if (formData?.formType === "secureAccessChecklist") {
-        const customerName = formData.customerName;
-        const submitterEmail = formData.submittedBy;
+if (formData?.formType === "secureAccessChecklist") {
+  const customerName = formData.customerName;
+  const submitterEmail = formData.submittedBy;
 
-        if (!customerName || !submitterEmail) {
-          console.error("❌ Missing required fields:", { customerName, submitterEmail });
-          return res.status(400).send("Missing Customer Name or Submitted By.");
-        }
+  if (!customerName || !submitterEmail) {
+    console.error("❌ Missing required fields:", { customerName, submitterEmail });
+    return res.status(400).send("Missing Customer Name or Submitted By.");
+  }
 
-        const summary = generateSummary(formData, customerName, submitterEmail);
-        console.log("📤 Markdown Summary:\n", summary);
+  const summary = generateSummary(formData, customerName, submitterEmail);
+  console.log("📤 Markdown Summary:\n", summary);
 
-        try {
-          const sent = await axios.post("https://webexapis.com/v1/messages", {
-            roomId, // post to room where form was submitted
-            markdown: summary
-          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
-          console.log("✅ Summary posted in room:", sent.data.id);
-        } catch (err) {
-          console.error("❌ Failed to send to room:", err.response?.data || err.message);
-        }
+  // ✅ Only post once — to the Strategic CSS Room
+  try {
+    const result = await axios.post("https://webexapis.com/v1/messages", {
+      roomId: STRATEGIC_CSS_ROOM_ID,
+      markdown: summary
+    }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-        try {
-          const sent = await axios.post("https://webexapis.com/v1/messages", {
-            toPersonEmail: submitterEmail,
-            markdown: summary
-          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
-          console.log("✅ Summary emailed to submitter:", sent.data.id);
-        } catch (err) {
-          console.error("❌ Failed to email submitter:", err.response?.data || err.message);
-        }
+    console.log("✅ Summary posted to Strategic CSS Room:", result.data.id);
+  } catch (err) {
+    console.error("❌ Failed to post to Strategic CSS Room:", err.response?.data || err.message);
+  }
 
-        return res.sendStatus(200);
-      }
-    }
+  return res.sendStatus(200);
+}
+
 
     res.sendStatus(200);
   } catch (err) {

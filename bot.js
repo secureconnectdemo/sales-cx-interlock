@@ -37,14 +37,22 @@ app.post("/webhook", async (req, res) => {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 
-      const text = (messageRes.data.text || "").toLowerCase().trim();
+      // 🔒 Ignore messages from the bot itself
+      if (messageRes.data.personId === BOT_PERSON_ID) {
+        console.log("🛑 Ignoring bot's own message");
+        return res.sendStatus(200);
+      }
+
+      // Clean and normalize the command
+      const rawText = messageRes.data.text || "";
+      const cleaned = rawText.replace(/\s+/g, " ").trim().toLowerCase();
       const mentioned = (data?.mentionedPeople || []).some(id => id.toLowerCase() === BOT_PERSON_ID.toLowerCase());
       const isDirect = roomType === "direct";
 
       if (!mentioned && !isDirect) return res.sendStatus(200);
 
-      // Handle known commands
-      if (text === "/submit deployment") {
+      // ✅ Command matching
+      if (cleaned === "/submit deployment") {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
           markdown: "📝 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
@@ -55,7 +63,7 @@ app.post("/webhook", async (req, res) => {
         return res.sendStatus(200);
       }
 
-      if (text === "/submit handoff") {
+      if (cleaned === "/submit handoff") {
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
           markdown: "📋 Opening the **Secure Access Handoff Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
@@ -66,7 +74,7 @@ app.post("/webhook", async (req, res) => {
         return res.sendStatus(200);
       }
 
-      if (text === "/help") {
+      if (cleaned === "/help") {
         const helpMessage = `
 🤖 **SSE-CX-Hub Bot – Help Menu**
 
@@ -76,10 +84,10 @@ Here are the available commands:
 - \`/submit handoff\` – Open the Secure Access Handoff Form  
 - \`/reset\` – Clear current session or inputs (coming soon)
 
-ℹ️ *For the form to appear, it might take a few seconds — especially after long periods of inactivity.*
+ℹ️ *If the form doesn't appear immediately, please wait — especially after long inactivity.*
 
-🛠️ Having issues?  
-Report issues to josfonse@cisco.com or complete the [Deployment Planning](https://forms.office.com/r/zGd6u5MEmt) form.
+🛠️ Need help? Contact: josfonse@cisco.com  
+📄 [Deployment Planning Form](https://forms.office.com/r/zGd6u5MEmt)
 `;
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
@@ -90,7 +98,7 @@ Report issues to josfonse@cisco.com or complete the [Deployment Planning](https:
         return res.sendStatus(200);
       }
 
-      // Fallback for unknown commands
+      // ❗ Unknown command fallback
       await axios.post("https://webexapis.com/v1/messages", {
         roomId,
         markdown: `⚠️ Unknown command. Type \`/help\` to see available options.`
@@ -100,14 +108,14 @@ Report issues to josfonse@cisco.com or complete the [Deployment Planning](https:
       return res.sendStatus(200);
     }
 
+    // 📥 Form submission
     if (resource === "attachmentActions") {
       const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
       const formData = actionRes.data.inputs;
 
-      console.log("Processing a form submission...");
-      console.log("formData:", formData);
+      console.log("📝 Processing form submission:", formData);
 
       if (formData?.formType === "secureAccessChecklist") {
         if (!formData.customerName || !formData.submittedBy) {
@@ -128,7 +136,7 @@ Report issues to josfonse@cisco.com or complete the [Deployment Planning](https:
           markdown: summary
         }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-        console.log("✅ Summary posted to Strategic CSS and sent to submitter.");
+        console.log("✅ Summary posted to Strategic CSS and submitter.");
         return res.sendStatus(200);
       }
     }
@@ -146,12 +154,12 @@ function capitalize(str) {
 
 function generateSummary(data, customer, submitter) {
   return `
-✅ **Secure Access Deployment Summary**
+✅ **Secure Access Handoff Summary**
 
 - **Customer Name:** ${capitalize(customer)}
 - **Submitted By:** ${submitter}
 
-📋 **Submitted Data:**
+📋 **Checklist Responses:**
 \`\`\`json
 ${JSON.stringify(data, null, 2)}
 \`\`\`

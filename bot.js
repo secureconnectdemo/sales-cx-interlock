@@ -1,3 +1,4 @@
+const submitterEmail = data.personEmail || "default-email@cisco.com";
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
@@ -106,12 +107,12 @@ const blockers = typeof blockersRaw === "string"
   ? blockersRaw.split(",").map(b => b.trim())
   : Array.isArray(blockersRaw) ? blockersRaw : [];
 
-// Calculate the initial score from toggles
+// Calculate score from toggles
 const totalToggles = Object.entries(formData).filter(([k, v]) => k.includes("_") && v === "true").length;
 const maxToggleItems = 30;
 let score = Math.round((totalToggles / maxToggleItems) * 100);
 
-// Adjust score based on blockers
+// Adjust for blockers
 blockers.forEach(b => {
   if (b.startsWith("high")) score -= 15;
   else if (b.startsWith("med")) score -= 10;
@@ -121,13 +122,16 @@ blockers.forEach(b => {
 // Ensure score doesn't go below 0
 if (score < 0) score = 0;
 
+// Determine icon and status
 const scoreIcon = score >= 70 ? (score >= 90 ? "🟢" : "🟡") : "🔴";
 const statusText = score >= 90 ? "✅ Healthy"
                  : score >= 70 ? "🟡 Further Assistance May Be Required"
                  : "🚨 At Risk";
 
+// Format blockers for message
 const blockerText = blockers.length ? blockers.map(b => `- ${b}`).join("\n") : "None";
 
+// Final summary message
 const summary = `📋 **Secure Access Onboarding Checklist Summary**
 
 👤 **Customer:** ${customerName}
@@ -139,14 +143,23 @@ ${blockerText}
 📌 **Status:** ${statusText}`;
 
 
-
+// Post to Strategic CSS Room
 await axios.post("https://webexapis.com/v1/messages", {
   roomId: STRATEGIC_CSS_ROOM_ID,
   markdown: summary
-}, {
-  headers: { Authorization: WEBEX_BOT_TOKEN }
-});
+}, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
+// Send summary back to submitter
+const personalMessage = `${summary}
+
+📌 **Action:** Please make sure to copy this output into the Console Notes for the respective account.`;
+
+await axios.post("https://webexapis.com/v1/messages", {
+  toPersonEmail: submitterEmail,
+  markdown: personalMessage
+}, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
+console.log("✅ Summary posted to STRATEGIC_CSS_ROOM_ID");
 
         // await addHandoffEntry(customerName, score, statusText, blockers.join(", "), submitterEmail);
 

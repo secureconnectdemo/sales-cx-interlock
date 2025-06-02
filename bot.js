@@ -44,48 +44,24 @@ app.post("/webhook", async (req, res) => {
       if (!mentioned && !isDirect) return res.sendStatus(200);
 
       if (text === "/submit deployment") {
-        console.log("📨 Matched '/submit deployment' command");
-        try {
-          await axios.post("https://webexapis.com/v1/messages", {
-            roomId,
-            markdown: "📝 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
-          await sendForm(roomId, "deployment");
-          console.log("✅ Deployment form sent successfully");
-        } catch (err) {
-          console.error("❌ Error sending deployment form:", err.message);
-          await axios.post("https://webexapis.com/v1/messages", {
-            roomId,
-            markdown: `❌ Failed to send deployment form: ${err.message}`
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
-        }
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: "📝 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+        await sendForm(roomId, "deployment");
         return res.sendStatus(200);
       }
 
       if (text === "/submit handoff") {
-        console.log("📨 Matched '/submit handoff' command");
-        try {
-          await axios.post("https://webexapis.com/v1/messages", {
-            roomId,
-            markdown: "📋 Opening the **Secure Access Handoff Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
-          await sendForm(roomId, "handoff");
-          console.log("✅ Handoff form sent successfully");
-        } catch (err) {
-          console.error("❌ Error sending handoff form:", err.message);
-          await axios.post("https://webexapis.com/v1/messages", {
-            roomId,
-            markdown: `❌ Failed to send handoff form: ${err.message}`
-          }, {
-            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-          });
-        }
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: "📋 Opening the **Secure Access Handoff Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+        await sendForm(roomId, "handoff");
         return res.sendStatus(200);
       }
 
@@ -120,46 +96,50 @@ If something's not working, please report the issue to josfonse@cisco.com and co
       });
       const formData = actionRes.data.inputs;
 
-      if (formData.formType === "handoff") {
-        const score = Number(formData.finalScore || 0);
-        let scoreColor = "🟢";
-        if (score < 70) scoreColor = "🟡";
-        if (score < 50) scoreColor = "🔴";
+      if (formData.formType === "secureAccessChecklist") {
+        const submitterEmail = data.personEmail;
+        const customerName = formData.customerName || "N/A";
+        const blockers = formData.adoptionBlockers || [];
+        const totalToggles = Object.entries(formData).filter(([k, v]) => k.includes("_") && v === "true").length;
 
-        const tier = score >= 90 ? "✅ No handoff needed"
-                   : score >= 70 ? "⚠️ Handoff recommended"
-                   : "🚨 At-risk handoff required";
+        const maxToggleItems = 30;
+        let score = Math.round((totalToggles / maxToggleItems) * 100);
 
-        const summary = `📦 **Secure Access Handoff Summary**
-
-👤 **Customer:** ${formData.customerName || "N/A"}  
-🆔 **Org ID:** ${formData.orgId || "N/A"}  
-📐 **Pilot Tier:** ${formData.pilotStatus || "N/A"}  
-📊 **Score:** ${scoreColor} ${score}/100  
-🧱 **Blockers:** ${(formData.risks || []).join(", ") || "None"}  
-📌 **Tier Assessment:** ${tier}  
-🙋 **Submitted By:** ${formData.submittedBy || "N/A"}`;
-
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId: CAPACITY_PLANNING_ROOM_ID,
-          markdown: summary
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        blockers.forEach(b => {
+          if (b.startsWith("high")) score -= 15;
+          else if (b.startsWith("med")) score -= 10;
+          else score -= 5;
         });
+        if (score < 0) score = 0;
+
+        const scoreIcon = score >= 70 ? (score >= 90 ? "🟢" : "🟡") : "🔴";
+        const statusText = score >= 90 ? "✅ Healthy"
+                         : score >= 70 ? "🟡 Further Assistance May Be Required"
+                         : "🚨 At Risk";
+
+        const blockerText = blockers.length ? blockers.map(b => `- ${b}`).join("\n") : "None";
+
+        const summary = `📋 **Secure Access Onboarding Checklist Summary**
+
+👤 **Customer:** ${customerName}
+📧 **Submitted by:** ${submitterEmail}
+📊 **Score:** ${scoreIcon} ${score}/100  
+🧱 **Adoption Blockers:**  
+${blockerText}
+
+📌 **Status:** ${statusText}`;
 
         await axios.post("https://webexapis.com/v1/messages", {
           roomId: STRATEGIC_CSS_ROOM_ID,
           markdown: summary
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
+        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
         await axios.post("https://webexapis.com/v1/messages", {
-          toPersonEmail: formData.personEmail,
-          markdown: `✅ Handoff score submitted for *${formData.customerName}*.\n\n${summary}`
-        }, {
-          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
-        });
+          toPersonEmail: submitterEmail,
+          markdown: `✅ Your Secure Access onboarding handoff was submitted.\n\n${summary}`
+        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
+        await addHandoffEntry(customerName, score, statusText, blockers.join(", "), submitterEmail);
 
         return res.sendStatus(200);
       }

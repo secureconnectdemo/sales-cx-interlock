@@ -98,28 +98,35 @@ If something's not working, please report the issue to josfonse@cisco.com and co
 
       if (formData.formType === "secureAccessChecklist") {
         const submitterEmail = data.personEmail;
-        const customerName = formData.customerName || "N/A";
-        const blockers = formData.adoptionBlockers || [];
-        const totalToggles = Object.entries(formData).filter(([k, v]) => k.includes("_") && v === "true").length;
+const customerName = formData.customerName || "N/A";
 
-        const maxToggleItems = 30;
-        let score = Math.round((totalToggles / maxToggleItems) * 100);
+// Normalize adoptionBlockers to an array
+const blockersRaw = formData.adoptionBlockers || "";
+const blockers = typeof blockersRaw === "string"
+  ? blockersRaw.split(",").map(b => b.trim())
+  : Array.isArray(blockersRaw) ? blockersRaw : [];
 
-        blockers.forEach(b => {
-          if (b.startsWith("high")) score -= 15;
-          else if (b.startsWith("med")) score -= 10;
-          else score -= 5;
-        });
-        if (score < 0) score = 0;
+const totalToggles = Object.entries(formData).filter(([k, v]) => k.includes("_") && v === "true").length;
 
-        const scoreIcon = score >= 70 ? (score >= 90 ? "🟢" : "🟡") : "🔴";
-        const statusText = score >= 90 ? "✅ Healthy"
-                         : score >= 70 ? "🟡 Further Assistance May Be Required"
-                         : "🚨 At Risk";
+const maxToggleItems = 30;
+let score = Math.round((totalToggles / maxToggleItems) * 100);
 
-        const blockerText = blockers.length ? blockers.map(b => `- ${b}`).join("\n") : "None";
+// Score adjustments based on blockers
+blockers.forEach(b => {
+  if (b.startsWith("high")) score -= 15;
+  else if (b.startsWith("med")) score -= 10;
+  else score -= 5;
+});
+if (score < 0) score = 0;
 
-        const summary = `📋 **Secure Access Onboarding Checklist Summary**
+const scoreIcon = score >= 70 ? (score >= 90 ? "🟢" : "🟡") : "🔴";
+const statusText = score >= 90 ? "✅ Healthy"
+                 : score >= 70 ? "🟡 Further Assistance May Be Required"
+                 : "🚨 At Risk";
+
+const blockerText = blockers.length ? blockers.map(b => `- ${b}`).join("\n") : "None";
+
+const summary = `📋 **Secure Access Onboarding Checklist Summary**
 
 👤 **Customer:** ${customerName}
 📧 **Submitted by:** ${submitterEmail}
@@ -128,6 +135,7 @@ If something's not working, please report the issue to josfonse@cisco.com and co
 ${blockerText}
 
 📌 **Status:** ${statusText}`;
+
 
 await axios.post("https://webexapis.com/v1/messages", {
   roomId: STRATEGIC_CSS_ROOM_ID,

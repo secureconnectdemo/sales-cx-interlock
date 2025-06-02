@@ -137,12 +137,13 @@ if (resource === "attachmentActions") {
       return res.sendStatus(200);
     }
 
-    return res.sendStatus(200); // fallback for unhandled formTypes
+        return res.sendStatus(200); // fallback for unhandled formTypes
   } catch (err) {
     console.error("❌ Webhook error:", err.stack || err.message);
     res.sendStatus(500);
   }
-});
+}); // ✅ closes app.post("/webhook", ...)
+
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();

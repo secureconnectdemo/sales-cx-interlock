@@ -28,7 +28,8 @@ app.post("/webhook", async (req, res) => {
   const { data, resource } = req.body;
 
   // Ensure submitterEmail is defined
-  const submitterEmail = data?.personEmail || "default-email@cisco.com"; // Default fallback
+const submitterEmail = formData.submittedBy || "N/A";
+
 
   const roomId = data?.roomId;
   const roomType = data?.roomType;
@@ -104,8 +105,12 @@ If something's not working, please report the issue to josfonse@cisco.com and co
 
 // Handle attachment actions (form submission)
 if (formData.formType === "secureAccessChecklist") {
-    const customerName = formData.customerName || "N/A";
-    const submitterEmail = data?.personEmail || "default-email@cisco.com"; // Get submitter's email
+  if (!formData.customerName || !formData.submittedBy) {
+    return res.status(400).send("Missing required fields: Customer Name or Submitted By.");
+  }
+
+  const customerName = formData.customerName;
+  const submitterEmail = formData.submittedBy;
 
     // Normalize blockers to an array
     const blockersRaw = formData.adoptionBlockers || "";

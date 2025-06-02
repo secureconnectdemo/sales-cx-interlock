@@ -137,12 +137,14 @@ if (resource === "attachmentActions") {
       return res.sendStatus(200);
     }
 
-        return res.sendStatus(200); // fallback for unhandled formTypes
+    return res.sendStatus(200); // fallback for unhandled formTypes
   } catch (err) {
     console.error("❌ Webhook error:", err.stack || err.message);
     res.sendStatus(500);
   }
-}); // ✅ THIS is correct: closes the app.post block
+} // 👈 Add this closing brace to close the if (resource === ...) block
+}); // ✅ closes app.post
+
 
 
 

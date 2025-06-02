@@ -72,7 +72,7 @@
       "wrap": true,
       "spacing": "Medium"
     },
-    {
+   {
   "type": "Input.ChoiceSet",
   "id": "expansionInterests",
   "style": "expanded",
@@ -86,14 +86,15 @@
     { "title": "ISE Integration", "value": "ISE" },
     { "title": "SD-WAN Integration", "value": "SD-WAN" },
     { "title": "Enterprise Browser", "value": "Enterprise browser" }
-  ],
+  ]
+},
+{
+  "type": "Input.Text",
+  "id": "comments",
+  "isMultiline": true,
+  "placeholder": "Share any extra context, blockers, or notes here..."
 }
-    {
-      "type": "Input.Text",
-      "id": "comments",
-      "isMultiline": true,
-      "placeholder": "Share any extra context, blockers, or notes here..."
-    }
+
   ],
   "actions": [
     {

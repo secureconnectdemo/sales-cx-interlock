@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const axios = require("axios");
+const { addHandoffEntry } = require("./sheet");
 
 const app = express();
 app.use(express.json());
@@ -15,12 +16,7 @@ const STRATEGIC_CSS_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vYTYzYWFmNjAtMWJjMC0xM
 
 const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
-  picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8")),
-  evpForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "evpForm.json"), "utf8")),
-  tacForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "tacForm.json"), "utf8")),
-  caseForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "caseForm.json"), "utf8")),
-  featureForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "featureForm.json"), "utf8")),
-  blockerForm: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "blockerForm.json"), "utf8")),
+  picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8"))
 };
 
 app.get("/test", (req, res) => {
@@ -28,7 +24,8 @@ app.get("/test", (req, res) => {
 });
 
 app.post("/webhook", async (req, res) => {
-  console.log("🔥 Incoming webhook hit from room:", req.body?.data?.roomId);
+  console.log("🔥 Incoming webhook hit");
+  console.log("BODY:", JSON.stringify(req.body, null, 2));
   const { data, resource } = req.body;
   const roomId = data?.roomId;
   const roomType = data?.roomType;
@@ -47,12 +44,9 @@ app.post("/webhook", async (req, res) => {
 
       if (!mentioned && !isDirect) return res.sendStatus(200);
 
-      if (text === "/submit") {
-        await sendForm(roomId, "picker");
-        return res.sendStatus(200);
-      }
-
       if (text === "/submit deployment") {
+        console.log("📨 Matched '/submit deployment' command");
+
         try {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
@@ -60,8 +54,11 @@ app.post("/webhook", async (req, res) => {
           }, {
             headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
           });
+
           await sendForm(roomId, "deployment");
+          console.log("✅ Deployment form sent successfully");
         } catch (err) {
+          console.error("❌ Error sending deployment form:", err.message);
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
             markdown: `❌ Failed to send deployment form: ${err.message}`
@@ -69,6 +66,7 @@ app.post("/webhook", async (req, res) => {
             headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
           });
         }
+
         return res.sendStatus(200);
       }
 
@@ -78,21 +76,22 @@ app.post("/webhook", async (req, res) => {
 
 Here are the available commands:
 
-- \`/submit\` – Open the Multi-Option Submission Form Picker  
 - \`/submit deployment\` – Open the Secure Access Onboarding & Deployment form  
 - \`/reset\` – Clear current session or inputs (coming soon)
 
 ℹ️ *For the form to appear, it might take a few seconds — especially after long periods of inactivity. Please wait patiently for the confirmation message before retrying.*
 
 🛠️ Having issues?
-Please contact: [Josh Fonseca](mailto:josfonse@cisco.com)
+If something's not working, please report the issue to josfonse@cisco.com and complete the following form to provide the necessary deployment details: [ Deployment Planning](https://forms.office.com/r/zGd6u5MEmt).
         `;
+
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
           markdown: helpMessage
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
+
         return res.sendStatus(200);
       }
 
@@ -101,15 +100,18 @@ Please contact: [Josh Fonseca](mailto:josfonse@cisco.com)
         const segment = capitalize(segmentRaw);
         const task = taskParts.join(" ").replace(/-/g, " ");
         const card = getPlaycard(segment, task);
+
         const response = card
           ? `🎯 **Playcard Overview**\n\n---\n**${segment} - ${task}**\n\n**Owner:** ${card.owner}\n**Title:** ${card.title}\n\n${(card.description || []).map(d => "- " + d).join("\n")}`
           : `❌ No playcard found for segment **${segment}** and task **${task}**.`;
+
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
           markdown: response
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
+
         return res.sendStatus(200);
       }
     }
@@ -120,47 +122,38 @@ Please contact: [Josh Fonseca](mailto:josfonse@cisco.com)
       });
       const formData = actionRes.data.inputs;
 
-      if (formData.formType === "formPicker") {
-        const type = formData.submissionType;
-        if (formMap[type + "Form"]) {
-          await sendForm(roomId, `${type}Form`);
-        }
-        return res.sendStatus(200);
-      }
-
       if (formData.formType === "deployment") {
-        const score = Number(formData.score || 0);
-        let scoreColor = "🟢";
-        if (score < 6) scoreColor = "🟡";
-        if (score < 3) scoreColor = "🔴";
+        const summary = `**📦 Secure Access - Onboard & Deployment Notification**\n\n👤 **Customer:** ${formData.customerName}  \n🆔 **Org ID:** ${formData.orgId}  \n📊 **Total Licenses:** ${formData.totalLicenses}  \n🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  \n📅 **Planned Rollout:** ${formData.plannedRollout}  \n📍 **Deployment Plan Info:**  \n${formData.deploymentPlan}  \n📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}`;
 
-        const summary = `📢 **Deployment Score Notification**
-
-**Customer:** ${formData.customerName || "N/A"}  
-**Org ID:** ${formData.orgId || "N/A"}  
-**Score:** ${scoreColor} ${score}/10  
-**Comments:** ${formData.comments || "None"}  
-**Submitted By:** ${formData.submittedBy || "N/A"}`;
-
-        const notes = `Customer: ${formData.customerName || "N/A"}
-Org ID: ${formData.orgId || "N/A"}
-Score: ${score}/10
-Submitted by: ${formData.submittedBy || "N/A"}
-
-Blockers or notes:
-${formData.comments || "None"}`;
+        await addHandoffEntry(formData);
 
         await axios.post("https://webexapis.com/v1/messages", {
-          roomId: STRATEGIC_CSS_ROOM_ID,
+          roomId,
           markdown: summary
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
 
         await axios.post("https://webexapis.com/v1/messages", {
+          roomId: CAPACITY_PLANNING_ROOM_ID,
+          markdown: `📢 **New Form Submission Notification**
+
+👤 **Customer:** ${formData.customerName}  
+🆔 **Org ID:** ${formData.orgId}  
+📊 **Total Licenses:** ${formData.totalLicenses}  
+🚀 **Already Deployed:** ${formData.alreadyDeployed || "N/A"}  
+📅 **Planned Rollout:** ${formData.plannedRollout}  
+📍 **Deployment Plan Info:**  
+${formData.deploymentPlan}  
+📎 **File Upload Info:** ${formData.fileUploadInfo || "To be sent"}  
+👤 **Submitted By:** ${formData.submittedBy || "N/A"}`
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+
+        await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: `✅ Score submitted. Copy this to SFDC:\n\n\
-\`\`\`${notes}\`\`\``
+          markdown: `✅ Submission received for *${formData.customerName}*.`
         }, {
           headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
@@ -183,9 +176,10 @@ function capitalize(str) {
 async function sendForm(roomId, type) {
   const form = formMap[type];
   if (!form) return;
+
   await axios.post("https://webexapis.com/v1/messages", {
     roomId,
-    markdown: `📋 Please complete the **${type.replace(/Form$/, '')}** form:`,
+    markdown: `📋 Please complete the **${type}** form:`,
     attachments: [{
       contentType: "application/vnd.microsoft.card.adaptive",
       content: form

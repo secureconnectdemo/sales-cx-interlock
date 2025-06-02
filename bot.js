@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const axios = require("axios");
-const { addHandoffEntry } = require("./sheet");
+// const { addHandoffEntry } = require("./sheet");
 
 const app = express();
 app.use(express.json());
@@ -145,7 +145,7 @@ await axios.post("https://webexapis.com/v1/messages", {
 });
 
 
-        await addHandoffEntry(customerName, score, statusText, blockers.join(", "), submitterEmail);
+        // await addHandoffEntry(customerName, score, statusText, blockers.join(", "), submitterEmail);
 
         return res.sendStatus(200);
       }

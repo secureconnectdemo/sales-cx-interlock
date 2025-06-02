@@ -203,23 +203,43 @@ function generateSummary(data, customer, submitter) {
     .map(({ label }) => `❗ ${label}`)
     .join("\n") || "✅ All key items completed.";
 
+  const expansion = (data.expansionInterests || "")
+    .split(",")
+    .map(e => e.trim())
+    .filter(Boolean);
+
+  const expansionText = expansion.length
+    ? `\n📈 **Customer Interested in Exploring:**\n• ${expansion.join("\n• ")}`
+    : "";
+
   return `
 ✅ **Secure Access Handoff Summary**
 
 - **Customer Name:** ${capitalize(customer)}
 - **Submitted By:** ${submitter}
-- **Score:** ${score}/100  
+- **Score:** ${score}/100
 - **Risk Level:** ${riskLevel}
 
-🚧 **Items Requiring Follow-Up:**
-${incompleteItems}
-
-🔎 **Adoption Blockers:**
-${blockers}
-
-${comments ? `💬 **Additional Comments:**\n> ${comments}` : ""}
-`;
+${
+  incomplete.length
+    ? `🚧 **Items Requiring Follow-Up:**\n${incomplete
+        .map(item => `❗ ${item.label}`)
+        .join("\n")}`
+    : "✅ All checklist items completed!"
 }
+
+${
+  blockers.length
+    ? `\n\n🔎 **Adoption Blockers:**\n• ${blockers.join("\n• ")}`
+    : ""
+}
+
+${expansionText}
+
+💬 **Additional Comments:**  
+> ${comment}
+`;
+
 
 
 

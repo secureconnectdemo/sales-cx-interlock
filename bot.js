@@ -145,6 +145,7 @@ if (formData?.formType === "secureAccessChecklist") {
 
 
     res.sendStatus(200);
+}
   } catch (err) {
     console.error("❌ Webhook error:", err.stack || err.message);
     res.sendStatus(500);

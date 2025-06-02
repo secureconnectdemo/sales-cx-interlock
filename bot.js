@@ -108,37 +108,45 @@ Contact: josfonse@cisco.com`
     }
 
     if (resource === "attachmentActions") {
-  console.log("📩 Attachment Action Triggered");
+      console.log("📩 Attachment Action Triggered");
 
-const formData = actionRes.data.inputs;
-console.log("📝 Processing form submission:", formData);
+      try {
+        const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
+          headers: { Authorization: WEBEX_BOT_TOKEN }
+        });
 
-try {
-  if (formData?.formType === "secureAccessChecklist") {
-    const customerName = formData.customerName;
-    const submitterEmail = formData.submittedBy;
-    const summary = generateSummary(formData, customerName, submitterEmail);
+        const formData = actionRes.data.inputs;
+        console.log("📝 Processing form submission:", formData);
 
-    await axios.post("https://webexapis.com/v1/messages", {
-      roomId: STRATEGIC_CSS_ROOM_ID,
-      markdown: summary
-    }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+        if (formData?.formType === "secureAccessChecklist") {
+          const customerName = formData.customerName;
+          const submitterEmail = formData.submittedBy;
+          const summary = generateSummary(formData, customerName, submitterEmail);
 
-    await axios.post("https://webexapis.com/v1/messages", {
-      roomId: data.roomId,
-      markdown: "✅ Submission received and summary sent to Strategic CSS room."
-    }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId: STRATEGIC_CSS_ROOM_ID,
+            markdown: summary
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-    return res.sendStatus(200); // ✅ successful form handling
-  } else {
-    // Only fallback if formType !== secureAccessChecklist
-    return res.sendStatus(200); // ✅ fallback for unhandled formTypes
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId: data.roomId,
+            markdown: "✅ Submission received and summary sent to Strategic CSS room."
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
+          return res.sendStatus(200);
+        } else {
+          return res.sendStatus(200); // fallback for unhandled formTypes
+        }
+      } catch (err) {
+        console.error("❌ Webhook error:", err.stack || err.message);
+        return res.sendStatus(500);
+      }
+    }
+  } catch (err) {
+    console.error("❌ General webhook error:", err.stack || err.message);
+    return res.sendStatus(500);
   }
-} catch (err) {
-  console.error("❌ Webhook error:", err.stack || err.message);
-  return res.sendStatus(500);
-}
-
+}); // ✅ closes app.post("/webhook")
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -202,7 +210,7 @@ ${blockers}
 
 ${expansionText}
 ${actionPlanLink ? `📎 **Action Plan Link:** [Open Action Plan](${actionPlanLink})` : ""}
-${actionPlanCloseDate ? `\n📅 **Action Plan Close Date:** ${actionPlanCloseDate}` : ""}
+${actionPlanCloseDate ? `📅 **Action Plan Close Date:** ${actionPlanCloseDate}` : ""}
 
 💬 **Additional Comments:**  
 > ${comments || "None"}

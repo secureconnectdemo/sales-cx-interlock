@@ -158,6 +158,8 @@ function capitalize(str) {
 
 function generateSummary(data, customer, submitter) {
   const comments = data.comments?.trim();
+  const actionPlanLink = data.actionPlanLink?.trim();
+  const actionPlanCloseDate = data.actionPlanCloseDate?.trim();
   const blockers = (data.adoptionBlockers || "")
     .split(",")
     .filter(b => b)
@@ -211,6 +213,8 @@ ${incompleteItems}
 ${blockers}
 
 ${expansionText}
+${actionPlanLink ? `📎 **Action Plan Link:** [Open Action Plan](${actionPlanLink})` : ""}
+${actionPlanCloseDate ? `\n📅 **Action Plan Close Date:** ${actionPlanCloseDate}` : ""}
 
 💬 **Additional Comments:**  
 > ${comments || "None"}

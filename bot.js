@@ -102,40 +102,55 @@ If something's not working, please report the issue to josfonse@cisco.com and co
       });
       const formData = actionRes.data.inputs;
 
-      if (formData.formType === "secureAccessChecklist") {
-        const customerName = formData.customerName || "N/A";
+// Handle attachment actions (form submission)
+if (formData.formType === "secureAccessChecklist") {
+    const customerName = formData.customerName || "N/A";
+    const submitterEmail = data?.personEmail || "default-email@cisco.com"; // Get submitter's email
 
-        // Normalize blockers to an array
-        const blockersRaw = formData.adoptionBlockers || "";
-        const blockers = typeof blockersRaw === "string"
-          ? blockersRaw.split(",").map(b => b.trim())
-          : Array.isArray(blockersRaw) ? blockersRaw : [];
+    // Normalize blockers to an array
+    const blockersRaw = formData.adoptionBlockers || "";
+    const blockers = typeof blockersRaw === "string"
+        ? blockersRaw.split(",").map(b => b.trim())
+        : Array.isArray(blockersRaw) ? blockersRaw : [];
 
-        // Calculate the initial score from toggles
-        const totalToggles = Object.entries(formData).filter(([k, v]) => k.includes("_") && v === "true").length;
-        const maxToggleItems = 30;
-        let score = Math.round((totalToggles / maxToggleItems) * 100);
+    // Calculate the initial score from toggles
+    const totalToggles = Object.entries(formData).filter(([k, v]) => k.includes("_") && v === "true").length;
+    const maxToggleItems = 30; // Update based on the actual number of toggles
+    let score = Math.round((totalToggles / maxToggleItems) * 100);
 
-        // Adjust score based on blockers
-        blockers.forEach(b => {
-          if (b.startsWith("high")) score -= 15;
-          else if (b.startsWith("med")) score -= 10;
-          else score -= 5;
-        });
+    // Adjust score based on blockers
+    blockers.forEach(b => {
+        if (b.startsWith("high")) score -= 15;
+        else if (b.startsWith("med")) score -= 10;
+        else score -= 5;
+    });
 
-        // Ensure score doesn't go below 0
-        if (score < 0) score = 0;
+    // Ensure score doesn't go below 0
+    if (score < 0) score = 0;
 
-        // Determine icon and status
-        const scoreIcon = score >= 70 ? (score >= 90 ? "🟢" : "🟡") : "🔴";
-        const statusText = score >= 90 ? "✅ Healthy"
-                         : score >= 70 ? "🟡 Further Assistance May Be Required"
-                         : "🚨 At Risk";
+    // Determine icon and status
+    const scoreIcon = score >= 70 ? (score >= 90 ? "🟢" : "🟡") : "🔴";
+    const statusText = score >= 90 ? "✅ Healthy"
+                     : score >= 70 ? "🟡 Further Assistance May Be Required"
+                     : "🚨 At Risk";
 
-        // Format blockers for message
-        const blockerText = blockers.length ? blockers.map(b => `- ${b}`).join("\n") : "None";
+    // Format blockers for message
+    const blockerText = blockers.length ? blockers.map(b => `- ${b}`).join("\n") : "None";
 
-        const summary = `📋 **Secure Access Onboarding Checklist Summary**
+    // Track incomplete items
+    const incompleteItems = [];
+    Object.entries(formData).forEach(([key, value]) => {
+        if (key.includes("_") && value === "false") {
+            const itemName = key.split("_")[1];  // Extract the relevant part of the key for a human-friendly name
+            incompleteItems.push(`- ${capitalize(itemName.replace(/([A-Z])/g, ' $1'))}`);
+        }
+    });
+
+    // Format incomplete items
+    const incompleteItemsText = incompleteItems.length ? incompleteItems.join("\n") : "None";
+
+    // Create summary message
+    const summary = `📋 **Secure Access Onboarding Checklist Summary**
 
 👤 **Customer:** ${customerName}
 📧 **Submitted by:** ${submitterEmail}
@@ -143,28 +158,32 @@ If something's not working, please report the issue to josfonse@cisco.com and co
 🧱 **Adoption Blockers:**  
 ${blockerText}
 
-📌 **Status:** ${statusText}`;
+📌 **Status:** ${statusText}
 
-        // Post to Strategic CSS Room
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId: STRATEGIC_CSS_ROOM_ID,
-          markdown: summary
-        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+🚧 **Incomplete Items:**
+${incompleteItemsText}`;
 
-        // Send summary back to submitter
-        const personalMessage = `${summary}
+    // Send summary to Strategic CSS Room
+    await axios.post("https://webexapis.com/v1/messages", {
+        roomId: STRATEGIC_CSS_ROOM_ID,
+        markdown: summary
+    }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
+    // Send the summary back to the submitter
+    const personalMessage = `${summary}
 
 📌 **Action:** Please make sure to copy this output into the Console Notes for the respective account.`;
 
-        await axios.post("https://webexapis.com/v1/messages", {
-          toPersonEmail: submitterEmail,
-          markdown: personalMessage
-        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+    await axios.post("https://webexapis.com/v1/messages", {
+        toPersonEmail: submitterEmail,
+        markdown: personalMessage
+    }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-        console.log("✅ Summary posted to STRATEGIC_CSS_ROOM_ID");
+    console.log("✅ Summary posted to Strategic CSS and sent to submitter.");
 
-        return res.sendStatus(200);
-      }
+    return res.sendStatus(200);
+}
+
     }
 
     res.sendStatus(200);

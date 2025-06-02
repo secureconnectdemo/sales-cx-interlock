@@ -221,14 +221,11 @@ async function startBot() {
     });
     BOT_PERSON_ID = res.data.id;
     const PORT = process.env.PORT || 10000;
-    app.listen(PORT, () => console.log("SSE-CX-Hub listening on port " + PORT));
+    app.listen(PORT, () => console.log(`SSE-CX-Hub listening on port ${PORT}`));
   } catch (err) {
     console.error("❌ Failed to get bot info:", err.response?.data || err.message);
     process.exit(1);
   }
 }
-
-startBot(); // This must be last and outside all other blocks
-
 
 startBot();

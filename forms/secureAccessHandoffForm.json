@@ -86,7 +86,7 @@
     { "title": "ISE Integration", "value": "ISE" },
     { "title": "SD-WAN Integration", "value": "SD-WAN" },
     { "title": "Enterprise Browser", "value": "Enterprise browser" }
-  ]
+  ],
 }
     {
       "type": "Input.Text",

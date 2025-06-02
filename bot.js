@@ -27,12 +27,12 @@ app.post("/webhook", async (req, res) => {
   console.log("🔥 Incoming webhook hit");
   const { data, resource } = req.body;
 
-console.log("formData:", formData);
+  let formData = null; // Declare formData with an initial value of null to avoid ReferenceError
 
-const submitterEmail = formData?.submittedBy || "N/A";
+  console.log("formData:", formData); // This will now log `null` if formData hasn't been set yet
 
-console.log("submitterEmail:", submitterEmail);
-
+  const submitterEmail = formData?.submittedBy || "N/A";
+  console.log("submitterEmail:", submitterEmail);
 
   const roomId = data?.roomId;
   const roomType = data?.roomType;
@@ -100,11 +100,25 @@ If something's not working, please report the issue to josfonse@cisco.com and co
       }
     }
 
-    if (resource === "attachmentActions") {
-      const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
-        headers: { Authorization: WEBEX_BOT_TOKEN }
-      });
-      const formData = actionRes.data.inputs;
+if (resource === "messages") {
+  console.log("Processing a message event...");
+  // Handle message events
+}
+
+if (resource === "attachmentActions") {
+  const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
+    headers: { Authorization: WEBEX_BOT_TOKEN }
+  });
+  const formData = actionRes.data.inputs;
+
+  console.log("Processing a form submission...");
+  console.log("formData:", formData);
+
+  // Handle form submissions
+}
+
+  // Process the form submission...
+}
 
 // Handle attachment actions (form submission)
 if (formData.formType === "secureAccessChecklist") {

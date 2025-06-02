@@ -129,15 +129,13 @@ ${blockerText}
 
 📌 **Status:** ${statusText}`;
 
-        await axios.post("https://webexapis.com/v1/messages", {
-          roomId: STRATEGIC_CSS_ROOM_ID,
-          markdown: summary
-        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+await axios.post("https://webexapis.com/v1/messages", {
+  roomId: STRATEGIC_CSS_ROOM_ID,
+  markdown: summary
+}, {
+  headers: { Authorization: WEBEX_BOT_TOKEN }
+});
 
-        await axios.post("https://webexapis.com/v1/messages", {
-          toPersonEmail: submitterEmail,
-          markdown: `✅ Your Secure Access onboarding handoff was submitted.\n\n${summary}`
-        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
         await addHandoffEntry(customerName, score, statusText, blockers.join(", "), submitterEmail);
 

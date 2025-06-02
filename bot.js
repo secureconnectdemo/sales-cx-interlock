@@ -85,7 +85,7 @@ Here are the available commands:
 ℹ️ *For the form to appear, it might take a few seconds — especially after long periods of inactivity. Please wait patiently for the confirmation message before retrying.*
 
 🛠️ Having issues?
-Please contact: [naas_support@cisco.com](mailto:naas_support@cisco.com)
+Please contact: [Josh Fonseca](mailto:josfonse@cisco.com)
         `;
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,

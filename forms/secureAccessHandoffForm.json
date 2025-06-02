@@ -17,105 +17,21 @@
       "weight": "Bolder"
     },
     {
-  "type": "Input.Text",
-  "id": "customerName",
-  "placeholder": "Customer Name",
-  "label": "Customer Name"
-},
-{
-  "type": "Input.Text",
-  "id": "submittedBy",
-  "placeholder": "Your Name or Email",
-  "label": "Submitted By"
-}
-    {
-      "type": "ActionSet",
-      "actions": [
-        {
-          "type": "Action.ShowCard",
-          "title": "📂 Platform Access & Roles",
-          "card": {
-            "type": "AdaptiveCard",
-            "body": [
-              {"type": "Input.Toggle", "title": "Secure Access dashboard admin access granted to primary IT owner(s)", "id": "pla_1", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "User roles and permissions reviewed and adjusted", "id": "pla_2", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Audit of who has access completed (optional)", "id": "pla_3", "valueOn": "true", "valueOff": "false"}
-            ]
-          }
-        },
-        {
-          "type": "Action.ShowCard",
-          "title": "📂 Configuration Review",
-          "card": {
-            "type": "AdaptiveCard",
-            "body": [
-              {"type": "Input.Toggle", "title": "Connectivity established (Secure Client, IPsec tunnels)", "id": "con_1", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "DNS redirection active and verified", "id": "con_2", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "SWG or ZTNA policies configured and active", "id": "con_3", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Root CA deployed on all necessary endpoints", "id": "con_4", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Experience Insights has been enabled and confirmed via dashboard", "id": "con_5", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "SaaS tenant integrations configured and validated", "id": "con_6", "valueOn": "true", "valueOff": "false"}
-            ]
-          }
-        },
-        {
-          "type": "Action.ShowCard",
-          "title": "📂 Policy & Rules Handoff",
-          "card": {
-            "type": "AdaptiveCard",
-            "body": [
-              {"type": "Input.Toggle", "title": "Web profiles reviewed", "id": "pol_1", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Internet access rules understood by IT", "id": "pol_2", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "DLP, RBI, IPS settings reviewed", "id": "pol_3", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "VPN profiles and posture settings transferred", "id": "pol_4", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Customer has interacted with the AI Assistant at least once", "id": "pol_5", "valueOn": "true", "valueOff": "false"}
-            ]
-          }
-        },
-        {
-          "type": "Action.ShowCard",
-          "title": "📂 Visibility & Monitoring",
-          "card": {
-            "type": "AdaptiveCard",
-            "body": [
-              {"type": "Input.Toggle", "title": "IT owner shown how to use dashboard reports (e.g., Security Overview)", "id": "vis_1", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Email reports configured for key stakeholders", "id": "vis_2", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Block hit data explained and correlated to policy efficacy", "id": "vis_3", "valueOn": "true", "valueOff": "false"}
-            ]
-          }
-        },
-        {
-          "type": "Action.ShowCard",
-          "title": "📂 Operational Ownership",
-          "card": {
-            "type": "AdaptiveCard",
-            "body": [
-              {"type": "Input.Toggle", "title": "Internal process established for making policy changes", "id": "ope_1", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Change control and rollback strategy discussed", "id": "ope_2", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Owner shown how to engage Cisco Support/TAC", "id": "ope_3", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Customer is aware of upcoming webinars", "id": "ope_4", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Customer is subscribed to Secure Access newsletter and Community", "id": "ope_5", "valueOn": "true", "valueOff": "false"}
-            ]
-          }
-        },
-        {
-          "type": "Action.ShowCard",
-          "title": "📂 Success Plan Reference",
-          "card": {
-            "type": "AdaptiveCard",
-            "body": [
-              {"type": "Input.Toggle", "title": "Original business outcomes reviewed with IT owner", "id": "suc_1", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Pilot use case confirmed as delivered", "id": "suc_2", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Additional features identified (Optimize/Expand phase)", "id": "suc_3", "valueOn": "true", "valueOff": "false"},
-              {"type": "Input.Toggle", "title": "Ownership handoff logged in internal Success Plan", "id": "suc_4", "valueOn": "true", "valueOff": "false"}
-            ]
-          }
-        }
-      ]
+      "type": "Input.Text",
+      "id": "customerName",
+      "placeholder": "Customer Name",
+      "label": "Customer Name"
     },
     {
+      "type": "Input.Text",
+      "id": "submittedBy",
+      "placeholder": "Your Name or Email",
+      "label": "Submitted By"
+    },
+    {"type":"ActionSet","actions":[{"type":"Action.ShowCard","title":"\ud83d\udcc2 Platform Access & Roles","card":{"type":"AdaptiveCard","body":[{"type":"Input.Toggle","title":"Secure Access dashboard admin access granted to primary IT owner(s)","id":"pla_1","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"User roles and permissions reviewed and adjusted","id":"pla_2","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Audit of who has access completed (optional)","id":"pla_3","valueOn":"true","valueOff":"false"}]}},{"type":"Action.ShowCard","title":"\ud83d\udcc2 Configuration Review","card":{"type":"AdaptiveCard","body":[{"type":"Input.Toggle","title":"Connectivity established (Secure Client, IPsec tunnels)","id":"con_1","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"DNS redirection active and verified","id":"con_2","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"SWG or ZTNA policies configured and active","id":"con_3","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Root CA deployed on all necessary endpoints","id":"con_4","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Experience Insights has been enabled and confirmed via dashboard","id":"con_5","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"SaaS tenant integrations configured and validated","id":"con_6","valueOn":"true","valueOff":"false"}]}},{"type":"Action.ShowCard","title":"\ud83d\udcc2 Policy & Rules Handoff","card":{"type":"AdaptiveCard","body":[{"type":"Input.Toggle","title":"Web profiles reviewed","id":"pol_1","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Internet access rules understood by IT","id":"pol_2","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"DLP, RBI, IPS settings reviewed","id":"pol_3","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"VPN profiles and posture settings transferred","id":"pol_4","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Customer has interacted with the AI Assistant at least once","id":"pol_5","valueOn":"true","valueOff":"false"}]}},{"type":"Action.ShowCard","title":"\ud83d\udcc2 Visibility & Monitoring","card":{"type":"AdaptiveCard","body":[{"type":"Input.Toggle","title":"IT owner shown how to use dashboard reports (e.g., Security Overview)","id":"vis_1","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Email reports configured for key stakeholders","id":"vis_2","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Block hit data explained and correlated to policy efficacy","id":"vis_3","valueOn":"true","valueOff":"false"}]}},{"type":"Action.ShowCard","title":"\ud83d\udcc2 Operational Ownership","card":{"type":"AdaptiveCard","body":[{"type":"Input.Toggle","title":"Internal process established for making policy changes","id":"ope_1","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Change control and rollback strategy discussed","id":"ope_2","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Owner shown how to engage Cisco Support/TAC","id":"ope_3","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Customer is aware of upcoming webinars","id":"ope_4","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Customer is subscribed to Secure Access newsletter and Community","id":"ope_5","valueOn":"true","valueOff":"false"}]}},{"type":"Action.ShowCard","title":"\ud83d\udcc2 Success Plan Reference","card":{"type":"AdaptiveCard","body":[{"type":"Input.Toggle","title":"Original business outcomes reviewed with IT owner","id":"suc_1","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Pilot use case confirmed as delivered","id":"suc_2","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Additional features identified (Optimize/Expand phase)","id":"suc_3","valueOn":"true","valueOff":"false"},{"type":"Input.Toggle","title":"Ownership handoff logged in internal Success Plan","id":"suc_4","valueOn":"true","valueOff":"false"}]}]}]},
+    {
       "type": "TextBlock",
-      "text": "🚧 Select Adoption Blockers",
+      "text": "\ud83d\udea7 Select Adoption Blockers",
       "weight": "Bolder",
       "wrap": true,
       "spacing": "Medium"
@@ -126,22 +42,22 @@
       "isMultiSelect": true,
       "style": "expanded",
       "choices": [
-        { "title": "🔴 No Budget / Not a Priority", "value": "high-budget" },
-        { "title": "🔴 Infrastructure Not Ready", "value": "high-infra" },
-        { "title": "🔴 Product Not GA or Missing Features", "value": "high-ga" },
-        { "title": "🟠 Training or Configuration Support Needed", "value": "med-training" },
-        { "title": "🟠 Customer Perceives Product as Complex", "value": "med-complex" },
-        { "title": "🟠 Partner Unresponsive or Unenabled", "value": "med-partner" },
-        { "title": "🟢 Documentation Not Found", "value": "low-doc" },
-        { "title": "🟢 Invalid or Missing Contact Info", "value": "low-contact" },
-        { "title": "🟢 Ownership or Success Plan Unclear", "value": "low-plan" }
+        { "title": "\ud83d\udd34 No Budget / Not a Priority", "value": "high-budget" },
+        { "title": "\ud83d\udd34 Infrastructure Not Ready", "value": "high-infra" },
+        { "title": "\ud83d\udd34 Product Not GA or Missing Features", "value": "high-ga" },
+        { "title": "\ud83d\udfe0 Training or Configuration Support Needed", "value": "med-training" },
+        { "title": "\ud83d\udfe0 Customer Perceives Product as Complex", "value": "med-complex" },
+        { "title": "\ud83d\udfe0 Partner Unresponsive or Unenabled", "value": "med-partner" },
+        { "title": "\ud83d\udfe2 Documentation Not Found", "value": "low-doc" },
+        { "title": "\ud83d\udfe2 Invalid or Missing Contact Info", "value": "low-contact" },
+        { "title": "\ud83d\udfe2 Ownership or Success Plan Unclear", "value": "low-plan" }
       ]
     }
   ],
   "actions": [
     {
       "type": "Action.Submit",
-      "title": "📨 Submit",
+      "title": "\ud83d\udce8 Submit",
       "data": {
         "formType": "secureAccessChecklist",
         "targetWebexRoom": "Strategic Css"

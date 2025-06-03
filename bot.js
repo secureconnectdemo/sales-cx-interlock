@@ -198,9 +198,10 @@ await axios.post(
   { headers: { Authorization: WEBEX_BOT_TOKEN } }
 );
 
-}; // ✅ <- Add this brace to close the if block
+// ✅ Close the checklist `if` block
+}  
 
-// ✅ Leave this as-is
+// ✅ Respond to webhook call
 return res.sendStatus(200);
 
 // Helper functions

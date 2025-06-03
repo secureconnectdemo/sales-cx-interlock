@@ -1,4 +1,4 @@
-Only airtable is not working and automatic score calculation
+//Only airtable is not working and automatic score calculation
 
 
 const Airtable = require("airtable");

@@ -137,8 +137,8 @@ Contact: josfonse@cisco.com`
           }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
           // ✅ Airtable insert
-         try {
-  await base("Handoff From").create({
+        try {
+  await base("Handoff Form").create({
     fields: {
       "Customer Name": formData.customerName || "",
       "Submitted By": formData.submittedBy || "",
@@ -153,7 +153,6 @@ Contact: josfonse@cisco.com`
 } catch (err) {
   console.error("❌ Airtable write failed:", err.response?.data || err.message || err);
 }
-
 
         // fallback for unhandled formTypes
         return res.sendStatus(200);

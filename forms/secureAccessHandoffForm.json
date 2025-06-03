@@ -17,22 +17,49 @@
       "label": "Customer Name"
     },
     {
-  "type": "Input.Text",
-  "id": "actionPlanLink",
-  "placeholder": "Paste the Action Plan link (e.g. Salesforce URL)",
-  "label": "📎 Action Plan Link (Optional)"
-},
-{
-  "type": "Input.Text",
-  "id": "actionPlanCloseDate",
-  "placeholder": "e.g. 2025-06-07",
-  "label": "📅 Action Plan Close Date (Optional)"
-},
+      "type": "Input.Text",
+      "id": "actionPlanLink",
+      "placeholder": "Paste the Action Plan link (e.g. Salesforce URL)",
+      "label": "📎 Action Plan Link (Optional)"
+    },
+    {
+      "type": "Input.Text",
+      "id": "actionPlanCloseDate",
+      "placeholder": "e.g. 2025-06-07",
+      "label": "📅 Action Plan Close Date (Optional)"
+    },
     {
       "type": "Input.Text",
       "id": "submittedBy",
       "placeholder": "Your Name or Email",
       "label": "Submitted By"
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "customerPulse",
+      "label": "Choose Customer Pulse",
+      "style": "expanded",
+      "isRequired": true,
+      "choices": [
+        { "title": "Good", "value": "Good" },
+        { "title": "Average", "value": "Average" },
+        { "title": "Poor", "value": "Poor" }
+      ]
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "accountStatus",
+      "label": "Account Status",
+      "style": "expanded",
+      "isRequired": false,
+      "choices": [
+        { "title": "New Request", "value": "New Request" },
+        { "title": "On Track", "value": "On Track" },
+        { "title": "Off Trajectory", "value": "Off Trajectory" },
+        { "title": "On Hold", "value": "On Hold" },
+        { "title": "Completed - Successful", "value": "Completed - Successful" },
+        { "title": "Completed - Unsuccessful", "value": "Completed - Unsuccessful" }
+      ]
     },
     { "type": "Input.Toggle", "title": "Secure Access dashboard admin access granted", "id": "pla_1", "valueOn": "true", "valueOff": "false" },
     { "type": "Input.Toggle", "title": "User roles and permissions reviewed and adjusted", "id": "pla_2", "valueOn": "true", "valueOff": "false" },
@@ -84,29 +111,27 @@
       "wrap": true,
       "spacing": "Medium"
     },
-   {
-  "type": "Input.ChoiceSet",
-  "id": "expansionInterests",
-  "style": "expanded",
-  "isMultiSelect": true,
-  "value": "",
-  "choices": [
-    { "title": "DLP", "value": "DLP" },
-    { "title": "RBI (Browser Isolation)", "value": "RBI" },
-    { "title": "IPS", "value": "IPS" },
-    { "title": "Experience Insights (Advanced)", "value": "Experience Insights advanced" },
-    { "title": "ISE Integration", "value": "ISE" },
-    { "title": "SD-WAN Integration", "value": "SD-WAN" },
-    { "title": "Enterprise Browser", "value": "Enterprise browser" }
-  ]
-},
-{
-  "type": "Input.Text",
-  "id": "comments",
-  "isMultiline": true,
-  "placeholder": "Share any extra context, blockers, or notes here..."
-}
-
+    {
+      "type": "Input.ChoiceSet",
+      "id": "expansionInterests",
+      "style": "expanded",
+      "isMultiSelect": true,
+      "choices": [
+        { "title": "DLP", "value": "DLP" },
+        { "title": "RBI (Browser Isolation)", "value": "RBI" },
+        { "title": "IPS", "value": "IPS" },
+        { "title": "Experience Insights (Advanced)", "value": "Experience Insights advanced" },
+        { "title": "ISE Integration", "value": "ISE" },
+        { "title": "SD-WAN Integration", "value": "SD-WAN" },
+        { "title": "Enterprise Browser", "value": "Enterprise browser" }
+      ]
+    },
+    {
+      "type": "Input.Text",
+      "id": "comments",
+      "isMultiline": true,
+      "placeholder": "Share any extra context, blockers, or notes here..."
+    }
   ],
   "actions": [
     {

@@ -20,13 +20,13 @@
       "type": "Input.Text",
       "id": "actionPlanLink",
       "placeholder": "Paste the Action Plan link (e.g. Salesforce URL)",
-      "label": "📎 Action Plan Link "
+      "label": "📎 Action Plan Link (Optional)"
     },
     {
       "type": "Input.Text",
       "id": "actionPlanCloseDate",
       "placeholder": "e.g. 2025-06-07",
-      "label": "📅 Action Plan Close Date"
+      "label": "📅 Action Plan Close Date (Optional)"
     },
     {
       "type": "Input.Text",
@@ -60,6 +60,12 @@
         { "title": "Completed - Successful", "value": "Completed - Successful" },
         { "title": "Completed - Unsuccessful", "value": "Completed - Unsuccessful" }
       ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "✅ Onboarding Tasks",
+      "wrap": true,
+      "weight": "Bolder"
     },
     { "type": "Input.Toggle", "title": "Secure Access dashboard admin access granted", "id": "pla_1", "valueOn": "true", "valueOff": "false" },
     { "type": "Input.Toggle", "title": "User roles and permissions reviewed and adjusted", "id": "pla_2", "valueOn": "true", "valueOff": "false" },

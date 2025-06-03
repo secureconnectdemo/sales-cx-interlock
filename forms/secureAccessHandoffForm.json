@@ -41,9 +41,9 @@
       "style": "expanded",
       "isRequired": true,
       "choices": [
-        { "title": "Good", "value": "Good" },
-        { "title": "Average", "value": "Average" },
-        { "title": "Poor", "value": "Poor" }
+        { "title": "Green", "value": "Green" },
+        { "title": "Orange", "value": "Orange" },
+        { "title": "Red", "value": "Red" }
       ]
     },
     {
@@ -53,10 +53,6 @@
       "style": "expanded",
       "isRequired": false,
       "choices": [
-        { "title": "New Request", "value": "New Request" },
-        { "title": "On Track", "value": "On Track" },
-        { "title": "Off Trajectory", "value": "Off Trajectory" },
-        { "title": "On Hold", "value": "On Hold" },
         { "title": "Completed - Successful", "value": "Completed - Successful" },
         { "title": "Completed - Unsuccessful", "value": "Completed - Unsuccessful" }
       ]

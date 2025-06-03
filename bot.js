@@ -1,10 +1,8 @@
-//working  
-
 const Airtable = require("airtable");
 
 Airtable.configure({
   endpointUrl: "https://api.airtable.com",
-  apiKey: process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN
+  apiKey: process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN,
 });
 
 const base = Airtable.base("appG1ZNhb2KRKQQOI");
@@ -19,13 +17,20 @@ app.use(express.json());
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 let BOT_PERSON_ID = "";
 
-const STRATEGIC_CSS_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
+const STRATEGIC_CSS_ROOM_ID =
+  "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
 
 // Load form JSON files
 const formMap = {
-  deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
-  picker: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8")),
-  handoff: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "secureAccessHandoffForm.json"), "utf8")),
+  deployment: JSON.parse(
+    fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")
+  ),
+  picker: JSON.parse(
+    fs.readFileSync(path.join(__dirname, "forms", "formPickerCard.json"), "utf8")
+  ),
+  handoff: JSON.parse(
+    fs.readFileSync(path.join(__dirname, "forms", "secureAccessHandoffForm.json"), "utf8")
+  ),
 };
 
 // Health check route
@@ -36,12 +41,13 @@ app.get("/test", (req, res) => {
 // Webhook route
 app.post("/webhook", async (req, res) => {
   console.log("🔥 Incoming webhook hit");
-  const { data, resource } = req.body;
+  const { data, resource } = req.body || {};
   const roomId = data?.roomId;
   const roomType = data?.roomType;
   const messageId = data?.id;
 
   if (!roomId || !messageId) {
+    console.warn("⚠️ Invalid webhook payload: Missing roomId or messageId.");
     return res.sendStatus(400);
   }
 
@@ -57,17 +63,13 @@ app.post("/webhook", async (req, res) => {
       }
 
       const rawText = messageRes.data.text || "";
-      const lines = rawText
-        .split("\n")
-        .map((line) => line.trim().toLowerCase())
-        .filter((line) => line.length > 0);
+      const lines = rawText.split("\n").map((line) => line.trim().toLowerCase());
+      const mentioned = data?.mentionedPeople?.some(
+        (id) => id.toLowerCase() === BOT_PERSON_ID.toLowerCase()
+      );
+      const isDirect = data?.roomType === "direct";
 
-      const mentioned = (data?.mentionedPeople || []).some((id) => id.toLowerCase() === BOT_PERSON_ID.toLowerCase());
-      const isDirect = roomType === "direct";
-
-      if (!mentioned && !isDirect) {
-        return res.sendStatus(200);
-      }
+      if (!mentioned && !isDirect) return res.sendStatus(200);
 
       let commandRecognized = false;
 
@@ -79,7 +81,8 @@ app.post("/webhook", async (req, res) => {
             "https://webexapis.com/v1/messages",
             {
               roomId,
-              markdown: "📝 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*",
+              markdown:
+                "📝 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*",
             },
             { headers: { Authorization: WEBEX_BOT_TOKEN } }
           );
@@ -90,7 +93,8 @@ app.post("/webhook", async (req, res) => {
             "https://webexapis.com/v1/messages",
             {
               roomId,
-              markdown: "📋 Opening the **Secure Access Handoff Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*",
+              markdown:
+                "📋 Opening the **Secure Access Handoff Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*",
             },
             { headers: { Authorization: WEBEX_BOT_TOKEN } }
           );
@@ -171,37 +175,39 @@ Contact: josfonse@cisco.com`,
           { headers: { Authorization: WEBEX_BOT_TOKEN } }
         );
 
-await base("Handoff Form").create({
-  "Customer Name": formData.customerName || "",
-  "Submitted By": formData.submittedBy || "",
-  "Action Plan Link": formData.actionPlanLink || "",
-  "Close Date": formData.actionPlanCloseDate || "",
-  "Adoption Blockers": formData.adoptionBlockers || "",
-  "Expansion Interests": formData.expansionInterests || "",
-  "Comments": formData.comments || ""
-});
+        // Airtable record creation
+        await base("Handoff Form").create({
+          fields: {
+            "Customer Name": formData.customerName || "",
+            "Submitted By": formData.submittedBy || "",
+            "Action Plan Link": formData.actionPlanLink || "",
+            "Close Date": formData.actionPlanCloseDate || "",
+            "Adoption Blockers": formData.adoptionBlockers || "",
+            "Expansion Interests": formData.expansionInterests || "",
+            "Comments": formData.comments || "",
+          },
+        });
 
-console.log("✅ Airtable record successfully created.");
+        console.log("✅ Airtable record successfully created.");
 
-const confirmation = `✅ Handoff received and recorded. We'll take it from here!
+        const confirmation = `✅ Handoff received and recorded. We'll take it from here!
 
 📋 **Please copy and paste the following summary into the Console case notes** for this account:
 
 ${summary}`;
 
-await axios.post(
-  "https://webexapis.com/v1/messages",
-  {
-    roomId: data.roomId,
-    markdown: confirmation,
-  },
-  { headers: { Authorization: WEBEX_BOT_TOKEN } }
-);
-
-// ✅ Leave this as-is
-return res.sendStatus(200);
-
+        await axios.post(
+          "https://webexapis.com/v1/messages",
+          {
+            roomId: data.roomId,
+            markdown: confirmation,
+          },
+          { headers: { Authorization: WEBEX_BOT_TOKEN } }
+        );
+      }
     }
+
+    return res.sendStatus(200); // Ensure the webhook response ends here
   } catch (err) {
     console.error("❌ General webhook error:", err.stack || err.message);
     return res.sendStatus(500);

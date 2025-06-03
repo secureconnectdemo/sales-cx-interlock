@@ -1,11 +1,8 @@
-const Airtable = require("airtable");
-
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base("appG1ZNhb2KRKQQOI");
-
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const axios = require("axios");
+const { addHandoffEntry } = require("./sheet");
 
 const app = express();
 app.use(express.json());
@@ -13,7 +10,8 @@ app.use(express.json());
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 let BOT_PERSON_ID = "";
 
-const STRATEGIC_CSS_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
+const CAPACITY_PLANNING_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
+const STRATEGIC_CSS_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vYTYzYWFmNjAtMWJjMC0xMWYwLWEwYmMtM2I5ZmNhY2JjZDgy";
 
 const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
@@ -31,7 +29,6 @@ app.post("/webhook", async (req, res) => {
   const roomId = data?.roomId;
   const roomType = data?.roomType;
   const messageId = data?.id;
-
   if (!roomId || !messageId) return res.sendStatus(400);
 
   try {
@@ -40,204 +37,136 @@ app.post("/webhook", async (req, res) => {
         headers: { Authorization: WEBEX_BOT_TOKEN }
       });
 
-      if (messageRes.data.personId === BOT_PERSON_ID) {
-        console.log("🛑 Ignoring bot's own message");
-        return res.sendStatus(200);
-      }
-
-      const rawText = messageRes.data.text || "";
-      const lines = rawText
-        .split("\n")
-        .map(line => line.trim().toLowerCase())
-        .filter(line => line.length > 0);
-
-      const mentioned = (data?.mentionedPeople || []).some(id => id.toLowerCase() === BOT_PERSON_ID.toLowerCase());
+      const text = (messageRes.data.text || "").toLowerCase().trim();
+      const mentioned = data?.mentionedPeople?.includes(BOT_PERSON_ID);
       const isDirect = roomType === "direct";
 
       if (!mentioned && !isDirect) return res.sendStatus(200);
 
-      let commandRecognized = false;
-
-      for (const line of lines) {
-        if (commandRecognized) break;
-
-        if (line === "/submit deployment") {
+      if (text === "/submit deployment") {
+        console.log("📨 Matched '/submit deployment' command");
+        try {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
             markdown: "📝 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
-          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
           await sendForm(roomId, "deployment");
-          commandRecognized = true;
+          console.log("✅ Deployment form sent successfully");
+        } catch (err) {
+          console.error("❌ Error sending deployment form:", err.message);
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId,
+            markdown: `❌ Failed to send deployment form: ${err.message}`
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
         }
+        return res.sendStatus(200);
+      }
 
-        if (line === "/submit handoff") {
+      if (text === "/submit handoff") {
+        console.log("📨 Matched '/submit handoff' command");
+        try {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
             markdown: "📋 Opening the **Secure Access Handoff Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*"
-          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
           await sendForm(roomId, "handoff");
-          commandRecognized = true;
-        }
-
-        if (line === "/help") {
+          console.log("✅ Handoff form sent successfully");
+        } catch (err) {
+          console.error("❌ Error sending handoff form:", err.message);
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
-            markdown: `
-🤖 **SSE-CX-Hub Bot – Help Menu**
-\`/submit deployment\` – Open Deployment Form  
-\`/submit handoff\` – Open Handoff Checklist  
-\`/reset\` – (Coming Soon)  
-Contact: josfonse@cisco.com`
-          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
-          commandRecognized = true;
+            markdown: `❌ Failed to send handoff form: ${err.message}`
+          }, {
+            headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+          });
         }
-
-        if (line === "/reset") {
-          await axios.post("https://webexapis.com/v1/messages", {
-            roomId,
-            markdown: "🔄 Reset acknowledged. (Coming soon.)"
-          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
-          commandRecognized = true;
-        }
+        return res.sendStatus(200);
       }
 
-      if (!commandRecognized) {
+      if (text === "/help") {
+        const helpMessage = `
+🤖 **SSE-CX-Hub Bot – Help Menu**
+
+Here are the available commands:
+
+- \`/submit deployment\` – Open the Secure Access Onboarding & Deployment form  
+- \`/submit handoff\` – Open the Secure Access Handoff Form  
+- \`/reset\` – Clear current session or inputs (coming soon)
+
+ℹ️ *For the form to appear, it might take a few seconds — especially after long periods of inactivity. Please wait patiently for the confirmation message before retrying.*
+
+🛠️ Having issues?
+If something's not working, please report the issue to josfonse@cisco.com and complete the following form to provide the necessary deployment details: [ Deployment Planning](https://forms.office.com/r/zGd6u5MEmt).
+        `;
         await axios.post("https://webexapis.com/v1/messages", {
           roomId,
-          markdown: "⚠️ Unknown command. Type \`/help\` for options."
-        }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+          markdown: helpMessage
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
+        return res.sendStatus(200);
       }
-
-      return res.sendStatus(200);
     }
 
     if (resource === "attachmentActions") {
-      console.log("📩 Attachment Action Triggered");
+      const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
+        headers: { Authorization: WEBEX_BOT_TOKEN }
+      });
+      const formData = actionRes.data.inputs;
 
-      try {
-        const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
-          headers: { Authorization: WEBEX_BOT_TOKEN }
+      if (formData.formType === "handoff") {
+        const score = Number(formData.finalScore || 0);
+        let scoreColor = "🟢";
+        if (score < 70) scoreColor = "🟡";
+        if (score < 50) scoreColor = "🔴";
+
+        const tier = score >= 90 ? "✅ No handoff needed"
+                   : score >= 70 ? "⚠️ Handoff recommended"
+                   : "🚨 At-risk handoff required";
+
+        const summary = `📦 **Secure Access Handoff Summary**
+
+👤 **Customer:** ${formData.customerName || "N/A"}  
+🆔 **Org ID:** ${formData.orgId || "N/A"}  
+📐 **Pilot Tier:** ${formData.pilotStatus || "N/A"}  
+📊 **Score:** ${scoreColor} ${score}/100  
+🧱 **Blockers:** ${(formData.risks || []).join(", ") || "None"}  
+📌 **Tier Assessment:** ${tier}  
+🙋 **Submitted By:** ${formData.submittedBy || "N/A"}`;
+
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId: CAPACITY_PLANNING_ROOM_ID,
+          markdown: summary
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
         });
 
-        const formData = actionRes.data.inputs;
-        console.log("📝 Processing form submission:", formData);
+        await axios.post("https://webexapis.com/v1/messages", {
+          roomId,
+          markdown: `✅ Handoff score submitted for *${formData.customerName}*.`
+        }, {
+          headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+        });
 
-      if (formData?.formType === "secureAccessChecklist") {
-  const customerName = formData.customerName;
-  const submitterEmail = formData.submittedBy;
-  const summary = generateSummary(formData, customerName, submitterEmail);
-
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: STRATEGIC_CSS_ROOM_ID,
-    markdown: summary
-  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
-
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: data.roomId,
-    markdown: "✅ Submission received and summary sent to Strategic CSS room."
-  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
-
-  // ✅ Airtable insert
-  await base("Handoff From").create({
-    fields: {
-      "Customer Name": formData.customerName || "",
-      "Submitted By": formData.submittedBy || "",
-      "Action Plan Link": formData.actionPlanLink || "",
-      "Close Date": formData.actionPlanCloseDate || "",
-      "Adoption Blockers": formData.adoptionBlockers || "",
-      "Expansion Interests": formData.expansionInterests || "",
-      "Comments": formData.comments || ""
-    }
-  });
-
-  console.log("✅ Airtable record successfully created.");
-  return res.sendStatus(200); // ✅ Return and exit
-}
-
-
-          return res.sendStatus(200);
-        } else {
-          return res.sendStatus(200); // fallback for unhandled formTypes
-        }
-      } catch (err) {
-        console.error("❌ Webhook error:", err.stack || err.message);
-        return res.sendStatus(500);
+        return res.sendStatus(200);
       }
     }
-  } catch (err) {
-    console.error("❌ General webhook error:", err.stack || err.message);
-    return res.sendStatus(500);
-  }
 
-}); // ✅ closes app.post("/webhook")
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Webhook error:", err.response?.data || err.message);
+    res.sendStatus(500);
+  }
+});
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-}
-
-function generateSummary(data, customer, submitter) {
-  const comments = data.comments?.trim();
-  const actionPlanLink = data.actionPlanLink?.trim();
-  const actionPlanCloseDate = data.actionPlanCloseDate?.trim();
-  const blockers = (data.adoptionBlockers || "")
-    .split(",")
-    .filter(b => b)
-    .map(b => `• ${b.trim()}`)
-    .join("\n") || "None";
-
-  const checklistMap = [
-    { key: "con_1", label: "Secure Client/IPsec Connectivity" },
-    { key: "con_2", label: "DNS Redirection Verified" },
-    { key: "con_3", label: "Rule Configured and Active" },
-    { key: "pla_1", label: "Admin Access Granted" },
-    { key: "pla_2", label: "User Roles Reviewed" },
-    { key: "pol_1", label: "Web Profiles Reviewed" },
-    { key: "pol_2", label: "Decryption + Do Not Decrypt Reviewed" },
-    { key: "suc_2", label: "Pilot Use Case Delivered" },
-    { key: "suc_3", label: "Expansion Opportunities Identified" },
-    { key: "ope_4", label: "Understands Post-Onboarding Support" }
-  ];
-
-  const total = checklistMap.length;
-  const completed = checklistMap.filter(({ key }) => data[key] === "true").length;
-  const score = Math.round((completed / total) * 100);
-  const riskLevel = score >= 90 ? "🟢 Healthy" : score >= 70 ? "🟡 At Risk" : "🔴 Critical";
-
-  const incompleteItems = checklistMap
-    .filter(({ key }) => data[key] !== "true")
-    .map(({ label }) => `❗ ${label}`)
-    .join("\n") || "✅ All key items completed.";
-
-  const expansion = (data.expansionInterests || "")
-    .split(",")
-    .map(e => e.trim())
-    .filter(Boolean);
-
-  const expansionText = expansion.length
-    ? `📈 **Customer Interested in Exploring:**\n• ${expansion.join("\n• ")}`
-    : "";
-
-  return `
-✅ **Secure Access Handoff Summary**
-
-- **Customer Name:** ${capitalize(customer)}
-- **Submitted By:** ${submitter}
-- **Score:** ${score}/100
-- **Risk Level:** ${riskLevel}
-
-🚧 **Items Requiring Follow-Up:**
-${incompleteItems}
-
-🔎 **Adoption Blockers:**
-${blockers}
-
-${expansionText}
-${actionPlanLink ? `📎 **Action Plan Link:** [Open Action Plan](${actionPlanLink})` : ""}
-${actionPlanCloseDate ? `📅 **Action Plan Close Date:** ${actionPlanCloseDate}` : ""}
-
-💬 **Additional Comments:**  
-> ${comments || "None"}
-`;
 }
 
 async function sendForm(roomId, type) {
@@ -250,7 +179,9 @@ async function sendForm(roomId, type) {
       contentType: "application/vnd.microsoft.card.adaptive",
       content: form
     }]
-  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+  }, {
+    headers: { Authorization: WEBEX_BOT_TOKEN, "Content-Type": "application/json" }
+  });
 }
 
 async function startBot() {
@@ -259,10 +190,10 @@ async function startBot() {
       headers: { Authorization: WEBEX_BOT_TOKEN }
     });
     BOT_PERSON_ID = res.data.id;
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 10000;
     app.listen(PORT, () => console.log(`🚀 SSE-CX-Hub listening on port ${PORT}`));
   } catch (err) {
-    console.error("❌ Failed to get bot info:", err.stack || err.message);
+    console.error("❌ Failed to get bot info:", err.response?.data || err.message);
     process.exit(1);
   }
 }

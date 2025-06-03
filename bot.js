@@ -218,24 +218,53 @@ ${summary}`;
   }
 });
 
-// Helper functions
+// Helper functions/////////////////////////////////////////////////////////////////////////
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
+function calculateScore(data) {
+  const checklistItems = [
+    "dns", "rule", "admin", "roles", "web", "pilot", "expansion", "support"
+  ];
+  const totalItems = checklistItems.length;
+  const completed = checklistItems.filter((id) => data[id] === "true").length;
+
+  let score = Math.round((completed / totalItems) * 100);
+
+  const blockersRaw = (data.adoptionBlockers || "").toLowerCase();
+  const red = (blockersRaw.match(/🔴/g) || []).length;
+  const orange = (blockersRaw.match(/🟠/g) || []).length;
+  const green = (blockersRaw.match(/🟢/g) || []).length;
+
+  score -= red * 25;
+  score -= orange * 10;
+  score -= green * 5;
+
+  return Math.max(score, 0);
+}
+
 function generateSummary(data, customer, submitter) {
-  const score = data.score || "N/A";
-  const riskLevel = data.riskLevel || "Unknown";
+  const score = calculateScore(data);
+
+  let riskLevel = "Unknown";
+  if (score <= 25) riskLevel = "Critical";
+  else if (score <= 50) riskLevel = "High";
+  else if (score <= 75) riskLevel = "Medium";
+  else riskLevel = "Low";
+
   const blockers = (data.adoptionBlockers || "")
     .split(",")
     .filter(b => b.trim())
     .map((b) => `• ${b.trim()}`)
     .join("\n") || "None";
+
   const expansion = (data.expansionInterests || "")
     .split(",")
     .filter(i => i.trim())
     .map((i) => `• ${i.trim()}`)
     .join("\n") || "None";
+
   const checklistItems = [
     { id: "dns", label: "DNS Redirection Verified" },
     { id: "rule", label: "Rule Configured and Active" },
@@ -253,15 +282,20 @@ function generateSummary(data, customer, submitter) {
     .join("\n") || "✅ All items completed.";
 
   const comments = data.comments?.trim() || "None";
-  const actionPlanLink = data.actionPlanLink?.trim();
+  const actionPlanLink = data.actionPlanLink?.trim() || "N/A";
   const closeDate = data.actionPlanCloseDate || "N/A";
+
+  const riskEmoji = riskLevel === "Critical" ? "🔴" :
+                    riskLevel === "High" ? "🟠" :
+                    riskLevel === "Medium" ? "🟡" :
+                    riskLevel === "Low" ? "🟢" : "❓";
 
   return `
 ✅ **Secure Access Handoff Summary**
 - **Customer Name:** ${capitalize(customer)}
 - **Submitted By:** ${submitter}
-- **Score:** ${score}
-- **Risk Level:** 🔴 ${riskLevel}
+- **Score:** ${score}/100
+- **Risk Level:** ${riskEmoji} ${riskLevel}
 
 🛠️ **Items Requiring Follow-Up:**
 ${checklist}
@@ -280,7 +314,7 @@ ${expansion}
 `;
 }
 
-
+//hasta aqui////////////////////////////////////
 async function sendForm(roomId, type) {
   const form = formMap[type];
   if (!form) return;

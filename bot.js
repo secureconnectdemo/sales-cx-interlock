@@ -161,16 +161,33 @@ function generateSummary(data, customer, submitter) {
   const riskLevel = score <= 25 ? "Critical" : score <= 50 ? "High" : score <= 75 ? "Medium" : "Low";
   const riskEmoji = riskLevel === "Critical" ? "🔴" : riskLevel === "High" ? "🟠" : riskLevel === "Medium" ? "🟡" : "🟢";
 
-  const checklist = [
-    { id: "dns", label: "DNS Redirection Verified" },
-    { id: "rule", label: "Rule Configured and Active" },
-    { id: "admin", label: "Admin Access Granted" },
-    { id: "roles", label: "User Roles Reviewed" },
-    { id: "web", label: "Web Profiles Reviewed" },
-    { id: "pilot", label: "Pilot Use Case Delivered" },
-    { id: "expansion", label: "Expansion Opportunities Identified" },
-    { id: "support", label: "Understands Post-Onboarding Support" },
-  ].filter(i => data[i.id] === "false").map(i => `❗ ${i.label}`).join("\n") || "✅ All items completed.";
+  const checklistItems = [
+    { id: "pla_1", label: "Secure Access dashboard admin access granted" },
+    { id: "pla_2", label: "User roles and permissions reviewed and adjusted" },
+    { id: "con_1", label: "Root Cert deployed and Connectivity established" },
+    { id: "con_2", label: "DNS redirection active and verified" },
+    { id: "con_3", label: "At least one Rule configured and active" },
+    { id: "con_5", label: "Experience Insights enabled and confirmed" },
+    { id: "con_6", label: "SaaS tenant integrations configured and validated" },
+    { id: "pol_1", label: "Web profiles reviewed" },
+    { id: "pol_2", label: "Decryption enabled and Do Not Decrypt list explained" },
+    { id: "pol_3", label: "DLP/ RBI/ IPS settings reviewed" },
+    { id: "pol_4", label: "VPN profiles and posture settings transferred" },
+    { id: "pol_5", label: "Customer has interacted with the AI Assistant" },
+    { id: "vis_2", label: "Schedule reports configured for key stakeholders" },
+    { id: "vis_3", label: "Block hit data explained and correlated to policy efficacy" },
+    { id: "ope_3", label: "Owner shown how to engage Cisco Support/TAC" },
+    { id: "ope_4", label: "Customer is aware of post-onboarding support" },
+    { id: "ope_5", label: "Customer is subscribed to SA newsletter and Cisco Community" },
+    { id: "suc_1", label: "Original business outcomes reviewed with IT owner" },
+    { id: "suc_2", label: "Pilot use case confirmed as delivered" },
+    { id: "suc_3", label: "Additional features identified (Optimize/Expand phase)" }
+  ];
+
+  const checklist = checklistItems
+    .filter(item => data[item.id] === "false")
+    .map(item => `❗ ${item.label}`)
+    .join("\n") || "✅ All items completed.";
 
   const blockers = (data.adoptionBlockers || "").split(",").filter(Boolean).map(b => `• ${b.trim()}`).join("\n") || "None";
   const expansion = (data.expansionInterests || "").split(",").filter(Boolean).map(i => `• ${i.trim()}`).join("\n") || "None";
@@ -224,8 +241,8 @@ async function startBot() {
     BOT_PERSON_ID = res.data.id;
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, function () {
-  console.log('🚀 SSE-CX-Hub listening on port ' + PORT);
-});
+      console.log('🚀 SSE-CX-Hub listening on port ' + PORT);
+    });
   } catch (err) {
     console.error("❌ Failed to get bot info:", err.stack || err.message);
     process.exit(1);

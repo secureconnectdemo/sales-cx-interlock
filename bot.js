@@ -86,7 +86,14 @@ app.post("/webhook", async (req, res) => {
 
         await axios.post("https://webexapis.com/v1/messages", { roomId: data.roomId, markdown: "✅ Submission received and summary sent to Strategic CSS room." }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-        const blockers = (formData.adoptionBlockers || "").split(",").map(b => b.trim()).filter(Boolean);
+        const blockers = (formData.adoptionBlockers || "")
+  .split(",")
+  .map(b => b.trim())
+  .filter(b => [
+    "high-budget", "high-infra", "high-ga",
+    "med-training", "med-complex", "med-partner",
+    "low-doc", "low-contact", "low-plan"
+  ].includes(b));
         const allowedStatuses = ["New Request", "On Track", "Off Trajectory", "On Hold", "Completed - Successful", "Completed - Unsuccessful"];
         const status = allowedStatuses.includes(formData.accountStatus) ? formData.accountStatus : undefined;
 

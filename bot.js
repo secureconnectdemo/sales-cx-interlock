@@ -1,10 +1,13 @@
+
 const Airtable = require("airtable");
-const base = Airtable.base("appG1ZNhb2KRKQQOI");
 
 Airtable.configure({
   endpointUrl: "https://api.airtable.com",
-  apiKey: process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN  // Make sure to rename it in Render too
+  apiKey: process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN
 });
+
+const base = Airtable.base("appG1ZNhb2KRKQQOI");
+
 
 const fs = require("fs");
 const path = require("path");

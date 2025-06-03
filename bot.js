@@ -110,54 +110,61 @@ Contact: josfonse@cisco.com`
       return res.sendStatus(200);
     }
 
-if (resource === "attachmentActions") {
-  console.log("📩 Attachment Action Triggered");
+    if (resource === "attachmentActions") {
+      console.log("📩 Attachment Action Triggered");
 
-  try {
-    const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
-      headers: { Authorization: WEBEX_BOT_TOKEN }
-    });
+      try {
+        const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
+          headers: { Authorization: WEBEX_BOT_TOKEN }
+        });
 
-    const formData = actionRes.data.inputs;
-    console.log("📝 Processing form submission:", formData);
+        const formData = actionRes.data.inputs;
+        console.log("📝 Processing form submission:", formData);
 
-    if (formData?.formType === "secureAccessChecklist") {
-      const customerName = formData.customerName;
-      const submitterEmail = formData.submittedBy;
-      const summary = generateSummary(formData, customerName, submitterEmail);
+        if (formData?.formType === "secureAccessChecklist") {
+          const customerName = formData.customerName;
+          const submitterEmail = formData.submittedBy;
+          const summary = generateSummary(formData, customerName, submitterEmail);
 
-      await axios.post("https://webexapis.com/v1/messages", {
-        roomId: STRATEGIC_CSS_ROOM_ID,
-        markdown: summary
-      }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId: STRATEGIC_CSS_ROOM_ID,
+            markdown: summary
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-      await axios.post("https://webexapis.com/v1/messages", {
-        roomId: data.roomId,
-        markdown: "✅ Submission received and summary sent to Strategic CSS room."
-      }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId: data.roomId,
+            markdown: "✅ Submission received and summary sent to Strategic CSS room."
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-      await base("Handoff Form").create({
-        fields: {
-          "Customer Name": formData.customerName || "",
-          "Submitted By": formData.submittedBy || "",
-          "Action Plan Link": formData.actionPlanLink || "",
-          "Close Date": formData.actionPlanCloseDate || "",
-          "Adoption Blockers": formData.adoptionBlockers || "",
-          "Expansion Interests": formData.expansionInterests || "",
-          "Comments": formData.comments || ""
+          await base("Handoff Form").create({
+            fields: {
+              "Customer Name": formData.customerName || "",
+              "Submitted By": formData.submittedBy || "",
+              "Action Plan Link": formData.actionPlanLink || "",
+              "Close Date": formData.actionPlanCloseDate || "",
+              "Adoption Blockers": formData.adoptionBlockers || "",
+              "Expansion Interests": formData.expansionInterests || "",
+              "Comments": formData.comments || ""
+            }
+          });
+
+          console.log("✅ Airtable record successfully created.");
         }
-      });
 
-      console.log("✅ Airtable record successfully created.");
-    }
+        return res.sendStatus(200); // inside try
+      } catch (err) {
+        console.error("❌ Webhook error:", err.stack || err.message);
+        return res.sendStatus(500);
+      }
+    } // closes if (resource === "attachmentActions")
 
-    return res.sendStatus(200); // ✅ inside try
   } catch (err) {
-    console.error("❌ Webhook error:", err.stack || err.message);
+    console.error("❌ General webhook error:", err.stack || err.message);
     return res.sendStatus(500);
   }
-} // ✅ closes if (resource === "attachmentActions")
+}); // closes app.post("/webhook")
 
+// ---------- KEEP THE REST BELOW UNCHANGED ----------
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -256,3 +263,4 @@ async function startBot() {
 }
 
 startBot();
+

@@ -169,17 +169,16 @@ Contact: josfonse@cisco.com`,
           { headers: { Authorization: WEBEX_BOT_TOKEN } }
         );
 
-        await base("Handoff Form").create({
-          fields: {
-            "Customer Name": formData.customerName || "",
-            "Submitted By": formData.submittedBy || "",
-            "Action Plan Link": formData.actionPlanLink || "",
-            "Close Date": formData.actionPlanCloseDate || "",
-            "Adoption Blockers": formData.adoptionBlockers || "",
-            "Expansion Interests": formData.expansionInterests || "",
-            "Comments": formData.comments || "",
-          },
-        });
+await base("Handoff Form").create({
+  "Customer Name": formData.customerName || "",
+  "Submitted By": formData.submittedBy || "",
+  "Action Plan Link": formData.actionPlanLink || "",
+  "Close Date": formData.actionPlanCloseDate || "",
+  "Adoption Blockers": formData.adoptionBlockers || "",
+  "Expansion Interests": formData.expansionInterests || "",
+  "Comments": formData.comments || ""
+});
+
 
         console.log("✅ Airtable record successfully created.");
       }

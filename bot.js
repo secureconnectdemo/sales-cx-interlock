@@ -171,7 +171,7 @@ Contact: josfonse@cisco.com`
           { headers: { Authorization: WEBEX_BOT_TOKEN } }
         );
 
-       await base("Handoff Form").create([
+     await base("Handoff Form").create([
   {
     fields: {
       "Customer Name": formData.customerName || "",
@@ -183,17 +183,12 @@ Contact: josfonse@cisco.com`
       "Comments": formData.comments || ""
     }
   }
-        });
-
-        console.log("✅ Airtable record successfully created.");
-      }
-
-      return res.sendStatus(200);
-    }
-  } catch (err) {
-    console.error("❌ General webhook error:", err.stack || err.message);
-    return res.sendStatus(500);
-  }
+])
+.then((record) => {
+  console.log("✅ Airtable record successfully created:", record[0].getId());
+})
+.catch((err) => {
+  console.error("❌ Airtable error:", err.response?.data || err.message || err);
 });
 
 // Helper functions

@@ -1,4 +1,3 @@
-
 const Airtable = require("airtable");
 
 Airtable.configure({

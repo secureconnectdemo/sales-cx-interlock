@@ -41,13 +41,12 @@ app.get("/test", (req, res) => {
 // Webhook route
 app.post("/webhook", async (req, res) => {
   console.log("🔥 Incoming webhook hit");
-  const { data, resource } = req.body || {};
+  const { data, resource } = req.body;
   const roomId = data?.roomId;
   const roomType = data?.roomType;
   const messageId = data?.id;
 
   if (!roomId || !messageId) {
-    console.warn("⚠️ Invalid webhook payload: Missing roomId or messageId.");
     return res.sendStatus(400);
   }
 
@@ -63,13 +62,19 @@ app.post("/webhook", async (req, res) => {
       }
 
       const rawText = messageRes.data.text || "";
-      const lines = rawText.split("\n").map((line) => line.trim().toLowerCase());
-      const mentioned = data?.mentionedPeople?.some(
+      const lines = rawText
+        .split("\n")
+        .map((line) => line.trim().toLowerCase())
+        .filter((line) => line.length > 0);
+
+      const mentioned = (data?.mentionedPeople || []).some(
         (id) => id.toLowerCase() === BOT_PERSON_ID.toLowerCase()
       );
-      const isDirect = data?.roomType === "direct";
+      const isDirect = roomType === "direct";
 
-      if (!mentioned && !isDirect) return res.sendStatus(200);
+      if (!mentioned && !isDirect) {
+        return res.sendStatus(200);
+      }
 
       let commandRecognized = false;
 
@@ -175,9 +180,8 @@ Contact: josfonse@cisco.com`,
           { headers: { Authorization: WEBEX_BOT_TOKEN } }
         );
 
-        // Airtable record creation
         await base("Handoff Form").create({
-          fields: {
+      
             "Customer Name": formData.customerName || "",
             "Submitted By": formData.submittedBy || "",
             "Action Plan Link": formData.actionPlanLink || "",
@@ -185,7 +189,7 @@ Contact: josfonse@cisco.com`,
             "Adoption Blockers": formData.adoptionBlockers || "",
             "Expansion Interests": formData.expansionInterests || "",
             "Comments": formData.comments || "",
-          },
+       
         });
 
         console.log("✅ Airtable record successfully created.");

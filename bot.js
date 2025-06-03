@@ -1,3 +1,5 @@
+working  
+
 const Airtable = require("airtable");
 
 Airtable.configure({
@@ -179,19 +181,16 @@ await base("Handoff Form").create({
   "Comments": formData.comments || ""
 });
 
-console.log("✅ Airtable record successfully created.");
 
-const confirmation = `✅ Handoff received and recorded. We'll take it from here!
+        console.log("✅ Airtable record successfully created.");
+      }
 
-📋 **Please copy and paste the following summary into the Console case notes** for this account:
-
-${summary}`;
-
-await axios.post("https://webexapis.com/v1/messages", {
-  roomId: data.roomId,
-  markdown: confirmation,
-}, {
-  headers: { Authorization: WEBEX_BOT_TOKEN },
+      return res.sendStatus(200);
+    }
+  } catch (err) {
+    console.error("❌ General webhook error:", err.stack || err.message);
+    return res.sendStatus(500);
+  }
 });
 
 // Helper functions

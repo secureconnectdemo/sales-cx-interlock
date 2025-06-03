@@ -137,21 +137,23 @@ Contact: josfonse@cisco.com`
           }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
           // ✅ Airtable insert
-          await base("Handoff From").create({
-            fields: {
-              "Customer Name": formData.customerName || "",
-              "Submitted By": formData.submittedBy || "",
-              "Action Plan Link": formData.actionPlanLink || "",
-              "Close Date": formData.actionPlanCloseDate || "",
-              "Adoption Blockers": formData.adoptionBlockers || "",
-              "Expansion Interests": formData.expansionInterests || "",
-              "Comments": formData.comments || ""
-            }
-          });
+         try {
+  await base("Handoff From").create({
+    fields: {
+      "Customer Name": formData.customerName || "",
+      "Submitted By": formData.submittedBy || "",
+      "Action Plan Link": formData.actionPlanLink || "",
+      "Close Date": formData.actionPlanCloseDate || "",
+      "Adoption Blockers": formData.adoptionBlockers || "",
+      "Expansion Interests": formData.expansionInterests || "",
+      "Comments": formData.comments || ""
+    }
+  });
+  console.log("✅ Airtable record successfully created.");
+} catch (err) {
+  console.error("❌ Airtable write failed:", err.response?.data || err.message || err);
+}
 
-          console.log("✅ Airtable record successfully created.");
-          return res.sendStatus(200); // ✅ Return and exit
-        }
 
         // fallback for unhandled formTypes
         return res.sendStatus(200);

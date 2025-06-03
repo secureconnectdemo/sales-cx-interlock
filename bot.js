@@ -228,7 +228,7 @@ async function sendForm(roomId, type) {
   await axios.post("https://webexapis.com/v1/messages",
     {
       roomId,
-      markdown: `📋 Please complete the **${type}** form:\`,
+      markdown: `📋 Please complete the **${type}** form:`,
       attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: form }],
     },
     { headers: { Authorization: WEBEX_BOT_TOKEN } });

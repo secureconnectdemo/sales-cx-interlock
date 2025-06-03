@@ -224,23 +224,62 @@ function capitalize(str) {
 }
 
 function generateSummary(data, customer, submitter) {
-  const comments = data.comments?.trim();
-  const actionPlanLink = data.actionPlanLink?.trim();
+  const score = data.score || "N/A";
+  const riskLevel = data.riskLevel || "Unknown";
   const blockers = (data.adoptionBlockers || "")
     .split(",")
+    .filter(b => b.trim())
     .map((b) => `• ${b.trim()}`)
     .join("\n") || "None";
+  const expansion = (data.expansionInterests || "")
+    .split(",")
+    .filter(i => i.trim())
+    .map((i) => `• ${i.trim()}`)
+    .join("\n") || "None";
+  const checklistItems = [
+    { id: "dns", label: "DNS Redirection Verified" },
+    { id: "rule", label: "Rule Configured and Active" },
+    { id: "admin", label: "Admin Access Granted" },
+    { id: "roles", label: "User Roles Reviewed" },
+    { id: "web", label: "Web Profiles Reviewed" },
+    { id: "pilot", label: "Pilot Use Case Delivered" },
+    { id: "expansion", label: "Expansion Opportunities Identified" },
+    { id: "support", label: "Understands Post-Onboarding Support" },
+  ];
+
+  const checklist = checklistItems
+    .filter((item) => data[item.id] === "false")
+    .map((item) => `❗ ${item.label}`)
+    .join("\n") || "✅ All items completed.";
+
+  const comments = data.comments?.trim() || "None";
+  const actionPlanLink = data.actionPlanLink?.trim();
+  const closeDate = data.actionPlanCloseDate || "N/A";
 
   return `
 ✅ **Secure Access Handoff Summary**
 - **Customer Name:** ${capitalize(customer)}
 - **Submitted By:** ${submitter}
-- **Adoption Blockers:**  
+- **Score:** ${score}
+- **Risk Level:** 🔴 ${riskLevel}
+
+🛠️ **Items Requiring Follow-Up:**
+${checklist}
+
+🔎 **Adoption Blockers:**
 ${blockers}
-💬 **Comments:**  
-> ${comments || "None"}
+
+📈 **Customer Interested in Exploring:**
+${expansion}
+
+🔗 **Action Plan Link:** [Open Action Plan](${actionPlanLink})
+📅 **Action Plan Close Date:** ${closeDate}
+
+🗒️ **Additional Comments:**
+> ${comments}
 `;
 }
+
 
 async function sendForm(roomId, type) {
   const form = formMap[type];

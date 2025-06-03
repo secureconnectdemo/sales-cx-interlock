@@ -198,11 +198,15 @@ await axios.post(
   { headers: { Authorization: WEBEX_BOT_TOKEN } }
 );
 
-// ✅ Close the checklist `if` block
-}  
-
-// ✅ Respond to webhook call
+// ✅ Leave this as-is
 return res.sendStatus(200);
+
+    }
+  } catch (err) {
+    console.error("❌ General webhook error:", err.stack || err.message);
+    return res.sendStatus(500);
+  }
+});
 
 // Helper functions
 function capitalize(str) {

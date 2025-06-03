@@ -1,5 +1,4 @@
 const Airtable = require("airtable");
-
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base("appG1ZNhb2KRKQQOI");
 
 const fs = require("fs");
@@ -122,43 +121,40 @@ Contact: josfonse@cisco.com`
         const formData = actionRes.data.inputs;
         console.log("📝 Processing form submission:", formData);
 
-      if (formData?.formType === "secureAccessChecklist") {
-  const customerName = formData.customerName;
-  const submitterEmail = formData.submittedBy;
-  const summary = generateSummary(formData, customerName, submitterEmail);
+        if (formData?.formType === "secureAccessChecklist") {
+          const customerName = formData.customerName;
+          const submitterEmail = formData.submittedBy;
+          const summary = generateSummary(formData, customerName, submitterEmail);
 
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: STRATEGIC_CSS_ROOM_ID,
-    markdown: summary
-  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId: STRATEGIC_CSS_ROOM_ID,
+            markdown: summary
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: data.roomId,
-    markdown: "✅ Submission received and summary sent to Strategic CSS room."
-  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+          await axios.post("https://webexapis.com/v1/messages", {
+            roomId: data.roomId,
+            markdown: "✅ Submission received and summary sent to Strategic CSS room."
+          }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-  // ✅ Airtable insert
-  await base("Handoff From").create({
-    fields: {
-      "Customer Name": formData.customerName || "",
-      "Submitted By": formData.submittedBy || "",
-      "Action Plan Link": formData.actionPlanLink || "",
-      "Close Date": formData.actionPlanCloseDate || "",
-      "Adoption Blockers": formData.adoptionBlockers || "",
-      "Expansion Interests": formData.expansionInterests || "",
-      "Comments": formData.comments || ""
-    }
-  });
+          // ✅ Airtable insert
+          await base("Handoff From").create({
+            fields: {
+              "Customer Name": formData.customerName || "",
+              "Submitted By": formData.submittedBy || "",
+              "Action Plan Link": formData.actionPlanLink || "",
+              "Close Date": formData.actionPlanCloseDate || "",
+              "Adoption Blockers": formData.adoptionBlockers || "",
+              "Expansion Interests": formData.expansionInterests || "",
+              "Comments": formData.comments || ""
+            }
+          });
 
-  console.log("✅ Airtable record successfully created.");
-  return res.sendStatus(200); // ✅ Return and exit
-}
-
-
-          return res.sendStatus(200);
-        } else {
-          return res.sendStatus(200); // fallback for unhandled formTypes
+          console.log("✅ Airtable record successfully created.");
+          return res.sendStatus(200); // ✅ Return and exit
         }
+
+        // fallback for unhandled formTypes
+        return res.sendStatus(200);
       } catch (err) {
         console.error("❌ Webhook error:", err.stack || err.message);
         return res.sendStatus(500);
@@ -168,7 +164,6 @@ Contact: josfonse@cisco.com`
     console.error("❌ General webhook error:", err.stack || err.message);
     return res.sendStatus(500);
   }
-
 }); // ✅ closes app.post("/webhook")
 
 function capitalize(str) {

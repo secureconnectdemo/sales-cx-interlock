@@ -158,7 +158,7 @@ try {
   console.error("❌ Webhook error:", err.stack || err.message);
   return res.sendStatus(500);
 }
-
+}); // closes app.post("/webhook")
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();

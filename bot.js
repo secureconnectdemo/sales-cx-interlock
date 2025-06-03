@@ -152,7 +152,7 @@ Contact: josfonse@cisco.com`
         }
 
         return res.sendStatus(200);
-
+ }
       } catch (err) {
         console.error("❌ Webhook error:", err.stack || err.message);
         return res.sendStatus(500);

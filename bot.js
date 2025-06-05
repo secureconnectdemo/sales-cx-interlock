@@ -123,7 +123,7 @@ function calculateOverallScore(data) {
 }
 
 function generateSummary(data, customer, submitter) {
-  const score = calculateScore(data);
+const score = calculateChecklistScore(data);
   const riskLevel = score <= 25 ? "Critical" : score <= 50 ? "High" : score <= 75 ? "Medium" : "Low";
   const riskEmoji = riskLevel === "Critical" ? "🔴" : riskLevel === "High" ? "🟠" : riskLevel === "Medium" ? "🟡" : "🟢";
 

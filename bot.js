@@ -56,7 +56,8 @@ app.post("/webhook", async (req, res) => {
         if (line === "/submit deployment") {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
-            markdown: "📝 Opening the **Secure Access Deployment Form**...
+           markdown: `📋 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*`,
+
 
 ⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*",
           }, { headers: { Authorization: WEBEX_BOT_TOKEN } });

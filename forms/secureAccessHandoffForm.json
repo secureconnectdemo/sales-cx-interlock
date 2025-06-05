@@ -20,13 +20,13 @@
       "type": "Input.Text",
       "id": "actionPlanLink",
       "placeholder": "Paste the Action Plan link (e.g. Salesforce URL)",
-      "label": "\ud83d\udcce Action Plan Link (Optional)"
+      "label": "📎 Action Plan Link (Optional)"
     },
     {
       "type": "Input.Text",
       "id": "actionPlanCloseDate",
       "placeholder": "e.g. 2025-06-07",
-      "label": "\ud83d\udcc5 Action Plan Close Date (Optional)"
+      "label": "📅 Action Plan Close Date (Optional)"
     },
     {
       "type": "Input.Text",
@@ -35,30 +35,15 @@
       "label": "Submitted By"
     },
     {
-      "type": "Input.Text",
-      "id": "strategicCss",
-      "placeholder": "Enter Strategic CSS name or email",
-      "label": "Strategic CSS Name or Email"
-    },
-    {
       "type": "Input.ChoiceSet",
       "id": "customerPulse",
       "label": "Choose Customer Pulse",
       "style": "expanded",
       "isRequired": true,
       "choices": [
-        {
-          "title": "Green",
-          "value": "Green"
-        },
-        {
-          "title": "Orange",
-          "value": "Orange"
-        },
-        {
-          "title": "Red",
-          "value": "Red"
-        }
+        { "title": "Green", "value": "Green" },
+        { "title": "Orange", "value": "Orange" },
+        { "title": "Red", "value": "Red" }
       ]
     },
     {
@@ -66,56 +51,110 @@
       "id": "accountStatus",
       "label": "Account Status",
       "style": "expanded",
+      "isRequired": false,
       "choices": [
-        {
-          "title": "Completed - Successful",
-          "value": "Completed - Successful"
-        },
-        {
-          "title": "Completed - Unsuccessful",
-          "value": "Completed - Unsuccessful"
-        }
+        { "title": "Completed - Successful", "value": "Completed - Successful" },
+        { "title": "Completed - Unsuccessful", "value": "Completed - Unsuccessful" }
       ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "✅ Onboarding Tasks",
+      "wrap": true,
+      "weight": "Bolder"
+    },
+    { "type": "Input.Toggle", "title": "Secure Access dashboard admin access granted", "id": "pla_1", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "User roles and permissions reviewed and adjusted", "id": "pla_2", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Root Cert deployed and Connectivity established (Secure Client, IPsec tunnels)", "id": "con_1", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "DNS redirection active and verified", "id": "con_2", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "At least one Rule configured and active", "id": "con_3", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Experience Insights enabled and confirmed ", "id": "con_5", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "SaaS tenant integrations configured and validated", "id": "con_6", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Web profiles reviewed", "id": "pol_1", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Decryption enabled and Do Not Decrypt list explained", "id": "pol_2", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "DLP/ RBI/ IPS settings reviewed", "id": "pol_3", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "VPN profiles and posture settings transferred", "id": "pol_4", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Customer has interacted with the AI Assistant ", "id": "pol_5", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Schedule reports configured for key stakeholders", "id": "vis_2", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Block hit data explained and correlated to policy efficacy", "id": "vis_3", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Owner shown how to engage Cisco Support/TAC", "id": "ope_3", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Customer is aware of post-onboarding support", "id": "ope_4", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Customer is subscribed to SA newsletter and Cisco Community", "id": "ope_5", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Original business outcomes reviewed with IT owner", "id": "suc_1", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Pilot use case confirmed as delivered", "id": "suc_2", "valueOn": "true", "valueOff": "false" },
+    { "type": "Input.Toggle", "title": "Additional features identified (Optimize/Expand phase)", "id": "suc_3", "valueOn": "true", "valueOff": "false" },
+    {
+      "type": "TextBlock",
+      "text": "🚧 Select Adoption Blockers",
+      "weight": "Bolder",
+      "wrap": true,
+      "spacing": "Medium"
     },
     {
       "type": "Input.ChoiceSet",
-      "id": "useCase",
-      "label": "Primary Use Case(s)",
+      "id": "adoptionBlockers",
       "isMultiSelect": true,
       "style": "expanded",
       "choices": [
-        {
-          "title": "Secure Private Access (SPA)",
-          "value": "SPA"
-        },
-        {
-          "title": "Secure Internet Access (SIA)",
-          "value": "SIA"
-        },
-        {
-          "title": "Remote Access VPN (RA-VPN)",
-          "value": "RA-VPN"
-        },
-        {
-          "title": "ZTA with Client",
-          "value": "ZTA Client"
-        },
-        {
-          "title": "ZTA Clientless",
-          "value": "ZTA Clientless"
-        },
-        {
-          "title": "IPsec Tunnels",
-          "value": "IPsec Tunnels"
-        }
+        { "title": "🔴 No Budget / Not a Priority", "value": "high-budget" },
+        { "title": "🔴 Infrastructure Not Ready", "value": "high-infra" },
+        { "title": "🔴 Product Not GA or Missing Features", "value": "high-ga" },
+        { "title": "🟠 Training or Configuration Support Needed", "value": "med-training" },
+        { "title": "🟠 Customer Perceives Product as Complex", "value": "med-complex" },
+        { "title": "🟠 Partner Unresponsive or Unenabled", "value": "med-partner" },
+        { "title": "🟢 Documentation Not Found", "value": "low-doc" },
+        { "title": "🟢 Invalid or Missing Contact Info", "value": "low-contact" },
+        { "title": "🟢 Ownership or Success Plan Unclear", "value": "low-plan" }
       ]
     },
     {
-      "type": "Input.Text",
-      "id": "openTickets",
-      "label": "Open Tickets (if any)",
-      "placeholder": "Paste TAC SRs, Jira, or internal references"
+      "type": "TextBlock",
+      "text": "💬 Customer interested in exploring more of the following in the future",
+      "wrap": true,
+      "spacing": "Medium"
     },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "expansionInterests",
+      "style": "expanded",
+      "isMultiSelect": true,
+      "choices": [
+        { "title": "DLP", "value": "DLP" },
+        { "title": "RBI (Browser Isolation)", "value": "RBI" },
+        { "title": "IPS", "value": "IPS" },
+        { "title": "Experience Insights (Advanced)", "value": "Experience Insights advanced" },
+        { "title": "ISE Integration", "value": "ISE" },
+        { "title": "SD-WAN Integration", "value": "SD-WAN" },
+        { "title": "Enterprise Browser", "value": "Enterprise browser" }
+      ]
+    },
+{
+  "type": "Input.Text",
+  "id": "strategicCss",
+  "placeholder": "Strategic CSS name or email",
+  "label": "👤 Strategic CSS Name or Email"
+},
+{
+  "type": "Input.ChoiceSet",
+  "id": "primaryUseCases",
+  "isMultiSelect": true,
+  "style": "expanded",
+  "label": "🔍 Primary Use Case(s)",
+  "choices": [
+    { "title": "Secure Web Gateway (SWG)", "value": "SWG" },
+    { "title": "Remote Access (VPN)", "value": "RAVPN" },
+    { "title": "Zero Trust Access (ZTA)", "value": "ZTA" },
+    { "title": "Private App Access (SPA)", "value": "SPA" },
+    { "title": "Secure Internet Access (SIA)", "value": "SIA" },
+    { "title": "Full SASE (SPA + SIA)", "value": "Full SASE" }
+  ]
+},
+{
+  "type": "Input.Text",
+  "id": "openTickets",
+  "placeholder": "TAC case IDs or open issues (optional)",
+  "label": "📂 Open Tickets"
+}
     {
       "type": "Input.Text",
       "id": "comments",
@@ -126,7 +165,7 @@
   "actions": [
     {
       "type": "Action.Submit",
-      "title": "\ud83d\udce8 Submit",
+      "title": "📨 Submit",
       "data": {
         "formType": "secureAccessChecklist",
         "targetWebexRoom": "Strategic Css"

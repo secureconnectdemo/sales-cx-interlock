@@ -107,12 +107,6 @@
         { "title": "🟢 Ownership or Success Plan Unclear", "value": "low-plan" }
       ]
     },
-    {
-      "type": "TextBlock",
-      "text": "💬 Customer interested in exploring more of the following in the future",
-      "wrap": true,
-      "spacing": "Medium"
-    },
      {
       "type": "TextBlock",
       "text": "\ud83d\udcac Customer interested in exploring more of the following in the future",
@@ -152,6 +146,14 @@
         {
           "title": "Enterprise Browser",
           "value": "Enterprise browser"
+        }
+         {
+          "title": "ZTA",
+          "value": "ZTA"
+        }
+           {
+          "title": "RA-VPN",
+          "value": "RA-VPN"
         }
       ]
     },

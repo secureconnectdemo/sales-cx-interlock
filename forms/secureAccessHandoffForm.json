@@ -113,48 +113,93 @@
       "wrap": true,
       "spacing": "Medium"
     },
+     {
+      "type": "TextBlock",
+      "text": "\ud83d\udcac Customer interested in exploring more of the following in the future",
+      "wrap": true,
+      "spacing": "Medium"
+    },
     {
       "type": "Input.ChoiceSet",
       "id": "expansionInterests",
       "style": "expanded",
       "isMultiSelect": true,
       "choices": [
-        { "title": "DLP", "value": "DLP" },
-        { "title": "RBI (Browser Isolation)", "value": "RBI" },
-        { "title": "IPS", "value": "IPS" },
-        { "title": "Experience Insights (Advanced)", "value": "Experience Insights advanced" },
-        { "title": "ISE Integration", "value": "ISE" },
-        { "title": "SD-WAN Integration", "value": "SD-WAN" },
-        { "title": "Enterprise Browser", "value": "Enterprise browser" }
+        {
+          "title": "DLP",
+          "value": "DLP"
+        },
+        {
+          "title": "RBI (Browser Isolation)",
+          "value": "RBI"
+        },
+        {
+          "title": "IPS",
+          "value": "IPS"
+        },
+        {
+          "title": "Experience Insights (Advanced)",
+          "value": "Experience Insights advanced"
+        },
+        {
+          "title": "ISE Integration",
+          "value": "ISE"
+        },
+        {
+          "title": "SD-WAN Integration",
+          "value": "SD-WAN"
+        },
+        {
+          "title": "Enterprise Browser",
+          "value": "Enterprise browser"
+        }
       ]
     },
-{
-  "type": "Input.Text",
-  "id": "strategicCss",
-  "placeholder": "Strategic CSS name or email",
-  "label": "👤 Strategic CSS Name or Email"
-},
-{
-  "type": "Input.ChoiceSet",
-  "id": "primaryUseCases",
-  "isMultiSelect": true,
-  "style": "expanded",
-  "label": "🔍 Primary Use Case(s)",
-  "choices": [
-    { "title": "Secure Web Gateway (SWG)", "value": "SWG" },
-    { "title": "Remote Access (VPN)", "value": "RAVPN" },
-    { "title": "Zero Trust Access (ZTA)", "value": "ZTA" },
-    { "title": "Private App Access (SPA)", "value": "SPA" },
-    { "title": "Secure Internet Access (SIA)", "value": "SIA" },
-    { "title": "Full SASE (SPA + SIA)", "value": "Full SASE" }
-  ]
-},
-{
-  "type": "Input.Text",
-  "id": "openTickets",
-  "placeholder": "TAC case IDs or open issues (optional)",
-  "label": "📂 Open Tickets"
-}
+    {
+      "type": "Input.Text",
+      "id": "strategicCss",
+      "placeholder": "Strategic CSS name or email",
+      "label": "\ud83d\udc64 Strategic CSS Name or Email"
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "primaryUseCases",
+      "isMultiSelect": true,
+      "style": "expanded",
+      "label": "\ud83d\udd0d Primary Use Case(s)",
+      "choices": [
+        {
+          "title": "Secure Web Gateway (SWG)",
+          "value": "SWG"
+        },
+        {
+          "title": "Remote Access (VPN)",
+          "value": "RAVPN"
+        },
+        {
+          "title": "Zero Trust Access (ZTA)",
+          "value": "ZTA"
+        },
+        {
+          "title": "Private App Access (SPA)",
+          "value": "SPA"
+        },
+        {
+          "title": "Secure Internet Access (SIA)",
+          "value": "SIA"
+        },
+        {
+          "title": "Full SASE (SPA + SIA)",
+          "value": "Full SASE"
+        }
+      ]
+    },
+    {
+      "type": "Input.Text",
+      "id": "openTickets",
+      "placeholder": "TAC case IDs or open issues (optional)",
+      "label": "\ud83d\udcc2 Open Tickets"
+    },
     {
       "type": "Input.Text",
       "id": "comments",
@@ -165,7 +210,7 @@
   "actions": [
     {
       "type": "Action.Submit",
-      "title": "📨 Submit",
+      "title": "\ud83d\udce8 Submit",
       "data": {
         "formType": "secureAccessChecklist",
         "targetWebexRoom": "Strategic Css"

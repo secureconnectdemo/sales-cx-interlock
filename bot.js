@@ -127,12 +127,16 @@ function generateSummary(data, customer, submitter, onboardingScore, overallScor
   const riskEmoji = riskLevel === "At Risk" ? "🔴" : riskLevel === "Needs Attention" ? "🟡" : "🟢";
   const useCase = data.useCase || "Not specified";
   const tickets = data.openTickets || "None";
+  const strategicCss = data.strategicCss || "Not specified";
+  const primaryUseCases = data.primaryUseCases || "Not specified";
 
   return `
 ✅ **Secure Access Handoff Summary**
 
 - **Customer Name:** ${customer}
 - **Submitted By:** ${submitter}
+- **Strategic CSS:** ${strategicCss}
+- **Primary Use Cases:** ${primaryUseCases}
 - **Onboarding Score:** ${onboardingScore}/100
 - **Overall Score:** ${overallScore}/100
 - **Risk Level:** ${riskEmoji} ${riskLevel}

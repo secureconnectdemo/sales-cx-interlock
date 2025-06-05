@@ -11,6 +11,7 @@ const path = require("path");
 const express = require("express");
 const axios = require("axios");
 
+
 const app = express();
 app.use(express.json());
 
@@ -77,21 +78,23 @@ app.post("/webhook", async (req, res) => {
         await axios.post("https://webexapis.com/v1/messages", { roomId: STRATEGIC_CSS_ROOM_ID, markdown: summary }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
         await axios.post("https://webexapis.com/v1/messages", { roomId: data.roomId, markdown: "✅ Submission received and summary sent to Strategic CSS room." }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-        await base("Handoff Form").create({
-          fields: {
-            "Customer Name": customerName || "",
-            "Submitted By": submitterEmail || "",
-            "Action Plan Link": formData.actionPlanLink || "",
-            "Close Date": formData.actionPlanCloseDate || "",
-            "Adoption Blockers": formData.adoptionBlockers || "",
-            "Expansion Interests": formData.expansionInterests || "",
-            "Comments": formData.comments || "",
-            "Customer Pulse": formData.customerPulse || "",
-            "Account Status": formData.accountStatus || "",
-            "Use Case": formData.useCase || "",
-            "Open Tickets": formData.openTickets || ""
-          }
-        });
+       await base("Handoff Form").create({
+  fields: {
+    "Customer Name": customerName || "",
+    "Submitted By": submitterEmail || "",
+    "Action Plan Link": formData.actionPlanLink || "",
+    "Close Date": formData.actionPlanCloseDate || "",
+    "Adoption Blockers": formData.adoptionBlockers || "",
+    "Expansion Interests": formData.expansionInterests || "",
+    "Primary Use Cases": formData.primaryUseCases || "",
+    "Strategic CSS": formData.strategicCss || "",
+    "Comments": formData.comments || "",
+    "Customer Pulse": formData.customerPulse || "",
+    "Account Status": formData.accountStatus || "",
+    "Use Case": formData.useCase || "",
+    "Open Tickets": formData.openTickets || ""
+  }
+});
       }
 
       return res.sendStatus(200);

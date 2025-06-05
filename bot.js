@@ -122,30 +122,92 @@ function calculateOverallScore(data) {
   return Math.max(score, 0);
 }
 
-function generateSummary(data, customer, submitter, onboardingScore, overallScore) {
-  const riskLevel = overallScore <= 25 ? "At Risk" : overallScore <= 75 ? "Needs Attention" : "All Good";
-  const riskEmoji = riskLevel === "At Risk" ? "🔴" : riskLevel === "Needs Attention" ? "🟡" : "🟢";
-  const useCase = data.useCase || "Not specified";
-  const tickets = data.openTickets || "None";
-  const strategicCss = data.strategicCss || "Not specified";
-  const primaryUseCases = data.primaryUseCases || "Not specified";
+function generateSummary(data, customer, submitter) {
+  const score = calculateScore(data);
+  const riskLevel = score <= 25 ? "Critical" : score <= 50 ? "High" : score <= 75 ? "Medium" : "Low";
+  const riskEmoji = riskLevel === "Critical" ? "🔴" : riskLevel === "High" ? "🟠" : riskLevel === "Medium" ? "🟡" : "🟢";
+
+  const checklistItems = [
+
+    { id: "pla_1", label: "Secure Access dashboard admin access granted" },
+
+    { id: "pla_2", label: "User roles and permissions reviewed and adjusted" },
+
+    { id: "con_1", label: "Root Cert deployed and Connectivity established" },
+
+    { id: "con_2", label: "DNS redirection active and verified" },
+
+    { id: "con_3", label: "At least one Rule configured and active" },
+
+    { id: "con_5", label: "Experience Insights enabled and confirmed" },
+
+    { id: "con_6", label: "SaaS tenant integrations configured and validated" },
+
+    { id: "pol_1", label: "Web profiles reviewed" },
+
+    { id: "pol_2", label: "Decryption enabled and Do Not Decrypt list explained" },
+
+    { id: "pol_3", label: "DLP/ RBI/ IPS settings reviewed" },
+
+    { id: "pol_4", label: "VPN profiles and posture settings transferred" },
+
+    { id: "pol_5", label: "Customer has interacted with the AI Assistant" },
+
+    { id: "vis_2", label: "Schedule reports configured for key stakeholders" },
+
+    { id: "vis_3", label: "Block hit data explained and correlated to policy efficacy" },
+
+    { id: "ope_3", label: "Owner shown how to engage Cisco Support/TAC" },
+
+    { id: "ope_4", label: "Customer is aware of post-onboarding support" },
+
+    { id: "ope_5", label: "Customer is subscribed to SA newsletter and Cisco Community" },
+
+    { id: "suc_1", label: "Original business outcomes reviewed with IT owner" },
+
+    { id: "suc_2", label: "Pilot use case confirmed as delivered" },
+
+    { id: "suc_3", label: "Additional features identified (Optimize/Expand phase)" }
+
+  ];
+
+  const checklist = checklistItems.filter(item => data[item.id] === "false").map(item => `❗ ${item.label}`).join("\n") || "✅ All items completed.";
+  const blockers = (data.adoptionBlockers || "").split(",").filter(Boolean).map(b => `• ${b.trim()}`).join("\n") || "None";
+  const expansion = (data.expansionInterests || "").split(",").filter(Boolean).map(i => `• ${i.trim()}`).join("\n") || "None";
+  const comments = data.comments?.trim() || "None";
+  const actionPlanLink = data.actionPlanLink?.trim() || "N/A";
+  const closeDate = data.actionPlanCloseDate || "N/A";
+  const pulse = data.customerPulse || "N/A";
+  const status = data.accountStatus || "N/A";
+  const strategicCss = data.strategicCss || "N/A";
+  const primaryUseCases = (data.primaryUseCases || "").split(",").map(u => `• ${u.trim()}`).join("\n") || "None";
 
   return `
 ✅ **Secure Access Handoff Summary**
-
-- **Customer Name:** ${customer}
+- **Customer Name:** ${capitalize(customer)}
 - **Submitted By:** ${submitter}
 - **Strategic CSS:** ${strategicCss}
-- **Primary Use Cases:** ${primaryUseCases}
-- **Onboarding Score:** ${onboardingScore}/100
-- **Overall Score:** ${overallScore}/100
+- **Primary Use Cases:**\n${primaryUseCases}
+- **Score:** ${score}/100
 - **Risk Level:** ${riskEmoji} ${riskLevel}
-- **Use Case:** ${useCase}
-- **Open Tickets:** ${tickets}
+- **Customer Pulse:** ${pulse}
+- **Account Status:** ${status}
 
-📌 Please review this overview as part of the onboarding success status.`;
+🛠️ **Items Requiring Follow-Up:**
+${checklist}
+
+🔎 **Adoption Blockers:**
+${blockers}
+
+📈 **Customer Interested in Exploring:**
+${expansion}
+
+🔗 **Action Plan Link:** [Open Action Plan](${actionPlanLink})
+📅 **Action Plan Close Date:** ${closeDate}
+
+🗒️ **Additional Comments:**
+> ${comments}`;
 }
-
 function sendForm(roomId, type) {
   const form = formMap[type];
   if (!form) return;

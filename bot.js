@@ -121,6 +121,9 @@ function calculateOverallScore(data) {
   }
   return Math.max(score, 0);
 }
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
 
 function generateSummary(data, customer, submitter) {
 const score = calculateChecklistScore(data);

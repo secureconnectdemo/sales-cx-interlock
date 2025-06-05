@@ -125,8 +125,8 @@ function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
-function generateSummary(data, customer, submitter) {
-const score = calculateChecklistScore(data);
+function generateSummary(data, customer, submitter, onboardingScore, overallScore) {
+const score = overallScore;
   const riskLevel = score <= 25 ? "Critical" : score <= 50 ? "High" : score <= 75 ? "Medium" : "Low";
   const riskEmoji = riskLevel === "Critical" ? "🔴" : riskLevel === "High" ? "🟠" : riskLevel === "Medium" ? "🟡" : "🟢";
 
@@ -185,13 +185,14 @@ const score = calculateChecklistScore(data);
   const strategicCss = data.strategicCss || "N/A";
   const primaryUseCases = (data.primaryUseCases || "").split(",").map(u => `• ${u.trim()}`).join("\n") || "None";
 
-  return `
+return `
 ✅ **Secure Access Handoff Summary**
 - **Customer Name:** ${capitalize(customer)}
 - **Submitted By:** ${submitter}
 - **Strategic CSS:** ${strategicCss}
 - **Primary Use Cases:**\n${primaryUseCases}
-- **Score:** ${score}/100
+- **Onboarding Score (Checklist):** ${onboardingScore}/100
+- **Overall Score (Adjusted):** ${overallScore}/100
 - **Risk Level:** ${riskEmoji} ${riskLevel}
 - **Customer Pulse:** ${pulse}
 - **Account Status:** ${status}

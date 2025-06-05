@@ -56,8 +56,7 @@ app.post("/webhook", async (req, res) => {
         if (line === "/submit deployment") {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
-           markdown: `📋 Opening the **Secure Access Deployment Form**...\n\n⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*`,
-
+            markdown: `📝 Opening the **Secure Access Deployment Form**...
 
 ⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*",
           }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
@@ -66,7 +65,7 @@ app.post("/webhook", async (req, res) => {
         } else if (line === "/submit handoff") {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
-            markdown: "📋 Opening the **Secure Access Handoff Form**...
+            markdown: `📋 Opening the **Secure Access Handoff Form**...
 
 ⌛ *Please wait a few seconds for the form to appear if the bot has been idle.*",
           }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
@@ -75,7 +74,7 @@ app.post("/webhook", async (req, res) => {
         } else if (line === "/help") {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
-            markdown: "🤖 **SSE-CX-Hub Bot – Help Menu**
+            markdown: `🤖 **SSE-CX-Hub Bot – Help Menu**
 `/submit deployment` – Open Deployment Form
 `/submit handoff` – Open Handoff Checklist
 `/reset` – (Coming Soon)
@@ -85,7 +84,7 @@ Contact: josfonse@cisco.com",
         } else if (line === "/reset") {
           await axios.post("https://webexapis.com/v1/messages", {
             roomId,
-            markdown: "🔄 Reset acknowledged. (Coming soon.)",
+            markdown: `🔄 Reset acknowledged. (Coming soon.)",
           }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
           return res.sendStatus(200);
         }
@@ -93,7 +92,7 @@ Contact: josfonse@cisco.com",
 
       await axios.post("https://webexapis.com/v1/messages", {
         roomId,
-        markdown: "⚠️ Unknown command. Type `/help` for options.",
+        markdown: `⚠️ Unknown command. Type `/help` for options.",
       }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
       return res.sendStatus(200);
@@ -117,7 +116,7 @@ Contact: josfonse@cisco.com",
 
         await axios.post("https://webexapis.com/v1/messages", {
           roomId: data.roomId,
-          markdown: "✅ Submission received and summary sent to Strategic CSS room.",
+          markdown: `✅ Submission received and summary sent to Strategic CSS room.",
         }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
         const blockers = (formData.adoptionBlockers || "").split(",").map(b => b.trim()).filter(b =>

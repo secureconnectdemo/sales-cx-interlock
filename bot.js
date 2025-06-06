@@ -1,3 +1,4 @@
+
 const Airtable = require("airtable");
 
 Airtable.configure({
@@ -184,6 +185,7 @@ const score = overallScore;
   const status = data.accountStatus || "N/A";
   const strategicCss = data.strategicCss || "N/A";
   const primaryUseCases = (data.primaryUseCases || "").split(",").map(u => `• ${u.trim()}`).join("\n") || "None";
+  const openTickets = data.openTickets?.trim() || "None";
 
 return `
 ✅ **Secure Access Handoff Summary**
@@ -196,6 +198,7 @@ return `
 - **Risk Level:** ${riskEmoji} ${riskLevel}
 - **Customer Pulse:** ${pulse}
 - **Account Status:** ${status}
+📂 **Open Tickets:** ${openTickets}
 
 🛠️ **Items Requiring Follow-Up:**
 ${checklist}

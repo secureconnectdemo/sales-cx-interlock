@@ -84,7 +84,7 @@ app.post("/webhook", async (req, res) => {
     "Submitted By": submitterEmail || "",
     "Action Plan Link": formData.actionPlanLink || "",
     "Close Date": formData.actionPlanCloseDate || "",
-    "Adoption Blockers": formData.adoptionBlockers || "",
+    "Adoption Blockers": (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean),
     "Expansion Interests": formData.expansionInterests || "",
     "Primary Use Cases": formData.primaryUseCases || "",
     "Strategic CSS": formData.strategicCss || "",

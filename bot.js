@@ -93,15 +93,17 @@ const parsedExpansion = (formData.expansionInterests || "").split(",").map(v => 
 const parsedUseCases = (formData.primaryUseCases || "").split(",").map(v => v.trim()).filter(Boolean);
 
 
+
+
         
 await base("Handoff Form").create({
   "Customer Name": customerName || "",
   "Submitted By": submitterEmail || "",
   "Action Plan Link": formData.actionPlanLink || "",
   "Close Date": formData.actionPlanCloseDate || "",
-"Adoption Blockers": parsedBlockers,
-"Expansion Interests": parsedExpansion,
-"Primary Use Cases": parsedUseCases,
+   "Adoption Blockers": parsedBlockers,
+  "Expansion Interests": parsedExpansion,
+  "Primary Use Cases": parsedUseCases,
   "Strategic CSS": formData.strategicCss || "",
   "Comments": formData.comments || "",
   "Customer Pulse": formData.customerPulse || "",

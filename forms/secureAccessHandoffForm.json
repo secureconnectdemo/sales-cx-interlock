@@ -112,7 +112,7 @@
         { "title": "🔴 Infrastructure Not Ready", "value": "high-infra" },
         { "title": "🔴 Product Not GA or Missing Features", "value": "high-ga" },
         { "title": "🟠 Training or Configuration Support Needed", "value": "med-training" },
-        { "title": "🟠 Customer Perceives Product as Complex", "value": "med-complex" },
+        { "title": "🟠 Customer Perceives Product as Complex", "value": "med-Customer Perceives Product as Complex" },
         { "title": "🟠 Partner Unresponsive or Unenabled", "value": "med-partner" },
         { "title": "🟢 Documentation Not Found", "value": "low-doc" },
         { "title": "🟢 Invalid or Missing Contact Info", "value": "low-contact" },

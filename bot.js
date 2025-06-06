@@ -97,12 +97,11 @@ if (resource === "attachmentActions") {
     }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
     // ✅ Send note to copy/paste if direct message
-    if (roomType === "direct") {
-      await axios.post("https://webexapis.com/v1/messages", {
-        roomId: data.roomId,
-        markdown: `📋 **Please copy and paste the following summary into the Console case notes for this account:**\n\n${summary}`
-      }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
-    }
+await axios.post("https://webexapis.com/v1/messages", {
+  roomId: data.roomId,
+  markdown: `📋 **Please copy and paste the following summary into the Console case notes for this account:**\n\n${summary}`
+}, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
 
     // ✅ Write to Airtable with added fields
     const parsedBlockers = (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean);

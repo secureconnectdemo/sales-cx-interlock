@@ -63,10 +63,7 @@ app.post("/webhook", async (req, res) => {
       await axios.post("https://webexapis.com/v1/messages", { roomId, markdown: "⚠️ Unknown command. Type `/help` for options." }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
       return res.sendStatus(200);
     }
-    await axios.post("https://webexapis.com/v1/messages", {
-  roomId: data.roomId,
-  markdown: `✅ Submission received and sent to Strategic CSS room.\n\n📋 **Please copy and paste the following summary into the Console case notes for this account:**\n\n${summary}`
-   }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
 
 
     if (resource === "attachmentActions") {
@@ -86,6 +83,11 @@ app.post("/webhook", async (req, res) => {
         await axios.post("https://webexapis.com/v1/messages", { roomId: STRATEGIC_CSS_ROOM_ID, markdown: summary }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
         await axios.post("https://webexapis.com/v1/messages", { roomId: data.roomId, markdown: "✅ Submission received and summary sent to Strategic CSS room." }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
+        await axios.post("https://webexapis.com/v1/messages", {
+  roomId: data.roomId,
+  markdown: `✅ Submission received and sent to Strategic CSS room.\n\n📋 **Please copy and paste the following summary into the Console case notes for this account:**\n\n${summary}`
+}, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+        
         const allowedUseCases = [
   "Secure Web Gateway (SWG)",
   "Remote Access (VPN)",

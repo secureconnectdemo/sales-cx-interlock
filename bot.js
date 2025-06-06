@@ -117,7 +117,7 @@ await base("Handoff Form").create({
   "Account Status": formData.accountStatus || "",
   "Open Tickets": formData.openTickets || "",
   "Onboarding Score": onboardingScore,
-  "Overall Score": overallScore
+  "Overall Score": overallScore,
    "Customer Org ID": orgId,
   "Updated Customer Contacts": updatedContacts,
 });

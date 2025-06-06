@@ -29,6 +29,18 @@
       "label": "📅 Action Plan Close Date (Optional)"
     },
     {
+  "type": "Input.Text",
+  "id": "orgId",
+  "placeholder": "1234567",
+  "label": "Customer Org ID"
+},
+{
+  "type": "Input.Text",
+  "id": "updatedContacts",
+  "placeholder": "Name, Email, Role...",
+  "label": "Updated Customer Contacts"
+}
+    {
       "type": "Input.Text",
       "id": "submittedBy",
       "placeholder": "Your Name or Email",

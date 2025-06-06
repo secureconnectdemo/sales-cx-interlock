@@ -196,7 +196,7 @@ const score = overallScore;
   const pulse = data.customerPulse || "N/A";
   const status = data.accountStatus || "N/A";
   const strategicCss = data.strategicCss || "N/A";
- const primaryUseCases = parsedUseCases.map(u => `• ${u}`).join("\n") || "None";
+  const primaryUseCases = (data.primaryUseCases || "").split(",").map(u => `• ${u.trim()}`).join("\n") || "None";
   const openTickets = data.openTickets?.trim() || "None";
 
 return `

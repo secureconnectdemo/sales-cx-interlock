@@ -88,10 +88,10 @@ app.post("/webhook", async (req, res) => {
   "Full SASE (SPA + SIA)"
 ]
 
-const parsedUseCases = (formData.primaryUseCases || "")
-  .split(",")
-  .map(v => v.trim())
-  .filter(v => allowedUseCases.includes(v));
+const parsedBlockers = (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean);
+const parsedExpansion = (formData.expansionInterests || "").split(",").map(v => v.trim()).filter(Boolean);
+const parsedUseCases = (formData.primaryUseCases || "").split(",").map(v => v.trim()).filter(Boolean);
+
 
         
 await base("Handoff Form").create({
@@ -99,9 +99,9 @@ await base("Handoff Form").create({
   "Submitted By": submitterEmail || "",
   "Action Plan Link": formData.actionPlanLink || "",
   "Close Date": formData.actionPlanCloseDate || "",
-  "Adoption Blockers": (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean),
-  "Expansion Interests": (formData.expansionInterests || "").split(",").map(v => v.trim()).filter(Boolean),
- "Primary Use Cases": parsedUseCases,
+"Adoption Blockers": parsedBlockers,
+"Expansion Interests": parsedExpansion,
+"Primary Use Cases": parsedUseCases,
   "Strategic CSS": formData.strategicCss || "",
   "Comments": formData.comments || "",
   "Customer Pulse": formData.customerPulse || "",

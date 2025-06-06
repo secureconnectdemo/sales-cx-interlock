@@ -101,14 +101,16 @@ await base("Handoff Form").create({
   "Submitted By": submitterEmail || "",
   "Action Plan Link": formData.actionPlanLink || "",
   "Close Date": formData.actionPlanCloseDate || "",
-   "Adoption Blockers": parsedBlockers,
+  "Adoption Blockers": parsedBlockers,
   "Expansion Interests": parsedExpansion,
-  "Primary Use Cases": parsedUseCases,
+  "Primary Use Cases": primaryUseCases,
   "Strategic CSS": formData.strategicCss || "",
   "Comments": formData.comments || "",
   "Customer Pulse": formData.customerPulse || "",
   "Account Status": formData.accountStatus || "",
-  "Open Tickets": formData.openTickets || ""
+  "Open Tickets": formData.openTickets || "",
+  "Onboarding Score": onboardingScore,
+  "Overall Score": overallScore
 });
       }
 

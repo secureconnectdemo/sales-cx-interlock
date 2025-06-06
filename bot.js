@@ -103,7 +103,7 @@ await base("Handoff Form").create({
   "Close Date": formData.actionPlanCloseDate || "",
   "Adoption Blockers": parsedBlockers,
   "Expansion Interests": parsedExpansion,
-  "Primary Use Cases": primaryUseCases,
+  "Primary Use Cases": parsedUseCases,
   "Strategic CSS": formData.strategicCss || "",
   "Comments": formData.comments || "",
   "Customer Pulse": formData.customerPulse || "",

@@ -105,7 +105,6 @@ await base("Handoff Form").create({
   "Comments": formData.comments || "",
   "Customer Pulse": formData.customerPulse || "",
   "Account Status": formData.accountStatus || "",
-  "Use Case": formData.useCase || "",
   "Open Tickets": formData.openTickets || ""
 });
       }

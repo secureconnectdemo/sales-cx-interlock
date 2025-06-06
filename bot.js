@@ -63,10 +63,17 @@ app.post("/webhook", async (req, res) => {
       await axios.post("https://webexapis.com/v1/messages", { roomId, markdown: "⚠️ Unknown command. Type `/help` for options." }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
       return res.sendStatus(200);
     }
+    await axios.post("https://webexapis.com/v1/messages", {
+  roomId: data.roomId,
+  markdown: `✅ Submission received and sent to Strategic CSS room.\n\n📋 **Please copy and paste the following summary into the Console case notes for this account:**\n\n${summary}`
+   }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
 
     if (resource === "attachmentActions") {
       const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, { headers: { Authorization: WEBEX_BOT_TOKEN } });
       const formData = actionRes.data.inputs;
+      const orgId = formData.orgId || "";
+      const updatedContacts = formData.updatedContacts || "";
 
       if (formData?.formType === "secureAccessChecklist") {
         const customerName = formData.customerName;
@@ -111,6 +118,8 @@ await base("Handoff Form").create({
   "Open Tickets": formData.openTickets || "",
   "Onboarding Score": onboardingScore,
   "Overall Score": overallScore
+   "Customer Org ID": orgId,
+  "Updated Customer Contacts": updatedContacts,
 });
       }
 
@@ -202,6 +211,9 @@ const score = overallScore;
   const strategicCss = data.strategicCss || "N/A";
   const primaryUseCases = (data.primaryUseCases || "").split(",").map(u => `• ${u.trim()}`).join("\n") || "None";
   const openTickets = data.openTickets?.trim() || "None";
+  const orgId = data.orgId || "N/A";
+  const updatedContacts = data.updatedContacts || "None";
+
 
 return `
 ✅ **Secure Access Handoff Summary**
@@ -215,6 +227,9 @@ return `
 - **Customer Pulse:** ${pulse}
 - **Account Status:** ${status}
 - **Open Tickets:** ${openTickets}
+ **Customer Org ID:** ${orgId}  
+**Updated Customer Contacts:** ${updatedContacts}
+
 
 🛠️ **Items Requiring Follow-Up:**
 ${checklist}

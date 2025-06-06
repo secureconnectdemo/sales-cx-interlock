@@ -86,7 +86,7 @@ app.post("/webhook", async (req, res) => {
   "Private App Access (SPA)",
   "Secure Internet Access (SIA)",
   "Full SASE (SPA + SIA)"
-];
+]
 
 const parsedUseCases = (formData.primaryUseCases || "")
   .split(",")
@@ -100,7 +100,7 @@ await base("Handoff Form").create({
   "Close Date": formData.actionPlanCloseDate || "",
   "Adoption Blockers": (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean),
   "Expansion Interests": (formData.expansionInterests || "").split(",").map(v => v.trim()).filter(Boolean),
-  "Primary Use Cases": parsedUseCases,
+  "Primary Use Cases": parsedUseCases.length ? parsedUseCases : undefined,
   "Strategic CSS": formData.strategicCss || "",
   "Comments": formData.comments || "",
   "Customer Pulse": formData.customerPulse || "",

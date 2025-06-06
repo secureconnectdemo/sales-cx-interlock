@@ -80,19 +80,19 @@ app.post("/webhook", async (req, res) => {
         await axios.post("https://webexapis.com/v1/messages", { roomId: data.roomId, markdown: "✅ Submission received and summary sent to Strategic CSS room." }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
        await base("Handoff Form").create({
-    "Customer Name": customerName || "",
-    "Submitted By": submitterEmail || "",
-    "Action Plan Link": formData.actionPlanLink || "",
-    "Close Date": formData.actionPlanCloseDate || "",
-    "Adoption Blockers": (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean),
-    "Expansion Interests": formData.expansionInterests || "",
-    "Primary Use Cases": formData.primaryUseCases || "",
-    "Strategic CSS": formData.strategicCss || "",
-    "Comments": formData.comments || "",
-    "Customer Pulse": formData.customerPulse || "",
-    "Account Status": formData.accountStatus || "",
-    "Use Case": formData.useCase || "",
-    "Open Tickets": formData.openTickets || ""
+   "Customer Name": customerName || "",
+  "Submitted By": submitterEmail || "",
+  "Action Plan Link": formData.actionPlanLink || "",
+  "Close Date": formData.actionPlanCloseDate || "",
+  "Adoption Blockers": (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean),
+  "Expansion Interests": (formData.expansionInterests || "").split(",").map(v => v.trim()).filter(Boolean),
+  "Primary Use Cases": (formData.primaryUseCases || "").split(",").map(v => v.trim()).filter(Boolean),
+  "Strategic CSS": formData.strategicCss || "",
+  "Comments": formData.comments || "",
+  "Customer Pulse": formData.customerPulse || "",
+  "Account Status": formData.accountStatus || "",
+  "Use Case": formData.useCase || "",
+  "Open Tickets": formData.openTickets || ""
 });
       }
 

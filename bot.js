@@ -66,63 +66,72 @@ app.post("/webhook", async (req, res) => {
 
 
 
- if (resource === "attachmentActions") {
+if (resource === "attachmentActions") {
   const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
     headers: { Authorization: WEBEX_BOT_TOKEN }
   });
 
   const formData = actionRes.data.inputs;
-  const roomType = data?.roomType || "";  // <-- Fix added
-  const customerName = formData.customerName || "";
-  const submitterEmail = formData.submittedBy || "";
-  const orgId = formData.orgId || "";
-  const updatedContacts = formData.updatedContacts || "";
 
-  const onboardingScore = calculateChecklistScore(formData);
-  const overallScore = calculateOverallScore(formData);
-  const summary = generateSummary(formData, customerName, submitterEmail, onboardingScore, overallScore);
+  if (formData?.formType === "secureAccessChecklist") {
+    const customerName = formData.customerName || "";
+    const submitterEmail = formData.submittedBy || "";
+    const orgId = formData.orgId || "";
+    const updatedContacts = formData.updatedContacts || "";
+    const roomType = data?.roomType || ""; // ✅ FIX: ensures we can check for direct message
 
-  // ✅ Send summary to Strategic CSS room
-  await axios.post("https://webexapis.com/v1/messages", {
-    roomId: STRATEGIC_CSS_ROOM_ID,
-    markdown: summary
-  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+    const onboardingScore = calculateChecklistScore(formData);
+    const overallScore = calculateOverallScore(formData);
+    const summary = generateSummary(formData, customerName, submitterEmail, onboardingScore, overallScore);
 
-  // ✅ If direct message, send summary back to submitter with instructions
-  if (roomType === "direct") {
+    // ✅ Send summary to Strategic CSS room
+    await axios.post("https://webexapis.com/v1/messages", {
+      roomId: STRATEGIC_CSS_ROOM_ID,
+      markdown: summary
+    }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
+    // ✅ Send confirmation to submitter
     await axios.post("https://webexapis.com/v1/messages", {
       roomId: data.roomId,
-      markdown: `📋 **Please copy and paste the following summary into the Console case notes for this account:**\n\n${summary}`
+      markdown: "✅ Submission received and summary sent to Strategic CSS room."
     }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
+    // ✅ Send note to copy/paste if direct message
+    if (roomType === "direct") {
+      await axios.post("https://webexapis.com/v1/messages", {
+        roomId: data.roomId,
+        markdown: `📋 **Please copy and paste the following summary into the Console case notes for this account:**\n\n${summary}`
+      }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+    }
+
+    // ✅ Write to Airtable with added fields
+    const parsedBlockers = (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean);
+    const parsedExpansion = (formData.expansionInterests || "").split(",").map(v => v.trim()).filter(Boolean);
+    const parsedUseCases = (formData.primaryUseCases || "").split(",").map(v => v.trim()).filter(Boolean);
+
+    await base("Handoff Form").create({
+      "Customer Name": customerName,
+      "Submitted By": submitterEmail,
+      "Action Plan Link": formData.actionPlanLink || "",
+      "Close Date": formData.actionPlanCloseDate || "",
+      "Adoption Blockers": parsedBlockers,
+      "Expansion Interests": parsedExpansion,
+      "Primary Use Cases": parsedUseCases,
+      "Strategic CSS": formData.strategicCss || "",
+      "Comments": formData.comments || "",
+      "Customer Pulse": formData.customerPulse || "",
+      "Account Status": formData.accountStatus || "",
+      "Open Tickets": formData.openTickets || "",
+      "Onboarding Score": onboardingScore,
+      "Overall Score": overallScore,
+      "Customer Org ID": orgId,
+      "Updated Customer Contacts": updatedContacts
+    });
   }
-
-  // ✅ Prepare data for Airtable
-  const parsedBlockers = (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean);
-  const parsedExpansion = (formData.expansionInterests || "").split(",").map(v => v.trim()).filter(Boolean);
-  const parsedUseCases = (formData.primaryUseCases || "").split(",").map(v => v.trim()).filter(Boolean);
-
-  // ✅ Write to Airtable
-  await base("Handoff Form").create({
-    "Customer Name": customerName,
-    "Submitted By": submitterEmail,
-    "Action Plan Link": formData.actionPlanLink || "",
-    "Close Date": formData.actionPlanCloseDate || "",
-    "Adoption Blockers": parsedBlockers,
-    "Expansion Interests": parsedExpansion,
-    "Primary Use Cases": parsedUseCases,
-    "Strategic CSS": formData.strategicCss || "",
-    "Comments": formData.comments || "",
-    "Customer Pulse": formData.customerPulse || "",
-    "Account Status": formData.accountStatus || "",
-    "Open Tickets": formData.openTickets || "",
-    "Onboarding Score": onboardingScore,
-    "Overall Score": overallScore,
-    "Customer Org ID": orgId,
-    "Updated Customer Contacts": updatedContacts
-  });
 
   return res.sendStatus(200);
 }
+
 
   } catch (err) {
     console.error("❌ Error handling webhook:", err.message);

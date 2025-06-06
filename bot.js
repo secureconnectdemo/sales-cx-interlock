@@ -88,7 +88,7 @@ app.post("/webhook", async (req, res) => {
   "Full SASE (SPA + SIA)"
 ]
 
-const parsedUseCases = (formData.primaryUseCases || "")
+const parsedUseCases = (formData. || "")
   .split(",")
   .map(v => v.trim())
   .filter(v => allowedUseCases.includes(v));
@@ -100,7 +100,7 @@ await base("Handoff Form").create({
   "Close Date": formData.actionPlanCloseDate || "",
   "Adoption Blockers": (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean),
   "Expansion Interests": (formData.expansionInterests || "").split(",").map(v => v.trim()).filter(Boolean),
-  "Primary Use Cases": parsedUseCases.length ? parsedUseCases : undefined,
+ "Primary Use Cases": parsedUseCases,
   "Strategic CSS": formData.strategicCss || "",
   "Comments": formData.comments || "",
   "Customer Pulse": formData.customerPulse || "",
@@ -195,7 +195,7 @@ const score = overallScore;
   const pulse = data.customerPulse || "N/A";
   const status = data.accountStatus || "N/A";
   const strategicCss = data.strategicCss || "N/A";
-  const primaryUseCases = (data.primaryUseCases || "").split(",").map(u => `• ${u.trim()}`).join("\n") || "None";
+ const primaryUseCases = parsedUseCases.map(u => `• ${u}`).join("\n") || "None";
   const openTickets = data.openTickets?.trim() || "None";
 
 return `

@@ -88,10 +88,11 @@ app.post("/webhook", async (req, res) => {
   "Full SASE (SPA + SIA)"
 ]
 
-const parsedUseCases = (formData. || "")
+const parsedUseCases = (formData.primaryUseCases || "")
   .split(",")
   .map(v => v.trim())
   .filter(v => allowedUseCases.includes(v));
+
         
 await base("Handoff Form").create({
   "Customer Name": customerName || "",

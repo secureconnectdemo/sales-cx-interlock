@@ -198,7 +198,7 @@ return `
 - **Risk Level:** ${riskEmoji} ${riskLevel}
 - **Customer Pulse:** ${pulse}
 - **Account Status:** ${status}
-📂 **Open Tickets:** ${openTickets}
+- **Open Tickets:** ${openTickets}
 
 🛠️ **Items Requiring Follow-Up:**
 ${checklist}

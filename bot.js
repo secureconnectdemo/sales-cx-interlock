@@ -79,14 +79,28 @@ app.post("/webhook", async (req, res) => {
         await axios.post("https://webexapis.com/v1/messages", { roomId: STRATEGIC_CSS_ROOM_ID, markdown: summary }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
         await axios.post("https://webexapis.com/v1/messages", { roomId: data.roomId, markdown: "✅ Submission received and summary sent to Strategic CSS room." }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
-       await base("Handoff Form").create({
-   "Customer Name": customerName || "",
+        const allowedUseCases = [
+  "Secure Web Gateway (SWG)",
+  "Remote Access (VPN)",
+  "Zero Trust Access (ZTA)",
+  "Private App Access (SPA)",
+  "Secure Internet Access (SIA)",
+  "Full SASE (SPA + SIA)"
+];
+
+const parsedUseCases = (formData.primaryUseCases || "")
+  .split(",")
+  .map(v => v.trim())
+  .filter(v => allowedUseCases.includes(v));
+        
+await base("Handoff Form").create({
+  "Customer Name": customerName || "",
   "Submitted By": submitterEmail || "",
   "Action Plan Link": formData.actionPlanLink || "",
   "Close Date": formData.actionPlanCloseDate || "",
   "Adoption Blockers": (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean),
   "Expansion Interests": (formData.expansionInterests || "").split(",").map(v => v.trim()).filter(Boolean),
-  "Primary Use Cases": (formData.primaryUseCases || "").split(",").map(v => v.trim()).filter(Boolean),
+  "Primary Use Cases": parsedUseCases,
   "Strategic CSS": formData.strategicCss || "",
   "Comments": formData.comments || "",
   "Customer Pulse": formData.customerPulse || "",

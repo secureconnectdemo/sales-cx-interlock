@@ -147,11 +147,13 @@ function calculateChecklistScore(data) {
 function calculateOverallScore(data) {
   let score = calculateChecklistScore(data);
   const blockers = (data.adoptionBlockers || "").split(",");
-  for (const b of blockers) {
-    if (b.includes("high-")) score -= 25;
-    else if (b.includes("med-")) score -= 10;
-    else if (b.includes("low-")) score -= 5;
-  }
+const blockerRawValues = (data.adoptionBlockers || "").split(",").map(b => b.trim()).filter(Boolean);
+  // Adjust the score
+for (const b of blockerRawValues) {
+  if (b.includes("high-")) score -= 25;
+  else if (b.includes("med-")) score -= 10;
+  else if (b.includes("low-")) score -= 5;
+}
   return Math.max(score, 0);
 }
 function capitalize(str) {
@@ -220,8 +222,20 @@ const score = overallScore;
   const openTickets = data.openTickets?.trim() || "None";
   const orgId = data.orgId || "N/A";
   const updatedContacts = data.updatedContacts || "None";
+  const blockerLabels = {
+  "high-budget": "🔴 No Budget / Not a Priority",
+  "high-infra": "🔴 Infrastructure Not Ready",
+  "high-ga": "🔴 Product Not GA or Missing Features",
+  "med-training": "🟠 Training or Configuration Support Needed",
+  "med-complex": "🟠 Customer Perceives Product as Complex",
+  "med-partner": "🟠 Partner Unresponsive or Unenabled",
+  "low-doc": "🟢 Documentation Not Found",
+  "low-contact": "🟢 Invalid or Missing Contact Info",
+  "low-plan": "🟢 Ownership or Success Plan Unclear"
+};
 
-
+const blockers = blockerRawValues.map(b => `• ${blockerLabels[b] || b}`).join("\n") || "None";
+  
 return `
 ✅ **Secure Access Handoff Summary**
 - **Customer Name:** ${capitalize(customer)}

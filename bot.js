@@ -234,7 +234,8 @@ const score = overallScore;
   "low-plan": "🟢 Ownership or Success Plan Unclear"
 };
 
-const blockers = blockerRawValues.map(b => `• ${blockerLabels[b] || b}`).join("\n") || "None";
+const blockerDisplayText = blockerRawValues.map(b => `• ${blockerLabels[b] || b}`).join("\n") || "None";
+
   
 return `
 ✅ **Secure Access Handoff Summary**
@@ -250,6 +251,8 @@ return `
 - **Open Tickets:** ${openTickets}
  **Customer Org ID:** ${orgId}  
 **Updated Customer Contacts:** ${updatedContacts}
+🔎 **Adoption Blockers:**${blockerDisplayText}
+
 
 
 🛠️ **Items Requiring Follow-Up:**

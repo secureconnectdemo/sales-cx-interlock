@@ -210,7 +210,8 @@ const score = overallScore;
   ];
 
   const checklist = checklistItems.filter(item => data[item.id] === "false").map(item => `❗ ${item.label}`).join("\n") || "✅ All items completed.";
-  const blockers = (data.adoptionBlockers || "").split(",").filter(Boolean).map(b => `• ${b.trim()}`).join("\n") || "None";
+  // const blockers = (data.adoptionBlockers || "").split(",").filter(Boolean).map(b => `• ${b.trim()}`).join("\n") || "None";
+  
   const expansion = (data.expansionInterests || "").split(",").filter(Boolean).map(i => `• ${i.trim()}`).join("\n") || "None";
   const comments = data.comments?.trim() || "None";
   const actionPlanLink = data.actionPlanLink?.trim() || "N/A";

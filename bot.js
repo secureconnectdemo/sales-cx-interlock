@@ -234,7 +234,10 @@ const score = overallScore;
   "low-plan": "🟢 Ownership or Success Plan Unclear"
 };
 
+const blockerRawValues = (data.adoptionBlockers || "").split(",").map(b => b.trim()).filter(Boolean);
+
 const blockerDisplayText = blockerRawValues.map(b => `• ${blockerLabels[b] || b}`).join("\n") || "None";
+
 
   
 return `

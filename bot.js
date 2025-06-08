@@ -12,6 +12,9 @@ const path = require("path");
 const express = require("express");
 const axios = require("axios");
 const { isValidWebexId, sanitizeLog } = require("./utils/validate");
+const rateLimit = require("express-rate-limit");
+app.use("/webhook", rateLimit({ windowMs: 1 * 60 * 1000, max: 10 }));
+
 
 
 

@@ -41,8 +41,18 @@ app.post("/webhook", async (req, res) => {
   if (!roomId || !messageId) return res.sendStatus(400);
 
   try {
-    if (resource === "messages") {
-      const messageRes = await axios.get(`https://webexapis.com/v1/messages/${messageId}`, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+if (resource === "messages") {
+  const idPattern = /^[a-zA-Z0-9_-]+$/;  // Adjust pattern as needed
+  if (!idPattern.test(messageId)) {
+    console.warn("Invalid messageId detected:", messageId);
+    return res.status(400).send("Invalid message ID.");
+  }
+
+  const messageRes = await axios.get(
+    `https://webexapis.com/v1/messages/${messageId}`,
+    { headers: { Authorization: WEBEX_BOT_TOKEN } }
+  );
+
       if (messageRes.data.personId === BOT_PERSON_ID) return res.sendStatus(200);
 
       const rawText = messageRes.data.text || "";

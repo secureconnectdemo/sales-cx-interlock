@@ -11,7 +11,6 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const axios = require("axios");
-const axios = require("axios");
 const { isValidWebexId, sanitizeLog } = require("./utils/validate");
 
 

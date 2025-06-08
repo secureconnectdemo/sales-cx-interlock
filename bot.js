@@ -66,7 +66,12 @@ app.post("/webhook", async (req, res) => {
 
 
 
-if (resource === "attachmentActions") {
+    if (resource === "attachmentActions") {
+      const idPattern = /^[a-zA-Z0-9_-]+$/; // Define a strict pattern for valid IDs
+      if (!idPattern.test(data.id)) {
+        console.error("Invalid data.id provided:", data.id);
+        return res.status(400).send("Invalid ID format.");
+      }
   const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
     headers: { Authorization: WEBEX_BOT_TOKEN }
   });

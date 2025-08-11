@@ -213,10 +213,7 @@ app.post("/webhook", async (req, res) => {
 
         await sendMarkdown(roomId, "⚠️ Unknown command. Try `/tasks` or `/submit handoff`.");
         return;
-      }
-
-      if (resource === "attachmentActions")) return; // should never happen
-      if (resource === "attachmentActions") {
+      } else if (resource === "attachmentActions") {
         const idPattern = /^[a-zA-Z0-9_-]+$/;
         if (!idPattern.test(data.id)) { console.error("Invalid attachment action id"); return; }
 
@@ -224,18 +221,13 @@ app.post("/webhook", async (req, res) => {
           headers: { Authorization: WEBEX_BOT_TOKEN },
         });
         const formData = actionRes.data.inputs || {};
-
-        // Always answer in the room from the action payload
         const replyRoomId = actionRes?.data?.roomId || data.roomId;
 
-        // Step A: picked subscription -> send trimmed handoff form
+        // A) handoff subscription -> trimmed form
         if (formData.formType === "handoffSubscriptionSelect") {
           const subMap = loadSubChecklistMap();
           const subKey = formData.subscription;
-          if (!subMap[subKey]) {
-            await sendText(replyRoomId, "Unknown subscription.");
-            return;
-          }
+          if (!subMap[subKey]) { await sendText(replyRoomId, "Unknown subscription."); return; }
           const trimmedForm = buildTrimmedHandoffForm(formMap.handoff, subKey, subMap);
           await axios.post(
             "https://webexapis.com/v1/messages",
@@ -249,8 +241,8 @@ app.post("/webhook", async (req, res) => {
           return;
         }
 
-        // Step B: /tasks select subscription
-        if (formData.formType === "taskSubscriptionSelect")) {
+        // B) /tasks subscription -> task picker
+        if (formData.formType === "taskSubscriptionSelect") {
           const catalog = loadCatalog();
           const sub = formData.subscription;
           if (!catalog[sub]) { await sendText(replyRoomId, "Unknown subscription."); return; }
@@ -258,8 +250,8 @@ app.post("/webhook", async (req, res) => {
           return;
         }
 
-        // Step C: /tasks submit tasks
-        if (formData.formType === "taskListSubmit")) {
+        // C) /tasks submit -> checklist
+        if (formData.formType === "taskListSubmit") {
           const selected = (formData.tasks || "").split(",").map((s) => s.trim()).filter(Boolean);
           if (!selected.length) { await sendText(replyRoomId, "No tasks selected."); return; }
           const msg = buildChecklistMarkdown(formData.subscription, selected);
@@ -279,7 +271,7 @@ app.post("/webhook", async (req, res) => {
           return;
         }
 
-        // Step D: handoff submit -> score, summarize, log
+        // D) handoff submit -> score, summarize, log
         if (formData.formType === "secureAccessChecklist") {
           const subMap = loadSubChecklistMap();
           const subKey = formData.subscription || "SIA";
@@ -295,7 +287,6 @@ app.post("/webhook", async (req, res) => {
           const overallScore = calculateOverallScore(formData, includeIds);
           const summary = generateSummary(formData, customerName, submitterEmail, onboardingScore, overallScore, subLabel);
 
-          // Try Strategic room first; fall back to user room if it fails
           try {
             await sendMarkdown(STRATEGIC_CSS_ROOM_ID, summary);
           } catch (e) {

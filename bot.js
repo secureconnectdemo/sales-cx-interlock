@@ -1,3 +1,14 @@
+// bot.js
+const {
+  loadCatalog,
+  buildSubscriptionPickerCard,
+  buildTaskPickerCard,
+  buildChecklistMarkdown,
+  loadSubChecklistMap,
+  buildHandoffSubPickerCard,
+  buildTrimmedHandoffForm,
+} = require("./utils/cards");
+
 const Airtable = require("airtable");
 const fs = require("fs");
 const path = require("path");
@@ -13,11 +24,9 @@ const base = Airtable.base("appG1ZNhb2KRKQQOI");
 const app = express();
 app.use(express.json());
 
-// ---- Webex + cards utils ----
+// ---- Webex helpers ----
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 let BOT_PERSON_ID = "";
-
-const { loadCatalog, buildSubscriptionPickerCard, buildTaskPickerCard, buildChecklistMarkdown } = require("./utils/cards");
 
 const sendText = (roomId, text) =>
   axios.post("https://webexapis.com/v1/messages", { roomId, text }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
@@ -26,13 +35,13 @@ const sendMarkdown = (roomId, markdown) =>
   axios.post("https://webexapis.com/v1/messages", { roomId, markdown }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
 
 const postCard = (roomId, markdown, card) =>
-  axios.post("https://webexapis.com/v1/messages", {
-    roomId,
-    markdown,
-    attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: card }],
-  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+  axios.post(
+    "https://webexapis.com/v1/messages",
+    { roomId, markdown, attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: card }] },
+    { headers: { Authorization: WEBEX_BOT_TOKEN } }
+  );
 
-const isTrue = v => v === true || v === "true" || v === "on";
+const isTrue = (v) => v === true || v === "true" || v === "on";
 
 // ---- Rooms / forms ----
 const STRATEGIC_CSS_ROOM_ID =
@@ -44,16 +53,21 @@ const formMap = {
   handoff: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "secureAccessHandoffForm.json"), "utf8")),
 };
 
-// ---- Health/score helpers (module scope) ----
-function calculateChecklistScore(data) {
-  const ids = ["pla_1","pla_2","con_1","con_2","con_3","con_5","con_6","pol_1","pol_2","pol_3","pol_4","pol_5","vis_2","vis_3","ope_3","ope_4","ope_5","suc_1","suc_2","suc_3"];
-  const completed = ids.filter(id => isTrue(data[id])).length;
-  return Math.round((completed / ids.length) * 100);
+// ---- Scoring / summary helpers ----
+function calculateChecklistScore(data, ids) {
+  const defaultIds = [
+    "pla_1","pla_2","con_1","con_2","con_3","con_5","con_6",
+    "pol_1","pol_2","pol_3","pol_4","pol_5","vis_2","vis_3",
+    "ope_3","ope_4","ope_5","suc_1","suc_2","suc_3"
+  ];
+  const list = (ids && ids.length) ? ids : defaultIds;
+  const completed = list.filter((id) => isTrue(data[id])).length;
+  return Math.round((completed / list.length) * 100);
 }
 
-function calculateOverallScore(data) {
-  let score = calculateChecklistScore(data);
-  const blockerRawValues = (data.adoptionBlockers || "").split(",").map(b => b.trim()).filter(Boolean);
+function calculateOverallScore(data, ids) {
+  let score = calculateChecklistScore(data, ids);
+  const blockerRawValues = (data.adoptionBlockers || "").split(",").map((b) => b.trim()).filter(Boolean);
   for (const b of blockerRawValues) {
     if (b.includes("high-")) score -= 25;
     else if (b.includes("med-")) score -= 10;
@@ -66,9 +80,9 @@ function capitalize(str) {
   return (str || "").charAt(0).toUpperCase() + (str || "").slice(1).toLowerCase();
 }
 
-const esc = s => (s || "").replace(/([*_`~>|[\]()])/g, "\\$1");
+const esc = (s) => (s || "").replace(/([*_`~>|[\]()])/g, "\\$1");
 
-function generateSummary(data, customer, submitter, onboardingScore, overallScore) {
+function generateSummary(data, customer, submitter, onboardingScore, overallScore, subLabel = null) {
   const score = overallScore;
   const riskLevel = score <= 25 ? "Critical" : score <= 50 ? "High" : score <= 75 ? "Medium" : "Low";
   const riskEmoji = riskLevel === "Critical" ? "🔴" : riskLevel === "High" ? "🟠" : riskLevel === "Medium" ? "🟡" : "🟢";
@@ -93,13 +107,14 @@ function generateSummary(data, customer, submitter, onboardingScore, overallScor
     { id: "ope_5", label: "Customer is subscribed to SA newsletter and Cisco Community" },
     { id: "suc_1", label: "Original business outcomes reviewed with IT owner" },
     { id: "suc_2", label: "Pilot use case confirmed as delivered" },
-    { id: "suc_3", label: "Additional features identified (Optimize/Expand phase)" }
+    { id: "suc_3", label: "Additional features identified (Optimize/Expand phase)" },
   ];
 
-  const followups = checklistItems
-    .filter(item => !isTrue(data[item.id]))
-    .map(item => `❗ ${item.label}`)
-    .join("\n") || "✅ All items completed.";
+  const followups =
+    checklistItems
+      .filter((item) => !isTrue(data[item.id]))
+      .map((item) => `❗ ${item.label}`)
+      .join("\n") || "✅ All items completed.";
 
   const blockerLabels = {
     "high-budget": "🔴 No Budget / Not a Priority",
@@ -110,19 +125,21 @@ function generateSummary(data, customer, submitter, onboardingScore, overallScor
     "med-partner": "🟠 Partner Unresponsive or Unenabled",
     "low-doc": "🟢 Documentation Not Found",
     "low-contact": "🟢 Invalid or Missing Contact Info",
-    "low-plan": "🟢 Ownership or Success Plan Unclear"
+    "low-plan": "🟢 Ownership or Success Plan Unclear",
   };
 
-  const blockerRawValues = (data.adoptionBlockers || "").split(",").map(b => b.trim()).filter(Boolean);
-  const blockerDisplayText = blockerRawValues.map(b => `• ${blockerLabels[b] || esc(b)}`).join("\n") || "None";
-  const expansion = (data.expansionInterests || "").split(",").filter(Boolean).map(i => `• ${esc(i.trim())}`).join("\n") || "None";
-  const primaryUseCases = (data.primaryUseCases || "").split(",").filter(Boolean).map(u => `• ${esc(u.trim())}`).join("\n") || "None";
+  const blockerRawValues = (data.adoptionBlockers || "").split(",").map((b) => b.trim()).filter(Boolean);
+  const blockerDisplayText = blockerRawValues.map((b) => `• ${blockerLabels[b] || esc(b)}`).join("\n") || "None";
+  const expansion = (data.expansionInterests || "").split(",").filter(Boolean).map((i) => `• ${esc(i.trim())}`).join("\n") || "None";
+  const primaryUseCases = (data.primaryUseCases || "").split(",").filter(Boolean).map((u) => `• ${esc(u.trim())}`).join("\n") || "None";
+
+  const subLine = subLabel ? `- **Subscription:** ${esc(subLabel)}` : "";
 
   return `
 ✅ **Secure Access Handoff Summary**
+${subLine}
 - **Customer Name:** ${esc(capitalize(customer))}
 - **Submitted By:** ${esc(submitter)}
-- **Strategic CSS:** ${esc(data.strategicCss || "N/A")}
 - **Primary Use Cases:**\n${primaryUseCases}
 - **Onboarding Score (Checklist):** ${onboardingScore}/100
 - **Overall Score (Adjusted):** ${overallScore}/100
@@ -167,22 +184,34 @@ app.post("/webhook", async (req, res) => {
   // Continue async
   setImmediate(async () => {
     try {
-      if (resource === "messages") {
-        const messageRes = await axios.get(`https://webexapis.com/v1/messages/${messageId}`, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+      if (resource === "messages")) {
+        const messageRes = await axios.get(`https://webexapis.com/v1/messages/${messageId}`, {
+          headers: { Authorization: WEBEX_BOT_TOKEN },
+        });
         if (messageRes.data.personId === BOT_PERSON_ID) return;
 
-        const rawText = messageRes.data.text || "";
-        const lines = rawText.split("\n").map(l => l.trim().toLowerCase()).filter(Boolean);
-        const mentioned = (data?.mentionedPeople || []).some(id => id.toLowerCase() === BOT_PERSON_ID.toLowerCase());
+        // Prefer markdown; fall back to text
+        const raw = (messageRes.data.markdown || messageRes.data.text || "").trim();
+        const lines = raw
+          .split("\n")
+          .map((l) => l.replace(/\s+/g, " ").trim().toLowerCase())
+          .filter(Boolean);
+
+        const mentioned = (data?.mentionedPeople || []).some((id) => id.toLowerCase() === BOT_PERSON_ID.toLowerCase());
         const isDirect = roomType === "direct";
         if (!mentioned && !isDirect) return;
 
-        if (lines.includes("/submit handoff")) {
-          await sendMarkdown(roomId, "📋 Opening the **Secure Access Handoff Form**...");
-          await sendForm(roomId, "handoff");
+        const hasCmd = (cmd) => lines.some((l) => l === cmd || l.includes(` ${cmd}`) || l.startsWith(cmd));
+
+        // /submit handoff -> show subscription picker
+        if (hasCmd("/submit handoff")) {
+          const subMap = loadSubChecklistMap();
+          await postCard(roomId, "📋 Choose subscription for this handoff:", buildHandoffSubPickerCard(subMap));
           return;
         }
-        if (lines.includes("/tasks")) {
+
+        // /tasks -> task picker flow
+        if (hasCmd("/tasks")) {
           const catalog = loadCatalog();
           await postCard(roomId, "🧭 Pick a subscription to see relevant tasks.", buildSubscriptionPickerCard(catalog));
           return;
@@ -194,81 +223,125 @@ app.post("/webhook", async (req, res) => {
 
       if (resource === "attachmentActions") {
         const idPattern = /^[a-zA-Z0-9_-]+$/;
-        if (!idPattern.test(data.id)) { console.error("Invalid attachment action id"); return; }
+        if (!idPattern.test(data.id)) {
+          console.error("Invalid attachment action id");
+          return;
+        }
 
-        const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+        const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
+          headers: { Authorization: WEBEX_BOT_TOKEN },
+        });
         const formData = actionRes.data.inputs || {};
 
-        // Step 1: subscription picked → show tasks
+        // Hand-off: user picked subscription -> send trimmed handoff form
+        if (formData.formType === "handoffSubscriptionSelect") {
+          const subMap = loadSubChecklistMap();
+          const subKey = formData.subscription;
+          if (!subMap[subKey]) {
+            await sendText(data.roomId, "Unknown subscription.");
+            return;
+          }
+          const baseForm = formMap.handoff; // already loaded from /forms
+          const trimmedForm = buildTrimmedHandoffForm(baseForm, subKey, subMap);
+
+          await axios.post(
+            "https://webexapis.com/v1/messages",
+            {
+              roomId: data.roomId,
+              markdown: "📋 Please complete the **Secure Access Handoff** form:",
+              attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: trimmedForm }],
+            },
+            { headers: { Authorization: WEBEX_BOT_TOKEN } }
+          );
+          return;
+        }
+
+        // /tasks step 1: subscription picked → show tasks
         if (formData.formType === "taskSubscriptionSelect") {
           const catalog = loadCatalog();
           const sub = formData.subscription;
-          if (!catalog[sub]) { await sendText(data.roomId, "Unknown subscription."); return; }
+          if (!catalog[sub]) {
+            await sendText(data.roomId, "Unknown subscription.");
+            return;
+          }
           await postCard(data.roomId, "📋 Choose tasks:", buildTaskPickerCard(sub, catalog));
           return;
         }
 
-        // Step 2: tasks picked → post checklist + log
-        if (formData.formType === "taskListSubmit") {
-          const selected = (formData.tasks || "").split(",").map(s => s.trim()).filter(Boolean);
-          if (!selected.length) { await sendText(data.roomId, "No tasks selected."); return; }
+        // /tasks step 2: tasks picked → post checklist + log
+        if (formData.formType === "taskListSubmit")) {
+          const selected = (formData.tasks || "").split(",").map((s) => s.trim()).filter(Boolean);
+          if (!selected.length) {
+            await sendText(data.roomId, "No tasks selected.");
+            return;
+          }
           const msg = buildChecklistMarkdown(formData.subscription, selected);
           await sendMarkdown(data.roomId, msg);
 
           try {
-            await base("Task Selections").create([{
-              fields: {
-                "Subscription": formData.subscription,
-                "Tasks": selected,
-                "Submitted By": actionRes?.data?.personEmail || ""
-              }
-            }]);
+            await base("Task Selections").create([
+              {
+                fields: {
+                  Subscription: formData.subscription,
+                  Tasks: selected,
+                  "Submitted By": actionRes?.data?.personEmail || "",
+                },
+              },
+            ]);
           } catch (e) {
             console.error("Airtable log error:", e?.response?.data || e.message);
           }
           return;
         }
 
-        // Secure Access checklist handoff → score, summarize, log
-        if (formData.formType === "secureAccessChecklist") {
-          const customerName    = formData.customerName || "";
-          const submitterEmail  = formData.submittedBy || "";
-          const orgId           = formData.orgId || "";
+        // Secure Access handoff submit → score, summarize, log
+        if (formData.formType === "secureAccessChecklist")) {
+          const subMap = loadSubChecklistMap();
+          const subKey = formData.subscription || "SIA";
+          const includeIds = subMap[subKey]?.includeIds || [];
+          const subLabel = subMap[subKey]?.label || subKey;
+
+          const customerName = formData.customerName || "";
+          const submitterEmail = formData.submittedBy || "";
+          const orgId = formData.orgId || "";
           const updatedContacts = formData.updatedContacts || "";
 
-          const onboardingScore = calculateChecklistScore(formData);
-          const overallScore    = calculateOverallScore(formData);
-          const summary         = generateSummary(formData, customerName, submitterEmail, onboardingScore, overallScore);
+          const onboardingScore = calculateChecklistScore(formData, includeIds);
+          const overallScore = calculateOverallScore(formData, includeIds);
+          const summary = generateSummary(formData, customerName, submitterEmail, onboardingScore, overallScore, subLabel);
 
           await sendMarkdown(STRATEGIC_CSS_ROOM_ID, summary);
           await sendMarkdown(data.roomId, "✅ Submission received and summary sent to Strategic CSS room.");
           await sendMarkdown(data.roomId, `📋 **Please copy/paste into Console case notes:**\n\n${summary}`);
 
-          const parsedBlockers  = (formData.adoptionBlockers || "").split(",").map(v => v.trim()).filter(Boolean);
-          const parsedExpansion = (formData.expansionInterests || "").split(",").map(v => v.trim()).filter(Boolean);
-          const parsedUseCases  = (formData.primaryUseCases || "").split(",").map(v => v.trim()).filter(Boolean);
+          const parsedBlockers = (formData.adoptionBlockers || "").split(",").map((v) => v.trim()).filter(Boolean);
+          const parsedExpansion = (formData.expansionInterests || "").split(",").map((v) => v.trim()).filter(Boolean);
+          const parsedUseCases = (formData.primaryUseCases || "").split(",").map((v) => v.trim()).filter(Boolean);
 
           try {
-            await base("Handoff Form").create([{
-              fields: {
-                "Customer Name": customerName,
-                "Submitted By": submitterEmail,
-                "Action Plan Link": formData.actionPlanLink || "",
-                "Close Date": formData.actionPlanCloseDate || "",
-                "Adoption Blockers": parsedBlockers,
-                "Expansion Interests": parsedExpansion,
-                "Primary Use Cases": parsedUseCases,
-                "Strategic CSS": formData.strategicCss || "",
-                "Comments": formData.comments || "",
-                "Customer Pulse": formData.customerPulse || "",
-                "Account Status": formData.accountStatus || "",
-                "Open Tickets": formData.openTickets || "",
-                "Onboarding Score": onboardingScore,
-                "Overall Score": overallScore,
-                "Customer Org ID": orgId,
-                "Updated Customer Contacts": updatedContacts
-              }
-            }]);
+            await base("Handoff Form").create([
+              {
+                fields: {
+                  "Customer Name": customerName,
+                  "Submitted By": submitterEmail,
+                  "Action Plan Link": formData.actionPlanLink || "",
+                  "Close Date": formData.actionPlanCloseDate || "",
+                  "Adoption Blockers": parsedBlockers,
+                  "Expansion Interests": parsedExpansion,
+                  "Primary Use Cases": parsedUseCases,
+                  "Strategic CSS": formData.strategicCss || "",
+                  Comments: formData.comments || "",
+                  "Customer Pulse": formData.customerPulse || "",
+                  "Account Status": formData.accountStatus || "",
+                  "Open Tickets": formData.openTickets || "",
+                  "Onboarding Score": onboardingScore,
+                  "Overall Score": overallScore,
+                  "Customer Org ID": orgId,
+                  "Updated Customer Contacts": updatedContacts,
+                  Subscription: subLabel,
+                },
+              },
+            ]);
           } catch (e) {
             console.error("Airtable create error (Handoff Form):", e?.response?.data || e.message);
           }
@@ -285,11 +358,15 @@ app.post("/webhook", async (req, res) => {
 function sendForm(roomId, type) {
   const form = formMap[type];
   if (!form) return;
-  return axios.post("https://webexapis.com/v1/messages", {
-    roomId,
-    markdown: `📋 Please complete the **${type}** form:`,
-    attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: form }]
-  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+  return axios.post(
+    "https://webexapis.com/v1/messages",
+    {
+      roomId,
+      markdown: `📋 Please complete the **${type}** form:`,
+      attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: form }],
+    },
+    { headers: { Authorization: WEBEX_BOT_TOKEN } }
+  );
 }
 
 async function startBot() {
@@ -307,4 +384,3 @@ async function startBot() {
 }
 
 startBot();
-

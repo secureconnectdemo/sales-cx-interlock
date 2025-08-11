@@ -1,84 +1,138 @@
+// utils/cards.js
 const fs = require("fs");
 const path = require("path");
 
-// load subscription → checklist id map
-function loadSubChecklistMap() {
-  const p = path.join(__dirname, "..", "config", "subscriptionChecklist.json");
-  return JSON.parse(fs.readFileSync(p, "utf8"));
-}
+// ---- loaders ---------------------------------------------------------------
+const loadCatalog = () =>
+  JSON.parse(
+    fs.readFileSync(path.join(__dirname, "..", "config", "tasksCatalog.json"), "utf8")
+  );
 
-// Unified picker for handoff (same look as /tasks picker)
-function buildHandoffSubPickerCard(subMap) {
+const loadSubChecklistMap = () =>
+  JSON.parse(
+    fs.readFileSync(path.join(__dirname, "..", "config", "subscriptionChecklist.json"), "utf8")
+  );
+
+// ---- cards: /tasks flow ----------------------------------------------------
+const buildSubscriptionPickerCard = (catalog) => ({
+  type: "AdaptiveCard",
+  $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
+  version: "1.2",
+  body: [
+    { type: "TextBlock", text: "Select Subscription Type", weight: "Bolder", size: "Medium" },
+    {
+      type: "Input.ChoiceSet",
+      id: "subscription",
+      style: "compact",
+      isMultiSelect: false,
+      choices: Object.entries(catalog).map(([key, v]) => ({ title: v.label, value: key }))
+    },
+    { type: "Input.Text", id: "formType", value: "taskSubscriptionSelect", isVisible: false }
+  ],
+  actions: [{ type: "Action.Submit", title: "Next" }]
+});
+
+const buildTaskPickerCard = (subscription, catalog) => {
+  const entry = catalog[subscription];
+  const tasks = entry?.tasks || [];
   return {
     type: "AdaptiveCard",
-    version: "1.2",
     $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
+    version: "1.2",
     body: [
-      { type: "TextBlock", text: "Select Subscription Type", weight: "Bolder", wrap: true },
-      { type: "TextBlock", text: "We’ll tailor the checklist for this handoff.", isSubtle: true, wrap: true, spacing: "Small" },
+      { type: "TextBlock", text: `Tasks for ${entry?.label || subscription}`, weight: "Bolder", size: "Medium" },
       {
         type: "Input.ChoiceSet",
-        id: "subscription",
-        style: "compact",
-        isMultiSelect: false,
-        choices: Object.entries(subMap).map(([k, v]) => ({ title: v.label, value: k }))
-      }
+        id: "tasks",
+        isMultiSelect: true,
+        choices: tasks.map(t => ({ title: t.label, value: t.id }))
+      },
+      { type: "Input.Text", id: "subscription", value: subscription, isVisible: false },
+      { type: "Input.Text", id: "formType", value: "taskListSubmit", isVisible: false }
     ],
-    actions: [{ type: "Action.Submit", title: "Next", data: { formType: "handoffSubscriptionSelect" } }]
+    actions: [{ type: "Action.Submit", title: "Create Checklist" }]
   };
-}
+};
 
-// Trim the base handoff form to only include selected checklist items.
-// Works by removing Input.Toggle blocks whose id is NOT in includeIds.
-function buildTrimmedHandoffForm(baseFormJson, subKey, subMap) {
-  const include = new Set((subMap[subKey]?.includeIds) || []);
-  const form = JSON.parse(JSON.stringify(baseFormJson)); // deep clone
+// ---- markdown checklist renderer for /tasks --------------------------------
+const buildChecklistMarkdown = (subscription, taskIds) => {
+  const catalog = loadCatalog();
+  const entry = catalog[subscription] || { label: subscription, tasks: [] };
+  const labelById = Object.fromEntries(entry.tasks.map(t => [t.id, t.label]));
+  const blocks = taskIds.map(id => `- [ ] ${labelById[id] || id}`);
+  return `### ${entry.label} — Checklist\n\n${blocks.join("\n")}`;
+};
 
-  function walk(node) {
-    if (!node || typeof node !== "object") return node;
+// ---- cards: /submit handoff flow -------------------------------------------
+const buildHandoffSubPickerCard = (subMap) => ({
+  type: "AdaptiveCard",
+  $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
+  version: "1.2",
+  body: [
+    { type: "TextBlock", text: "Secure Access Handoff — Select Subscription", weight: "Bolder", size: "Medium" },
+    {
+      type: "Input.ChoiceSet",
+      id: "subscription",
+      style: "compact",
+      isMultiSelect: false,
+      choices: Object.entries(subMap).map(([k, v]) => ({ title: v.label || k, value: k }))
+    },
+    { type: "Input.Text", id: "formType", value: "handoffSubscriptionSelect", isVisible: false }
+  ],
+  actions: [{ type: "Action.Submit", title: "Next" }]
+});
 
-    // remove Toggle inputs not in the include set (only applies to checklist toggles)
-    if (node.type === "Input.Toggle" && node.id && node.id.match(/^(pla|con|pol|vis|ope|suc)_/)) {
-      return include.has(node.id) ? node : null;
+// naive deep clone
+const clone = (obj) => JSON.parse(JSON.stringify(obj));
+
+/**
+ * Trim the full handoff card to only show checklist items present in includeIds.
+ * We hide non-included Input.Toggle items via isVisible=false and add a hidden
+ * "subscription" field.
+ */
+const buildTrimmedHandoffForm = (baseForm, subKey, subMap) => {
+  const includeIds = subMap[subKey]?.includeIds || [];
+  const card = clone(baseForm);
+
+  // recursive walk to hide Toggle inputs not in includeIds
+  const walk = (node) => {
+    if (Array.isArray(node)) { node.forEach(walk); return; }
+    if (!node || typeof node !== "object") return;
+
+    if (node.type === "Input.Toggle" && node.id && /^((pla|con|pol|vis|ope|suc)_\d+)$/.test(node.id)) {
+      if (!includeIds.includes(node.id)) node.isVisible = false;
     }
 
-    // recurse common container arrays
-    for (const key of ["body", "items", "columns"]) {
-      if (Array.isArray(node[key])) {
-        node[key] = node[key].map(walk).filter(Boolean);
-      }
-    }
-    // Adaptive Columns have "items" under each column item; handled above
-    return node;
-  }
-
-  const trimmed = walk(form);
-  // update title to include subscription label
-  const label = subMap[subKey]?.label || subKey;
-  if (trimmed?.body?.length && trimmed.body[0]?.type === "TextBlock") {
-    trimmed.body[0].text = `Secure Access Handoff Checklist — ${label}`;
-  }
-
-  // ensure submit action carries subscription key back to the bot
-  if (trimmed?.actions?.length) {
-    trimmed.actions = trimmed.actions.map(a => {
-      if (a.type === "Action.Submit") {
-        return { ...a, data: { ...(a.data || {}), formType: "secureAccessChecklist", subscription: subKey } };
-      }
-      return a;
+    // Recurse possible containers
+    ["body","items","columns","cards"].forEach(k => {
+      if (node[k]) walk(node[k]);
     });
+  };
+
+  walk(card);
+
+  // ensure hidden fields exist
+  card.body = card.body || [];
+  card.body.push({ type: "Input.Text", id: "subscription", value: subKey, isVisible: false });
+
+  // make sure formType is present (some base forms already have it)
+  const hasFormType = JSON.stringify(card).includes('"formType":"secureAccessChecklist"');
+  if (!hasFormType) {
+    card.body.push({ type: "Input.Text", id: "formType", value: "secureAccessChecklist", isVisible: false });
   }
-  return trimmed;
-}
+
+  // lock version to what Webex supports
+  card.version = "1.2";
+  card.$schema = "http://adaptivecards.io/schemas/adaptive-card.json";
+  return card;
+};
 
 module.exports = {
-  // keep your existing exports…
   loadCatalog,
   buildSubscriptionPickerCard,
   buildTaskPickerCard,
   buildChecklistMarkdown,
-  // new ones:
   loadSubChecklistMap,
   buildHandoffSubPickerCard,
-  buildTrimmedHandoffForm
+  buildTrimmedHandoffForm,
 };

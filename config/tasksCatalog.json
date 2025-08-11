@@ -1,0 +1,29 @@
+{
+  "DNS_DEFENSE": {
+    "label": "DNS Defense",
+    "tasks": [
+      { "id": "dns_precheck", "label": "Pre-check: Org & identities" },
+      { "id": "dns_va", "label": "Deploy Virtual Appliances" },
+      { "id": "dns_policies", "label": "Baseline Security/Content Policies" },
+      { "id": "dns_reports", "label": "Schedule stakeholder reports" }
+    ]
+  },
+  "SIA": {
+    "label": "Secure Internet Access (SIA)",
+    "tasks": [
+      { "id": "sia_root_cert", "label": "Root Cert & HTTPS Decryption" },
+      { "id": "sia_web_profiles", "label": "Web Profiles & Rule Ordering" },
+      { "id": "sia_file_scan", "label": "File Inspection / Sandboxing" },
+      { "id": "sia_activity_search", "label": "Activity Search & Alerts" }
+    ]
+  },
+  "SPA": {
+    "label": "Secure Private Access (SPA)",
+    "tasks": [
+      { "id": "spa_saml", "label": "SAML integration" },
+      { "id": "spa_ipsec", "label": "IPsec tunnel to edge" },
+      { "id": "spa_client", "label": "Secure Client modules & profiles" },
+      { "id": "spa_app_segments", "label": "App segments & least-privilege" }
+    ]
+  }
+}

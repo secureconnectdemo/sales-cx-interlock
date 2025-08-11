@@ -44,8 +44,14 @@ const postCard = (roomId, markdown, card) =>
 const isTrue = (v) => v === true || v === "true" || v === "on";
 
 // ---- Rooms / forms ----
+// keep your existing code:
 const STRATEGIC_CSS_ROOM_ID =
   "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
+
+// add this next to it:
+const STRATEGIC_CSS_ROOM_TITLE = process.env.STRATEGIC_CSS_ROOM_TITLE || "Strategic CSS";
+let strategicRoomIdCache = process.env.STRATEGIC_CSS_ROOM_ID || STRATEGIC_CSS_ROOM_ID;
+
 
 const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
@@ -288,7 +294,7 @@ app.post("/webhook", async (req, res) => {
           const summary = generateSummary(formData, customerName, submitterEmail, onboardingScore, overallScore, subLabel);
 
           try {
-            await sendMarkdown(STRATEGIC_CSS_ROOM_ID, summary);
+            await postToStrategic(summary);
           } catch (e) {
             console.warn("Post to Strategic room failed:", e?.response?.data || e.message);
             await sendMarkdown(replyRoomId, "⚠️ Couldn't post to Strategic CSS room. Check bot membership/room ID.");

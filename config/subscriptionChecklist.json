@@ -1,14 +1,25 @@
 {
   "SIA": {
     "label": "Secure Internet Access (SIA)",
-    "includeIds": ["pla_1","pla_2","con_1","con_2","con_3","con_5","con_6","pol_1","pol_2","pol_3","pol_4","pol_5","vis_2","vis_3","ope_3","ope_4","ope_5","suc_1","suc_2","suc_3"]
+    "includeIds": [
+      "pla_1","pla_2",
+      "con_1","con_2","con_3","con_5","con_6",
+      "pol_1","pol_2","pol_3","pol_4","pol_5",
+      "vis_2","vis_3",
+      "ope_3","ope_4","ope_5",
+      "suc_1","suc_2","suc_3"
+    ]
   },
   "DNS_DEFENSE": {
     "label": "DNS Defense",
-    "includeIds": ["pla_1","pla_2","con_2","vis_2","vis_3","ope_3","ope_4","ope_5","suc_1","suc_2","suc_3"]
-  },
-  "SPA": {
-    "label": "Secure Private Access (SPA)",
-    "includeIds": ["pla_1","pla_2","con_3","pol_1","pol_4","vis_2","ope_3","ope_4","suc_1","suc_2","suc_3"]
+    "includeIds": [
+      "pla_1","pla_2",
+      "con_1","con_2","con_3","con_6",
+      "pol_5",
+      "vis_2","vis_3",
+      "ope_3","ope_4","ope_5",
+      "suc_1","suc_2","suc_3"
+    ]
   }
 }
+

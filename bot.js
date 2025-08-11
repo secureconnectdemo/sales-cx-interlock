@@ -79,6 +79,7 @@ function calculateOverallScore(data, ids) {
 function capitalize(str) {
   return (str || "").charAt(0).toUpperCase() + (str || "").slice(1).toLowerCase();
 }
+
 const esc = (s) => (s || "").replace(/([*_`~>|[\]()])/g, "\\$1");
 
 function generateSummary(data, customer, submitter, onboardingScore, overallScore, subLabel = null) {
@@ -183,14 +184,18 @@ app.post("/webhook", async (req, res) => {
   // Continue async
   setImmediate(async () => {
     try {
-      if (resource === "messages") { // <-- fixed extra ')'
+      if (resource === "messages") { // <-- fixed
         const messageRes = await axios.get(`https://webexapis.com/v1/messages/${messageId}`, {
           headers: { Authorization: WEBEX_BOT_TOKEN },
         });
         if (messageRes.data.personId === BOT_PERSON_ID) return;
 
+        // Prefer markdown; fall back to text
         const raw = (messageRes.data.markdown || messageRes.data.text || "").trim();
-        const lines = raw.split("\n").map((l) => l.replace(/\s+/g, " ").trim().toLowerCase()).filter(Boolean);
+        const lines = raw
+          .split("\n")
+          .map((l) => l.replace(/\s+/g, " ").trim().toLowerCase())
+          .filter(Boolean);
 
         const mentioned = (data?.mentionedPeople || []).some((id) => id.toLowerCase() === BOT_PERSON_ID.toLowerCase());
         const isDirect = roomType === "direct";
@@ -229,14 +234,14 @@ app.post("/webhook", async (req, res) => {
         const formData = actionRes.data.inputs || {};
 
         // Hand-off: user picked subscription -> send trimmed handoff form
-        if (formData.formType === "handoffSubscriptionSelect")) { // <-- remove extra ')'
+        if (formData.formType === "handoffSubscriptionSelect") {
           const subMap = loadSubChecklistMap();
           const subKey = formData.subscription;
           if (!subMap[subKey]) {
             await sendText(data.roomId, "Unknown subscription.");
             return;
           }
-          const baseForm = formMap.handoff; // already loaded
+          const baseForm = formMap.handoff; // already loaded from /forms
           const trimmedForm = buildTrimmedHandoffForm(baseForm, subKey, subMap);
 
           await axios.post(
@@ -264,7 +269,7 @@ app.post("/webhook", async (req, res) => {
         }
 
         // /tasks step 2: tasks picked → post checklist + log
-        if (formData.formType === "taskListSubmit")) { // <-- fixed
+        if (formData.formType === "taskListSubmit") { // <-- fixed
           const selected = (formData.tasks || "").split(",").map((s) => s.trim()).filter(Boolean);
           if (!selected.length) {
             await sendText(data.roomId, "No tasks selected.");
@@ -290,7 +295,7 @@ app.post("/webhook", async (req, res) => {
         }
 
         // Secure Access handoff submit → score, summarize, log
-        if (formData.formType === "secureAccessChecklist")) { // <-- fixed
+        if (formData.formType === "secureAccessChecklist") { // <-- fixed
           const subMap = loadSubChecklistMap();
           const subKey = formData.subscription || "SIA";
           const includeIds = subMap[subKey]?.includeIds || [];

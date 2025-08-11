@@ -1,4 +1,4 @@
-// bot.js
+
 const {
   loadCatalog,
   buildSubscriptionPickerCard,

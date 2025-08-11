@@ -184,18 +184,14 @@ app.post("/webhook", async (req, res) => {
   // Continue async
   setImmediate(async () => {
     try {
-      if (resource === "messages") { // <-- fixed
+      if (resource === "messages") {
         const messageRes = await axios.get(`https://webexapis.com/v1/messages/${messageId}`, {
           headers: { Authorization: WEBEX_BOT_TOKEN },
         });
         if (messageRes.data.personId === BOT_PERSON_ID) return;
 
-        // Prefer markdown; fall back to text
         const raw = (messageRes.data.markdown || messageRes.data.text || "").trim();
-        const lines = raw
-          .split("\n")
-          .map((l) => l.replace(/\s+/g, " ").trim().toLowerCase())
-          .filter(Boolean);
+        const lines = raw.split("\n").map(l => l.replace(/\s+/g, " ").trim().toLowerCase()).filter(Boolean);
 
         const mentioned = (data?.mentionedPeople || []).some((id) => id.toLowerCase() === BOT_PERSON_ID.toLowerCase());
         const isDirect = roomType === "direct";
@@ -203,14 +199,12 @@ app.post("/webhook", async (req, res) => {
 
         const hasCmd = (cmd) => lines.some((l) => l === cmd || l.includes(` ${cmd}`) || l.startsWith(cmd));
 
-        // /submit handoff -> show subscription picker
         if (hasCmd("/submit handoff")) {
           const subMap = loadSubChecklistMap();
           await postCard(roomId, "📋 Choose subscription for this handoff:", buildHandoffSubPickerCard(subMap));
           return;
         }
 
-        // /tasks -> task picker flow
         if (hasCmd("/tasks")) {
           const catalog = loadCatalog();
           await postCard(roomId, "🧭 Pick a subscription to see relevant tasks.", buildSubscriptionPickerCard(catalog));
@@ -221,33 +215,32 @@ app.post("/webhook", async (req, res) => {
         return;
       }
 
+      if (resource === "attachmentActions")) return; // should never happen
       if (resource === "attachmentActions") {
         const idPattern = /^[a-zA-Z0-9_-]+$/;
-        if (!idPattern.test(data.id)) {
-          console.error("Invalid attachment action id");
-          return;
-        }
+        if (!idPattern.test(data.id)) { console.error("Invalid attachment action id"); return; }
 
         const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
           headers: { Authorization: WEBEX_BOT_TOKEN },
         });
         const formData = actionRes.data.inputs || {};
 
-        // Hand-off: user picked subscription -> send trimmed handoff form
+        // Always answer in the room from the action payload
+        const replyRoomId = actionRes?.data?.roomId || data.roomId;
+
+        // Step A: picked subscription -> send trimmed handoff form
         if (formData.formType === "handoffSubscriptionSelect") {
           const subMap = loadSubChecklistMap();
           const subKey = formData.subscription;
           if (!subMap[subKey]) {
-            await sendText(data.roomId, "Unknown subscription.");
+            await sendText(replyRoomId, "Unknown subscription.");
             return;
           }
-          const baseForm = formMap.handoff; // already loaded from /forms
-          const trimmedForm = buildTrimmedHandoffForm(baseForm, subKey, subMap);
-
+          const trimmedForm = buildTrimmedHandoffForm(formMap.handoff, subKey, subMap);
           await axios.post(
             "https://webexapis.com/v1/messages",
             {
-              roomId: data.roomId,
+              roomId: replyRoomId,
               markdown: "📋 Please complete the **Secure Access Handoff** form:",
               attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: trimmedForm }],
             },
@@ -256,46 +249,38 @@ app.post("/webhook", async (req, res) => {
           return;
         }
 
-        // /tasks step 1: subscription picked → show tasks
-        if (formData.formType === "taskSubscriptionSelect") {
+        // Step B: /tasks select subscription
+        if (formData.formType === "taskSubscriptionSelect")) {
           const catalog = loadCatalog();
           const sub = formData.subscription;
-          if (!catalog[sub]) {
-            await sendText(data.roomId, "Unknown subscription.");
-            return;
-          }
-          await postCard(data.roomId, "📋 Choose tasks:", buildTaskPickerCard(sub, catalog));
+          if (!catalog[sub]) { await sendText(replyRoomId, "Unknown subscription."); return; }
+          await postCard(replyRoomId, "📋 Choose tasks:", buildTaskPickerCard(sub, catalog));
           return;
         }
 
-        // /tasks step 2: tasks picked → post checklist + log
-        if (formData.formType === "taskListSubmit") { // <-- fixed
+        // Step C: /tasks submit tasks
+        if (formData.formType === "taskListSubmit")) {
           const selected = (formData.tasks || "").split(",").map((s) => s.trim()).filter(Boolean);
-          if (!selected.length) {
-            await sendText(data.roomId, "No tasks selected.");
-            return;
-          }
+          if (!selected.length) { await sendText(replyRoomId, "No tasks selected."); return; }
           const msg = buildChecklistMarkdown(formData.subscription, selected);
-          await sendMarkdown(data.roomId, msg);
+          await sendMarkdown(replyRoomId, msg);
 
           try {
-            await base("Task Selections").create([
-              {
-                fields: {
-                  Subscription: formData.subscription,
-                  Tasks: selected,
-                  "Submitted By": actionRes?.data?.personEmail || "",
-                },
+            await base("Task Selections").create([{
+              fields: {
+                Subscription: formData.subscription,
+                Tasks: selected,
+                "Submitted By": actionRes?.data?.personEmail || "",
               },
-            ]);
+            }]);
           } catch (e) {
             console.error("Airtable log error:", e?.response?.data || e.message);
           }
           return;
         }
 
-        // Secure Access handoff submit → score, summarize, log
-        if (formData.formType === "secureAccessChecklist") { // <-- fixed
+        // Step D: handoff submit -> score, summarize, log
+        if (formData.formType === "secureAccessChecklist") {
           const subMap = loadSubChecklistMap();
           const subKey = formData.subscription || "SIA";
           const includeIds = subMap[subKey]?.includeIds || [];
@@ -310,38 +295,43 @@ app.post("/webhook", async (req, res) => {
           const overallScore = calculateOverallScore(formData, includeIds);
           const summary = generateSummary(formData, customerName, submitterEmail, onboardingScore, overallScore, subLabel);
 
-          await sendMarkdown(STRATEGIC_CSS_ROOM_ID, summary);
-          await sendMarkdown(data.roomId, "✅ Submission received and summary sent to Strategic CSS room.");
-          await sendMarkdown(data.roomId, `📋 **Please copy/paste into Console case notes:**\n\n${summary}`);
+          // Try Strategic room first; fall back to user room if it fails
+          try {
+            await sendMarkdown(STRATEGIC_CSS_ROOM_ID, summary);
+          } catch (e) {
+            console.warn("Post to Strategic room failed:", e?.response?.data || e.message);
+            await sendMarkdown(replyRoomId, "⚠️ Couldn't post to Strategic CSS room. Check bot membership/room ID.");
+          }
 
-          const parsedBlockers = (formData.adoptionBlockers || "").split(",").map((v) => v.trim()).filter(Boolean);
+          await sendMarkdown(replyRoomId, "✅ Submission received and summary sent.");
+          await sendMarkdown(replyRoomId, `📋 **Please copy/paste into Console case notes:**\n\n${summary}`);
+
+          const parsedBlockers  = (formData.adoptionBlockers || "").split(",").map((v) => v.trim()).filter(Boolean);
           const parsedExpansion = (formData.expansionInterests || "").split(",").map((v) => v.trim()).filter(Boolean);
-          const parsedUseCases = (formData.primaryUseCases || "").split(",").map((v) => v.trim()).filter(Boolean);
+          const parsedUseCases  = (formData.primaryUseCases || "").split(",").map((v) => v.trim()).filter(Boolean);
 
           try {
-            await base("Handoff Form").create([
-              {
-                fields: {
-                  "Customer Name": customerName,
-                  "Submitted By": submitterEmail,
-                  "Action Plan Link": formData.actionPlanLink || "",
-                  "Close Date": formData.actionPlanCloseDate || "",
-                  "Adoption Blockers": parsedBlockers,
-                  "Expansion Interests": parsedExpansion,
-                  "Primary Use Cases": parsedUseCases,
-                  "Strategic CSS": formData.strategicCss || "",
-                  Comments: formData.comments || "",
-                  "Customer Pulse": formData.customerPulse || "",
-                  "Account Status": formData.accountStatus || "",
-                  "Open Tickets": formData.openTickets || "",
-                  "Onboarding Score": onboardingScore,
-                  "Overall Score": overallScore,
-                  "Customer Org ID": orgId,
-                  "Updated Customer Contacts": updatedContacts,
-                  Subscription: subLabel,
-                },
+            await base("Handoff Form").create([{
+              fields: {
+                "Customer Name": customerName,
+                "Submitted By": submitterEmail,
+                "Action Plan Link": formData.actionPlanLink || "",
+                "Close Date": formData.actionPlanCloseDate || "",
+                "Adoption Blockers": parsedBlockers,
+                "Expansion Interests": parsedExpansion,
+                "Primary Use Cases": parsedUseCases,
+                "Strategic CSS": formData.strategicCss || "",
+                Comments: formData.comments || "",
+                "Customer Pulse": formData.customerPulse || "",
+                "Account Status": formData.accountStatus || "",
+                "Open Tickets": formData.openTickets || "",
+                "Onboarding Score": onboardingScore,
+                "Overall Score": overallScore,
+                "Customer Org ID": orgId,
+                "Updated Customer Contacts": updatedContacts,
+                Subscription: subLabel,
               },
-            ]);
+            }]);
           } catch (e) {
             console.error("Airtable create error (Handoff Form):", e?.response?.data || e.message);
           }
@@ -369,10 +359,28 @@ function sendForm(roomId, type) {
   );
 }
 
+async function ensureStrategicRoomMembership() {
+  try {
+    await axios.post(
+      "https://webexapis.com/v1/memberships",
+      { roomId: STRATEGIC_CSS_ROOM_ID, personId: BOT_PERSON_ID },
+      { headers: { Authorization: WEBEX_BOT_TOKEN } }
+    );
+    console.log("Joined Strategic CSS room");
+  } catch (e) {
+    if (e.response?.status === 409) {
+      console.log("Already a member of Strategic CSS room");
+    } else {
+      console.warn("Could not join Strategic CSS room:", e.response?.data || e.message);
+    }
+  }
+}
+
 async function startBot() {
   try {
     const res = await axios.get("https://webexapis.com/v1/people/me", { headers: { Authorization: WEBEX_BOT_TOKEN } });
     BOT_PERSON_ID = res.data.id;
+    await ensureStrategicRoomMembership();
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, function () {
       console.log("🚀 SSE-CX-Hub bot is running on port", PORT);

@@ -51,6 +51,52 @@ const STRATEGIC_CSS_ROOM_ID =
 // add this next to it:
 const STRATEGIC_CSS_ROOM_TITLE = process.env.STRATEGIC_CSS_ROOM_TITLE || "Strategic CSS";
 let strategicRoomIdCache = process.env.STRATEGIC_CSS_ROOM_ID || STRATEGIC_CSS_ROOM_ID;
+// Resolve-by-title fallback + cache
+const STRATEGIC_CSS_ROOM_TITLE = process.env.STRATEGIC_CSS_ROOM_TITLE || "Strategic CSS";
+let strategicRoomIdCache = process.env.STRATEGIC_CSS_ROOM_ID || STRATEGIC_CSS_ROOM_ID;
+
+async function resolveRoomIdByTitle(title) {
+  const res = await axios.get("https://webexapis.com/v1/rooms?type=group&max=1000", {
+    headers: { Authorization: WEBEX_BOT_TOKEN },
+  });
+  const room = (res.data.items || []).find(
+    r => (r.title || "").trim().toLowerCase() === title.toLowerCase()
+  );
+  if (!room) throw new Error(`Room titled "${title}" not found or bot lacks access`);
+  return room.id;
+}
+
+async function ensureMembership(roomId) {
+  try {
+    await axios.post("https://webexapis.com/v1/memberships",
+      { roomId, personId: BOT_PERSON_ID },
+      { headers: { Authorization: WEBEX_BOT_TOKEN } }
+    );
+  } catch (e) {
+    if (e.response?.status !== 409) {
+      console.warn("Membership check/add failed:", e.response?.data || e.message);
+    }
+  }
+}
+
+async function postToStrategic(markdown) {
+  // 1) try the cached/constant ID
+  try {
+    await ensureMembership(strategicRoomIdCache);
+    await sendMarkdown(strategicRoomIdCache, markdown);
+    return;
+  } catch (e) {
+    const payload = e.response?.data || e.message;
+    const isIdIssue = e.response?.status === 404 || /could not find a room/i.test(String(payload));
+    if (!isIdIssue) throw e; // not an ID problem — bubble up
+    console.warn("Strategic post failed with cached ID; re-resolving:", payload);
+  }
+
+  // 2) fallback: resolve by title, update cache, ensure membership, retry once
+  strategicRoomIdCache = await resolveRoomIdByTitle(STRATEGIC_CSS_ROOM_TITLE);
+  await ensureMembership(strategicRoomIdCache);
+  await sendMarkdown(strategicRoomIdCache, markdown);
+}
 
 
 const formMap = {

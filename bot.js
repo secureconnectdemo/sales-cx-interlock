@@ -4,6 +4,21 @@ Airtable.configure({
   endpointUrl: "https://api.airtable.com",
   apiKey: process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN,
 });
+const { loadCatalog, buildSubscriptionPickerCard, buildTaskPickerCard, buildChecklistMarkdown } = require("./utils/cards");
+const sendText = (roomId, text) =>
+  axios.post("https://webexapis.com/v1/messages", { roomId, text }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
+const sendMarkdown = (roomId, markdown) =>
+  axios.post("https://webexapis.com/v1/messages", { roomId, markdown }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
+const postCard = (roomId, markdown, card) =>
+  axios.post("https://webexapis.com/v1/messages", {
+    roomId, markdown, attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: card }]
+  }, { headers: { Authorization: WEBEX_BOT_TOKEN } });
+
+const isTrue = v => v === true || v === "true" || v === "on";
+
+
 
 const base = Airtable.base("appG1ZNhb2KRKQQOI");
 const fs = require("fs");

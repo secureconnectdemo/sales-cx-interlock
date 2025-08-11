@@ -15,16 +15,18 @@ const path = require("path");
 const express = require("express");
 const axios = require("axios");
 
+// ---------- Airtable ----------
 Airtable.configure({
   endpointUrl: "https://api.airtable.com",
   apiKey: process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN,
 });
-
 const base = Airtable.base("appG1ZNhb2KRKQQOI");
+
+// ---------- App ----------
 const app = express();
 app.use(express.json());
 
-// ---- Webex helpers ----
+// ---------- Webex helpers ----------
 const WEBEX_BOT_TOKEN = `Bearer ${process.env.WEBEX_BOT_TOKEN}`;
 let BOT_PERSON_ID = "";
 
@@ -43,15 +45,10 @@ const postCard = (roomId, markdown, card) =>
 
 const isTrue = (v) => v === true || v === "true" || v === "on";
 
-// ---- Rooms / forms ----
-// keep your existing code:
+// ---------- Rooms / forms ----------
 const STRATEGIC_CSS_ROOM_ID =
   "Y2lzY29zcGFyazovL3VzL1JPT00vMTlhNjE0YzAtMTdjYi0xMWYwLWFhZjUtNDExZmQ2MTY1ZTM1";
 
-// add this next to it:
-const STRATEGIC_CSS_ROOM_TITLE = process.env.STRATEGIC_CSS_ROOM_TITLE || "Strategic CSS";
-let strategicRoomIdCache = process.env.STRATEGIC_CSS_ROOM_ID || STRATEGIC_CSS_ROOM_ID;
-// Resolve-by-title fallback + cache
 const STRATEGIC_CSS_ROOM_TITLE = process.env.STRATEGIC_CSS_ROOM_TITLE || "Strategic CSS";
 let strategicRoomIdCache = process.env.STRATEGIC_CSS_ROOM_ID || STRATEGIC_CSS_ROOM_ID;
 
@@ -60,7 +57,7 @@ async function resolveRoomIdByTitle(title) {
     headers: { Authorization: WEBEX_BOT_TOKEN },
   });
   const room = (res.data.items || []).find(
-    r => (r.title || "").trim().toLowerCase() === title.toLowerCase()
+    (r) => (r.title || "").trim().toLowerCase() === title.toLowerCase()
   );
   if (!room) throw new Error(`Room titled "${title}" not found or bot lacks access`);
   return room.id;
@@ -68,7 +65,8 @@ async function resolveRoomIdByTitle(title) {
 
 async function ensureMembership(roomId) {
   try {
-    await axios.post("https://webexapis.com/v1/memberships",
+    await axios.post(
+      "https://webexapis.com/v1/memberships",
       { roomId, personId: BOT_PERSON_ID },
       { headers: { Authorization: WEBEX_BOT_TOKEN } }
     );
@@ -80,24 +78,22 @@ async function ensureMembership(roomId) {
 }
 
 async function postToStrategic(markdown) {
-  // 1) try the cached/constant ID
+  // Try cached/constant ID first
   try {
     await ensureMembership(strategicRoomIdCache);
     await sendMarkdown(strategicRoomIdCache, markdown);
     return;
   } catch (e) {
     const payload = e.response?.data || e.message;
-    const isIdIssue = e.response?.status === 404 || /could not find a room/i.test(String(payload));
-    if (!isIdIssue) throw e; // not an ID problem — bubble up
+    const idProblem = e.response?.status === 404 || /could not find a room/i.test(String(payload));
+    if (!idProblem) throw e;
     console.warn("Strategic post failed with cached ID; re-resolving:", payload);
   }
-
-  // 2) fallback: resolve by title, update cache, ensure membership, retry once
+  // Fallback: resolve by title, cache, ensure membership, retry
   strategicRoomIdCache = await resolveRoomIdByTitle(STRATEGIC_CSS_ROOM_TITLE);
   await ensureMembership(strategicRoomIdCache);
   await sendMarkdown(strategicRoomIdCache, markdown);
 }
-
 
 const formMap = {
   deployment: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "engineeringDeploymentForm.json"), "utf8")),
@@ -105,7 +101,7 @@ const formMap = {
   handoff: JSON.parse(fs.readFileSync(path.join(__dirname, "forms", "secureAccessHandoffForm.json"), "utf8")),
 };
 
-// ---- Scoring / summary helpers ----
+// ---------- Scoring / summary helpers ----------
 function calculateChecklistScore(data, ids) {
   const defaultIds = [
     "pla_1","pla_2","con_1","con_2","con_3","con_5","con_6",
@@ -131,7 +127,6 @@ function calculateOverallScore(data, ids) {
 function capitalize(str) {
   return (str || "").charAt(0).toUpperCase() + (str || "").slice(1).toLowerCase();
 }
-
 const esc = (s) => (s || "").replace(/([*_`~>|[\]()])/g, "\\$1");
 
 function generateSummary(data, customer, submitter, onboardingScore, overallScore, subLabel = null) {
@@ -218,7 +213,7 @@ ${expansion}
 > ${esc(data.comments || "None")}`;
 }
 
-// ---- Routes ----
+// ---------- Routes ----------
 app.get("/test", (req, res) => {
   res.send("✅ SSE-CX-Hub bot is up and running");
 });
@@ -230,10 +225,9 @@ app.post("/webhook", async (req, res) => {
   const messageId = data?.id;
   if (!roomId || !messageId) return res.sendStatus(400);
 
-  // ACK immediately
+  // ACK quickly
   res.sendStatus(200);
 
-  // Continue async
   setImmediate(async () => {
     try {
       if (resource === "messages") {
@@ -265,169 +259,165 @@ app.post("/webhook", async (req, res) => {
 
         await sendMarkdown(roomId, "⚠️ Unknown command. Try `/tasks` or `/submit handoff`.");
         return;
-      } else if (resource === "attachmentActions") {
-        const idPattern = /^[a-zA-Z0-9_-]+$/;
-        if (!idPattern.test(data.id)) { console.error("Invalid attachment action id"); return; }
-
-        const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
-          headers: { Authorization: WEBEX_BOT_TOKEN },
-        });
-        const formData = actionRes.data.inputs || {};
-        const replyRoomId = actionRes?.data?.roomId || data.roomId;
-
-        // A) handoff subscription -> trimmed form
-        if (formData.formType === "handoffSubscriptionSelect") {
-          const subMap = loadSubChecklistMap();
-          const subKey = formData.subscription;
-          if (!subMap[subKey]) { await sendText(replyRoomId, "Unknown subscription."); return; }
-          const trimmedForm = buildTrimmedHandoffForm(formMap.handoff, subKey, subMap);
-          await axios.post(
-            "https://webexapis.com/v1/messages",
-            {
-              roomId: replyRoomId,
-              markdown: "📋 Please complete the **Secure Access Handoff** form:",
-              attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: trimmedForm }],
-            },
-            { headers: { Authorization: WEBEX_BOT_TOKEN } }
-          );
-          return;
-        }
-
-        // B) /tasks subscription -> task picker
-        if (formData.formType === "taskSubscriptionSelect") {
-          const catalog = loadCatalog();
-          const sub = formData.subscription;
-          if (!catalog[sub]) { await sendText(replyRoomId, "Unknown subscription."); return; }
-          await postCard(replyRoomId, "📋 Choose tasks:", buildTaskPickerCard(sub, catalog));
-          return;
-        }
-
-        // C) /tasks submit -> checklist
-        if (formData.formType === "taskListSubmit") {
-          const selected = (formData.tasks || "").split(",").map((s) => s.trim()).filter(Boolean);
-          if (!selected.length) { await sendText(replyRoomId, "No tasks selected."); return; }
-          const msg = buildChecklistMarkdown(formData.subscription, selected);
-          await sendMarkdown(replyRoomId, msg);
-
-          try {
-            await base("Task Selections").create([{
-              fields: {
-                Subscription: formData.subscription,
-                Tasks: selected,
-                "Submitted By": actionRes?.data?.personEmail || "",
-              },
-            }]);
-          } catch (e) {
-            console.error("Airtable log error:", e?.response?.data || e.message);
-          }
-          return;
-        }
-
-        // D) handoff submit -> score, summarize, log
-        if (formData.formType === "secureAccessChecklist") {
-          const subMap = loadSubChecklistMap();
-          const subKey = formData.subscription || "SIA";
-          const includeIds = subMap[subKey]?.includeIds || [];
-          const subLabel = subMap[subKey]?.label || subKey;
-
-          const customerName = formData.customerName || "";
-          const submitterEmail = formData.submittedBy || "";
-          const orgId = formData.orgId || "";
-          const updatedContacts = formData.updatedContacts || "";
-
-          const onboardingScore = calculateChecklistScore(formData, includeIds);
-          const overallScore = calculateOverallScore(formData, includeIds);
-          const summary = generateSummary(formData, customerName, submitterEmail, onboardingScore, overallScore, subLabel);
-
-          try {
-            await postToStrategic(summary);
-          } catch (e) {
-            console.warn("Post to Strategic room failed:", e?.response?.data || e.message);
-            await sendMarkdown(replyRoomId, "⚠️ Couldn't post to Strategic CSS room. Check bot membership/room ID.");
-          }
-
-          await sendMarkdown(replyRoomId, "✅ Submission received and summary sent.");
-          await sendMarkdown(replyRoomId, `📋 **Please copy/paste into Console case notes:**\n\n${summary}`);
-
-          const parsedBlockers  = (formData.adoptionBlockers || "").split(",").map((v) => v.trim()).filter(Boolean);
-          const parsedExpansion = (formData.expansionInterests || "").split(",").map((v) => v.trim()).filter(Boolean);
-          const parsedUseCases  = (formData.primaryUseCases || "").split(",").map((v) => v.trim()).filter(Boolean);
-
-          try {
-            await base("Handoff Form").create([{
-              fields: {
-                "Customer Name": customerName,
-                "Submitted By": submitterEmail,
-                "Action Plan Link": formData.actionPlanLink || "",
-                "Close Date": formData.actionPlanCloseDate || "",
-                "Adoption Blockers": parsedBlockers,
-                "Expansion Interests": parsedExpansion,
-                "Primary Use Cases": parsedUseCases,
-                "Strategic CSS": formData.strategicCss || "",
-                Comments: formData.comments || "",
-                "Customer Pulse": formData.customerPulse || "",
-                "Account Status": formData.accountStatus || "",
-                "Open Tickets": formData.openTickets || "",
-                "Onboarding Score": onboardingScore,
-                "Overall Score": overallScore,
-                "Customer Org ID": orgId,
-                "Updated Customer Contacts": updatedContacts,
-                Subscription: subLabel,
-              },
-            }]);
-          } catch (e) {
-            console.error("Airtable create error (Handoff Form):", e?.response?.data || e.message);
-          }
-          return;
-        }
       }
+
+      if (resource === "attachmentActions")) return; // should never happen
     } catch (err) {
       console.error("❌ Error handling webhook:", err?.response?.data || err.message);
     }
   });
 });
 
-// ---- helpers ----
-function sendForm(roomId, type) {
-  const form = formMap[type];
-  if (!form) return;
-  return axios.post(
-    "https://webexapis.com/v1/messages",
-    {
-      roomId,
-      markdown: `📋 Please complete the **${type}** form:`,
-      attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: form }],
-    },
-    { headers: { Authorization: WEBEX_BOT_TOKEN } }
-  );
-}
+// Webex sends "attachmentActions" as separate webhook events
+app.post("/webhook", async (req, res) => {
+  res.sendStatus(200); // double-ACK to be safe
+});
 
-async function ensureStrategicRoomMembership() {
-  try {
-    await axios.post(
-      "https://webexapis.com/v1/memberships",
-      { roomId: STRATEGIC_CSS_ROOM_ID, personId: BOT_PERSON_ID },
-      { headers: { Authorization: WEBEX_BOT_TOKEN } }
-    );
-    console.log("Joined Strategic CSS room");
-  } catch (e) {
-    if (e.response?.status === 409) {
-      console.log("Already a member of Strategic CSS room");
-    } else {
-      console.warn("Could not join Strategic CSS room:", e.response?.data || e.message);
-    }
+// Dedicated handler to keep logic clean
+app.use(async (req, res, next) => {
+  if (req.body?.resource !== "attachmentActions") return next();
+
+  const { data } = req.body;
+  const idPattern = /^[a-zA-Z0-9_-]+$/;
+  if (!idPattern.test(data.id)) {
+    console.error("Invalid attachment action id");
+    return;
   }
-}
 
+  try {
+    const actionRes = await axios.get(`https://webexapis.com/v1/attachment/actions/${data.id}`, {
+      headers: { Authorization: WEBEX_BOT_TOKEN },
+    });
+    const formData = actionRes.data.inputs || {};
+    const replyRoomId = actionRes?.data?.roomId || req.body?.data?.roomId;
+
+    // A) handoff subscription -> trimmed form
+    if (formData.formType === "handoffSubscriptionSelect") {
+      const subMap = loadSubChecklistMap();
+      const subKey = formData.subscription;
+      if (!subMap[subKey]) { await sendText(replyRoomId, "Unknown subscription."); return; }
+      const trimmedForm = buildTrimmedHandoffForm(formMap.handoff, subKey, subMap);
+
+      await axios.post(
+        "https://webexapis.com/v1/messages",
+        {
+          roomId: replyRoomId,
+          markdown: "📋 Please complete the **Secure Access Handoff** form:",
+          attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content: trimmedForm }],
+        },
+        { headers: { Authorization: WEBEX_BOT_TOKEN } }
+      );
+      return;
+    }
+
+    // B) /tasks subscription -> task picker
+    if (formData.formType === "taskSubscriptionSelect") {
+      const catalog = loadCatalog();
+      const sub = formData.subscription;
+      if (!catalog[sub]) { await sendText(replyRoomId, "Unknown subscription."); return; }
+      await postCard(replyRoomId, "📋 Choose tasks:", buildTaskPickerCard(sub, catalog));
+      return;
+    }
+
+    // C) /tasks submit -> checklist
+    if (formData.formType === "taskListSubmit") {
+      const selected = (formData.tasks || "").split(",").map((s) => s.trim()).filter(Boolean);
+      if (!selected.length) { await sendText(replyRoomId, "No tasks selected."); return; }
+      const msg = buildChecklistMarkdown(formData.subscription, selected);
+      await sendMarkdown(replyRoomId, msg);
+
+      try {
+        await base("Task Selections").create([{
+          fields: {
+            Subscription: formData.subscription,
+            Tasks: selected,
+            "Submitted By": actionRes?.data?.personEmail || "",
+          },
+        }]);
+      } catch (e) {
+        console.error("Airtable log error:", e?.response?.data || e.message);
+      }
+      return;
+    }
+
+    // D) handoff submit -> score, summarize, log
+    if (formData.formType === "secureAccessChecklist") {
+      const subMap = loadSubChecklistMap();
+      const subKey = formData.subscription || "SIA";
+      const includeIds = subMap[subKey]?.includeIds || [];
+      const subLabel = subMap[subKey]?.label || subKey;
+
+      const customerName = formData.customerName || "";
+      const submitterEmail = formData.submittedBy || "";
+      const orgId = formData.orgId || "";
+      const updatedContacts = formData.updatedContacts || "";
+
+      const onboardingScore = calculateChecklistScore(formData, includeIds);
+      const overallScore = calculateOverallScore(formData, includeIds);
+      const summary = generateSummary(formData, customerName, submitterEmail, onboardingScore, overallScore, subLabel);
+
+      try {
+        await postToStrategic(summary);
+      } catch (e) {
+        console.warn("Post to Strategic room failed:", e?.response?.data || e.message);
+        await sendMarkdown(replyRoomId, "⚠️ Couldn't post to Strategic CSS room. Check bot membership/room ID.");
+      }
+
+      await sendMarkdown(replyRoomId, "✅ Submission received and summary sent.");
+      await sendMarkdown(replyRoomId, `📋 **Please copy/paste into Console case notes:**\n\n${summary}`);
+
+      const parsedBlockers  = (formData.adoptionBlockers || "").split(",").map((v) => v.trim()).filter(Boolean);
+      const parsedExpansion = (formData.expansionInterests || "").split(",").map((v) => v.trim()).filter(Boolean);
+      const parsedUseCases  = (formData.primaryUseCases || "").split(",").map((v) => v.trim()).filter(Boolean);
+
+      try {
+        await base("Handoff Form").create([{
+          fields: {
+            "Customer Name": customerName,
+            "Submitted By": submitterEmail,
+            "Action Plan Link": formData.actionPlanLink || "",
+            "Close Date": formData.actionPlanCloseDate || "",
+            "Adoption Blockers": parsedBlockers,
+            "Expansion Interests": parsedExpansion,
+            "Primary Use Cases": parsedUseCases,
+            "Strategic CSS": formData.strategicCss || "",
+            Comments: formData.comments || "",
+            "Customer Pulse": formData.customerPulse || "",
+            "Account Status": formData.accountStatus || "",
+            "Open Tickets": formData.openTickets || "",
+            "Onboarding Score": onboardingScore,
+            "Overall Score": overallScore,
+            "Customer Org ID": orgId,
+            "Updated Customer Contacts": updatedContacts,
+            Subscription: subLabel, // keep only if this field exists in Airtable
+          },
+        }]);
+      } catch (e) {
+        console.error("Airtable create error (Handoff Form):", e?.response?.data || e.message);
+      }
+      return;
+    }
+  } catch (err) {
+    console.error("❌ Error handling attachmentActions:", err?.response?.data || err.message);
+  }
+});
+
+// ---------- Startup ----------
 async function startBot() {
   try {
-    const res = await axios.get("https://webexapis.com/v1/people/me", { headers: { Authorization: WEBEX_BOT_TOKEN } });
-    BOT_PERSON_ID = res.data.id;
-    await ensureStrategicRoomMembership();
+    const me = await axios.get("https://webexapis.com/v1/people/me", { headers: { Authorization: WEBEX_BOT_TOKEN } });
+    BOT_PERSON_ID = me.data.id;
+
+    // Try to resolve Strategic room at startup (best effort; postToStrategic will retry anyway)
+    try {
+      strategicRoomIdCache = await resolveRoomIdByTitle(STRATEGIC_CSS_ROOM_TITLE);
+      await ensureMembership(strategicRoomIdCache);
+    } catch (e) {
+      console.warn("Startup room resolve/membership best-effort failed (will retry on post):", e?.response?.data || e.message);
+    }
+
     const PORT = process.env.PORT || 3000;
-    app.listen(PORT, function () {
-      console.log("🚀 SSE-CX-Hub bot is running on port", PORT);
-    });
+    app.listen(PORT, () => console.log("🚀 SSE-CX-Hub bot is running on port", PORT));
   } catch (err) {
     console.error("❌ Failed to start bot:", err.message);
     process.exit(1);

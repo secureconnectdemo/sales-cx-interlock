@@ -1,4 +1,6 @@
 // utils/cards.js
+const fs = require("fs");
+const path = require("path"); // <-- missing before
 
 function loadCatalog() {
   const p = path.join(__dirname, "..", "config", "tasksCatalog.json");
@@ -7,7 +9,6 @@ function loadCatalog() {
 
 const getSubLabel = (catalog, key) => (catalog[key]?.label || key);
 
-// 1) Subscription picker stays the same
 function buildSubscriptionPickerCard(catalog) {
   return {
     type: "AdaptiveCard",
@@ -28,7 +29,6 @@ function buildSubscriptionPickerCard(catalog) {
   };
 }
 
-// 2) Task picker: same header/instructions for all subs; ONLY the choices change
 function buildTaskPickerCard(subscriptionKey, catalog) {
   const sub = catalog[subscriptionKey];
   return {
@@ -46,20 +46,13 @@ function buildTaskPickerCard(subscriptionKey, catalog) {
         choices: sub.tasks.map(t => ({ title: t.label, value: t.id }))
       }
     ],
-    actions: [
-      { type: "Action.Submit", title: "Create Checklist", data: { formType: "taskListSubmit", subscription: subscriptionKey } }
-    ]
+    actions: [{ type: "Action.Submit", title: "Create Checklist", data: { formType: "taskListSubmit", subscription: subscriptionKey } }]
   };
 }
 
-// 3) Checklist message: same title every time; include subscription as a line item
-const titleMap = { DNS_DEFENSE: "DNS Defense", SIA: "Secure Internet Access", SPA: "Secure Private Access" };
-
-function buildChecklistMarkdown(subscription, taskIds) {
-  const header = "Selected Tasks — Checklist"; // unified header
-  const subLine = `**Subscription:** ${titleMap[subscription] || subscription}`;
-  const blocks = taskIds.map(id => taskRenderers[id]?.() || `• ${id}`);
-  return `### ${header}\n${subLine}\n${blocks.map(b => `\n${b}`).join("\n")}`;
-}
-
-module.exports = { loadCatalog, buildSubscriptionPickerCard, buildTaskPickerCard, buildChecklistMarkdown };
+const taskRenderers = {
+  dns_precheck: () => `**DNS Defense — Pre-check**\n- Confirm Org ID linked\n- Verify Network/VA identities\n- Admin access to dashboard\n- Validate reporting visibility`,
+  dns_va: () => `**Deploy Virtual Appliances**\n1) Sizing/prereqs\n2) Deploy VA(s)\n3) Map networks\n4) Validate internal IP visibility`,
+  dns_policies: () => `**Baseline Policies**\n- Security + Content categories\n- Allow lists for business apps\n- Rule order & tests`,
+  dns_reports: () => `**Reports**\n- Schedule weekly summaries\n- Share to stakeholders\n- Review block hits`,
+  sia_root_cert: () => `**Root Cert & HTTPS Decryption**\n- Install root
